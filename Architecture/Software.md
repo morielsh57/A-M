@@ -248,8 +248,6 @@ Main capabilities include:
 - Log in to the supplier interface.
 - View assigned products.
 - View relevant orders.
-- Receive notifications about new orders.
-- Receive notifications about cancelled orders.
 - Update the status of assigned orders.
 - Manage relevant product information according to permissions.
 
