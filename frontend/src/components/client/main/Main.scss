@@ -1,0 +1,12 @@
+.client-main-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  justify-content: space-between;
+
+    >*:not(.client-store-header, .nav-client, .footer) {
+    width: 100%;
+    flex: 1;
+    overflow-y: auto;
+  }
+}

@@ -1,0 +1,29 @@
+@import "../../styles/colors.scss";
+
+.client-store-header {
+  background: $pink0;
+
+  .logo {
+    width: 50%;
+    -webkit-mask-image: radial-gradient(circle, $natural9 60%, transparent 100%);
+    mask-image: radial-gradient(circle, $natural9 60%, transparent 100%);
+  }
+
+  .menuAvatarClient:hover {
+    background: $pink2 !important;
+    transition: 1ms;
+  }
+
+  .cart-header-btn{
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .client-store-header .logo {
+    width: 100%;
+  }
+}

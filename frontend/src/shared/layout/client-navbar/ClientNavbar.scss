@@ -1,0 +1,64 @@
+@import "../../styles/colors.scss";
+
+.nav-client {
+  background: $purple7;
+  display: flex;
+
+  .desktop-navbar-contaienr {
+    column-gap: 30px;
+  }
+
+  a {
+    color: $natural1;
+    text-decoration: none;
+    font-size: 1em;
+
+    &:hover {
+      color: $natural1;
+    }
+  }
+
+  .nav-dropdown-icon {
+    font-size: 0.7rem;
+    margin-left: 2px;
+  }
+}
+
+.ant-dropdown .ant-dropdown-menu .ant-dropdown-menu-item.menuItemNav {
+  padding-right: 20px;
+  padding-left: 20px;
+  
+  &:hover {
+    background: $pink2;
+  }
+
+  a {
+    text-decoration: none;
+    font-size: 1.1em;
+    padding: 10px 4px;
+    padding-left: 1px;
+  }
+}
+
+.ant-dropdown .ant-dropdown-menu,
+.ant-dropdown .ant-dropdown-menu-sub {
+  max-height: none !important;
+  overflow-y: visible !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+@media screen and (max-width: 768px) {
+  .nav-client {
+    padding-left: 8px;
+  }
+
+  .ant-dropdown.ant-dropdown-placement-bottomLeft .ant-dropdown-menu{
+    width: 100% !important;
+  }
+  
+  .fa-bars {
+    font-size: 1.2em;
+    cursor: pointer;
+  }
+}
