@@ -4,6 +4,12 @@ body{
   background: $natural1;
 }
 
+.display-4 {
+  font-size: calc(1.475rem + 2.7vw);
+  font-weight: 300;
+  line-height: 1.2;
+}
+
 /* width */
 ::-webkit-scrollbar {
   width: 8px;
@@ -55,7 +61,10 @@ body{
 }
 
 hr.hr-for-title {
-  height: 4px;
+  height: 1px;
+  width: 90%;
+  border: none;
+  background: $natural8;
 }
 
 .title-with-hr {
@@ -137,4 +146,3 @@ hr.hr-for-title {
   padding: 4px;
   width: 50%;
 }
-

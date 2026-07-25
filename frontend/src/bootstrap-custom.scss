@@ -1,0 +1,37 @@
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+@import "bootstrap/scss/maps";
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+
+// Minimal layout foundation that Bootstrap grid/utilities expect.
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+}
+
+img,
+svg {
+  vertical-align: middle;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+// Keep Bootstrap tokens and selected class systems, but skip global element resets like reboot/type.
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/badge";
+@import "bootstrap/scss/utilities/api";

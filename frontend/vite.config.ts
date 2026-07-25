@@ -33,7 +33,7 @@ export default defineConfig(({ mode, command }) => {
       devSourcemap: true,
       preprocessorOptions: {
         scss: {
-          silenceDeprecations: ['import', 'global-builtin', 'if-function', 'legacy-js-api'],
+          silenceDeprecations: ['import', 'global-builtin', 'if-function', 'legacy-js-api', 'color-functions'],
         },
       },
     },
@@ -50,8 +50,6 @@ export default defineConfig(({ mode, command }) => {
         { find: '@material-ui/core', replacement: resolve(__dirname, 'src/compat/material-ui/core') },
         { find: '@material-ui/icons', replacement: resolve(__dirname, 'src/compat/material-ui/icons') },
         { find: '@material-ui/lab', replacement: resolve(__dirname, 'src/compat/material-ui/lab') },
-        { find: /^antd$/, replacement: resolve(__dirname, 'src/compat/antd.tsx') },
-        { find: 'antd/dist/antd.css', replacement: resolve(__dirname, 'src/compat/antd.css') },
         { find: 'react-google-maps', replacement: resolve(__dirname, 'src/compat/react-google-maps.tsx') },
         { find: 'react-paypal-button-v2', replacement: resolve(__dirname, 'src/compat/react-paypal-button-v2.tsx') },
         { find: 'react-toast-notifications', replacement: resolve(__dirname, 'src/compat/react-toast-notifications.tsx') },

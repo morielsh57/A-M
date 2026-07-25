@@ -44,12 +44,6 @@
       "@material-ui/lab/*": [
         "./src/compat/material-ui/lab/*"
       ],
-      "antd": [
-        "./src/compat/antd.tsx"
-      ],
-      "antd/dist/antd.css": [
-        "./src/compat/antd.css"
-      ],
       "react-google-maps": [
         "./src/compat/react-google-maps.tsx"
       ],
