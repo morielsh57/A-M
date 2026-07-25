@@ -47,7 +47,14 @@ const MOBILE_MENU_ITEMS: MenuProps['items'] = [
 
 const ClientMobileNavbar: React.FC = () => {
   return (
-    <Dropdown menu={{ items: MOBILE_MENU_ITEMS, className: 'py-0 w-sm-25 w-50' }} trigger={['click']}>
+    <Dropdown
+      menu={{
+        items: MOBILE_MENU_ITEMS,
+        className: 'py-0 w-sm-25 w-50',
+        triggerSubMenuAction: 'click',
+      }}
+      trigger={['click']}
+    >
       <div className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
         <i className="fa fa-bars text-light" aria-hidden="true"></i>
       </div>

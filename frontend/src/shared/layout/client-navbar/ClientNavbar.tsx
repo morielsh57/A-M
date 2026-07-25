@@ -6,8 +6,6 @@ import { Dropdown } from 'antd';
 import ClientMobileNavbar from './ClientMobileNavbar';
 import './ClientNavbar.scss';
 
-const DownIcon = DownOutlined as React.ComponentType<Record<string, never>>;
-
 const NAV_ITEMS = {
   women: ['Tops', 'Pants', 'Drasses'],
   men: ['Shirts', 'Pants'],
@@ -31,7 +29,7 @@ const ClientNavbar: React.FC = () => {
           menu={{ items: createMenuItems('women', NAV_ITEMS.women), className: 'py-0' }}
         >
           <Link to="#" className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-            Women <DownIcon className="nav-dropdown-icon" />
+            Women <DownOutlined className="nav-dropdown-icon" />
           </Link>
         </Dropdown>
         <Dropdown
@@ -39,7 +37,7 @@ const ClientNavbar: React.FC = () => {
           menu={{ items: createMenuItems('men', NAV_ITEMS.men), className: 'py-0' }}
         >
           <Link to="#" className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-            Men <DownIcon className="nav-dropdown-icon" />
+            Men <DownOutlined className="nav-dropdown-icon" />
           </Link>
         </Dropdown>
         <Dropdown
@@ -47,7 +45,7 @@ const ClientNavbar: React.FC = () => {
           menu={{ items: createMenuItems('boys', NAV_ITEMS.boys), className: 'py-0' }}
         >
           <Link to="#" className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-            Boys <DownIcon className="nav-dropdown-icon" />
+            Boys <DownOutlined className="nav-dropdown-icon" />
           </Link>
         </Dropdown>
         <Dropdown
@@ -55,7 +53,7 @@ const ClientNavbar: React.FC = () => {
           menu={{ items: createMenuItems('girls', NAV_ITEMS.girls), className: 'py-0' }}
         >
           <Link to="#" className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-            Girls <DownIcon className="nav-dropdown-icon" />
+            Girls <DownOutlined className="nav-dropdown-icon" />
           </Link>
         </Dropdown>
         <Link to="#" className="text-decoration-none text-white">Accessories</Link>
