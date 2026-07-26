@@ -1,6 +1,14 @@
 backend/venv/
 __pycache__/
 *.pyc
-.env
+.env*
+**/.env
 .DS_Store
 backend/.env
+
+# dependencies
+node_modules/
+
+# production
+dist/
+build

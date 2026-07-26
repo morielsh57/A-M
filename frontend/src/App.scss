@@ -1,0 +1,149 @@
+@import "./shared/styles/colors";
+
+body{
+  background: $natural1;
+}
+
+.display-4 {
+  font-size: calc(1.475rem + 2.7vw);
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: $natural3; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: $natural7; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: $natural8; 
+}
+
+.dropdown-client-class {
+  width: 45px !important;
+  height: 45px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 50% !important;
+  padding: 0px !important;
+}
+
+.btn-outline-purple {
+  color: $purple10 !important;
+  font-size: 1.5em;
+}
+
+.btn-outline-purple:hover {
+  color: $pink7 !important;
+}
+
+.btn-purple {
+  background: $purple7;
+  border-color: $purple7;
+  color: $natural1;
+}
+
+.btn-purple:hover {
+  background: $purple6;
+  border-color: $purple6;
+  color: $natural1;
+}
+
+hr.hr-for-title {
+  height: 2px;
+  width: 90%;
+  border: none;
+  background: $purple5;
+}
+
+.title-with-hr {
+  margin-top: -38px;
+  text-align: center;
+  color: $purple6;
+}
+
+.title-with-hr span {
+  background: $natural1;
+  padding: 8px;
+  position: relative;
+  z-index: 999;
+}
+
+.text-purple {
+  color: $purple7;
+}
+
+.mb-40 {
+  margin-bottom: 40px !important;
+}
+
+.mt-40 {
+  margin-top: 40px;
+}
+
+.mt-50 {
+  margin-top: 50px;
+}
+
+.circule-color {
+  height: 35px;
+  width: 35px;
+  border-radius: 50%;
+  border: 3px solid $natural1;
+  box-shadow: 0 0 0 1px $natural8 !important;
+}
+
+.search-input,
+.search-input-admin {
+  border: none;
+  border-bottom: 2px solid $pink7;
+  outline: none;
+  background: transparent;
+}
+
+.search-input-admin {
+  border-bottom: 2px solid $natural9;
+}
+
+.btn-search,
+.btn-search-admin {
+  border: none;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+
+.btn-search:active,
+.btn-search-admin:active {
+  transform: translate(0, 2px);
+}
+
+.btn-search-admin .bi-search {
+  color: $natural9;
+}
+
+.btn-search .bi-search {
+  color: $purple6;
+}
+
+.btn-search .bi-search:hover {
+  transform: scale(1.1, 1.1);
+}
+
+.location-search-input {
+  border: 1px solid $natural9;
+  border-radius: 5px;
+  padding: 4px;
+  width: 50%;
+}

@@ -1,0 +1,35 @@
+
+@import "../../styles/colors.scss";
+
+.footer {
+  background: $purple7;
+
+  a, p {
+  display: block;
+  text-decoration: none;
+  color: $natural1;
+  font-size: 1em;
+  padding: 8px 0px;
+}
+p {
+  padding: 0px;
+}
+a:hover {
+  color: $pink3;
+}
+button:hover {
+  background: $pink3;
+}
+.fa-facebook,
+.fa-instagram {
+  color: $purple7;
+  font-size: 1.1em;
+}
+}
+
+@media screen and (max-width: 768px) {
+  .fa-bars {
+    font-size: 1.2em;
+    cursor: pointer;
+  }
+}
