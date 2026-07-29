@@ -8,8 +8,10 @@ const Main: React.FC = () => {
   return (
     <main className="client-main-container">
       <Header />
-      <Outlet />
-      <ClientFooter />
+      <div className="client-main-scrollable-content-container">
+        <Outlet />
+        <ClientFooter />
+      </div>
     </main>
   );
 };
