@@ -1,0 +1,31 @@
+@import "../../../../shared/styles/colors.scss";
+
+.client-login-container {
+
+  input.form-control {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.2rem;
+    border-radius: 12px;
+    background-color: $natural1;
+    outline: none;
+    transition: all 0.2s ease-in-out;
+
+    &:focus {
+      box-shadow: 0 0 0 2px rgba($pink3, 0.9);
+    }
+  }
+
+  .sign-up-link {
+    color: $pink9;
+    transition: color 0.2s ease-in-out;
+
+    &:hover {
+      color: $pink7;
+    }
+
+    &:active {
+      color: $pink8;
+    }
+  }
+}
