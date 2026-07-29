@@ -1,0 +1,19 @@
+@import "../../styles/colors.scss";
+
+.app-logo {
+  &.main-logo {
+    width: 35%;
+    -webkit-mask-image: radial-gradient(circle, $natural9 60%, transparent 100%);
+    mask-image: radial-gradient(circle, $natural9 60%, transparent 100%);
+  }
+
+  &.auth-logo {
+    width: 60%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .app-logo.main-logo {
+    width: 100%;
+  }
+}
