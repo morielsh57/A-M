@@ -5,14 +5,16 @@ import { apiService, createApiThunk } from '../../shared/api/axios';
 import { APIRequestState, type IAPIRequestState } from '../../shared/api/models';
 import { createAPIReducerCases, type ApiDataStateType } from '../../shared/store/utils';
 import { setItemInLocalStorage } from '../../shared/utils/localStorage.utils';
-import { ILoginRequest, ILoginResponse } from './auth.types';
+import { ILoginRequest, ILoginResponse, ISignUpRequest } from './auth.types';
 import { API_ROUTES } from '../routing';
 
 export interface AuthStoreState extends ApiDataStateType {
+  signupRes: IAPIRequestState<void>;
   loginRes: IAPIRequestState<ILoginResponse>;
 }
 
 const initialState: AuthStoreState = {
+  signupRes: APIRequestState.create<void>(),
   loginRes: APIRequestState.create<ILoginResponse>(),
 };
 
@@ -21,8 +23,23 @@ export const loginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
   (payload) => apiService.post<ILoginResponse>(API_ROUTES.AUTH.LOGIN, payload),
 );
 
+export const signupRequest = createApiThunk<void, ISignUpRequest>(
+  'auth/signup',
+  (payload) => apiService.post<void>(API_ROUTES.AUTH.SIGNUP, payload),
+);
+
 export const authStoreReducer = createReducer(initialState, (builder) => {
   const apiBuilder = builder as unknown as ActionReducerMapBuilder<ApiDataStateType>;
+
+  createAPIReducerCases(signupRequest, 'signupRes', apiBuilder, {
+    onPending: (state) => {
+      state.signupRes.error = undefined;
+      state.signupRes.data = undefined;
+    },
+    onFulfilled: (state) => {
+      state.signupRes.error = undefined;
+    },
+  });
 
   createAPIReducerCases(loginRequest, 'loginRes', apiBuilder, {
     onFulfilled: (_, payload) => {
