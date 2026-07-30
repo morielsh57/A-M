@@ -19,26 +19,6 @@
     line-height: 1.2;
   }
 
-  /* width */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  /* Track */
-  ::-webkit-scrollbar-track {
-    background: $natural3;
-  }
-
-  /* Handle */
-  ::-webkit-scrollbar-thumb {
-    background: $natural7;
-  }
-
-  /* Handle on hover */
-  ::-webkit-scrollbar-thumb:hover {
-    background: $natural8;
-  }
-
   .dropdown-client-class {
     width: 45px !important;
     height: 45px !important;

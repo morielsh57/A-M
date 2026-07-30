@@ -7,10 +7,12 @@ export const useLoginStyles = makeStyles((theme) => ({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
+    "@media (max-width: 768px)": {
+      marginTop: theme.spacing(4),
+    },
   },
   avatar: {
     margin: theme.spacing(1),
-    backgroundColor: theme.palette.primary.main,
   },
   form: {
     width: "100%",

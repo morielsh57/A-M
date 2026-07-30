@@ -1,4 +1,5 @@
 @import "./shared/styles/colors";
+@import "./shared/styles/mixins";
 
 body,
 html {
@@ -37,4 +38,13 @@ code {
 button,
 a {
   cursor: pointer;
+}
+
+// to hide the scrollbar on mobile devices
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+@media only screen and (min-width: 1101px) {
+  @include appScrollbar;
 }
