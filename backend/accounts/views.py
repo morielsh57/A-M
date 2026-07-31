@@ -211,7 +211,8 @@ class LoginView(APIView):
             "Authenticates an active, verified user and returns short-lived access "
             "and rotating refresh tokens. Both tokens include the user's role for frontend "
             "routing; backend permissions still use the current database role. Invalid "
-            "credentials and unavailable accounts use the same generic message. When `isAdmin` is true, "
+            "credentials and unavailable accounts use the same generic message. When "
+            "`isAdmin` is true, "
             "the account must have the Admin or Supplier database role to access the "
             "shared management panel; other roles receive a 403 response with support guidance."
         ),
