@@ -119,7 +119,7 @@ Main capabilities include:
 - Support for three user roles:
   - Customer
   - Supplier
-  - Administrator
+  - Admin
 
 ---
 
@@ -217,9 +217,9 @@ Main capabilities include:
 
 ---
 
-### 6.7. Administrator Dashboard
+### 6.7. Admin Dashboard
 
-Administrators can manage the main resources of the system.
+Admins can manage the main resources of the system.
 
 Main capabilities include:
 
@@ -231,7 +231,7 @@ Main capabilities include:
 - Add, edit, and remove categories.
 - Manage customer accounts.
 - Manage supplier accounts.
-- Manage administrator accounts.
+- Manage admin accounts.
 - View all orders.
 - Update order statuses.
 - Delete orders when permitted.

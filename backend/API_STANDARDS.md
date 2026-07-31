@@ -75,3 +75,14 @@ and name required roles in the operation description. Public operations use
 `auth=[]`; protected operations must declare authentication and DRF permission
 classes. Never put credentials, tokens, internal exception text, or stack traces
 in examples or responses.
+
+## Customer registration and email verification
+
+- `POST /api/v1/auth/register/` creates inactive Customer accounts only.
+- `GET /api/v1/auth/verify-email/?token=...` consumes a one-hour, one-time token
+  and redirects to the configured frontend success URL with the consumed token
+  included as a `token` query parameter.
+- `POST /api/v1/auth/resend-verification/` sends a replacement token and is
+  limited to one request per minute per normalized email and client IP.
+- Supplier and Admin creation is intentionally excluded from public
+  registration and must be implemented through protected administration APIs.
