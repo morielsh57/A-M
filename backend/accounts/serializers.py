@@ -132,6 +132,57 @@ class PasswordResetSerializer(serializers.Serializer):
         return attrs
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(source="role.role_name", read_only=True)
+
+    class Meta:
+        model = User
+        fields = ("user_id", "name", "email", "phone", "address", "role")
+        read_only_fields = fields
+
+
+class UserProfileUpdateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=255, required=False)
+    phone = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    address = serializers.CharField(required=False, allow_blank=True)
+
+    protected_fields = frozenset(
+        {
+            "user_id",
+            "email",
+            "role",
+            "role_id",
+            "is_active",
+            "is_valid_email",
+            "password",
+            "date_created",
+        }
+    )
+
+    def validate(self, attrs):
+        attempted = self.protected_fields.intersection(self.initial_data)
+        if attempted:
+            raise serializers.ValidationError(
+                {
+                    field: ["This field cannot be modified through the profile endpoint."]
+                    for field in sorted(attempted)
+                }
+            )
+        return attrs
+
+    def update(self, instance, validated_data):
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        if validated_data:
+            instance.save(update_fields=list(validated_data))
+        return instance
+
+
+class UserProfileResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=True)
+    data = UserProfileSerializer()
+
+
 class RegistrationDataSerializer(serializers.Serializer):
     email = serializers.EmailField()
     message = serializers.CharField()
