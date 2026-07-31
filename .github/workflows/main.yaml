@@ -63,7 +63,7 @@ jobs:
 
       - name: Run Django tests
         env: *django-env
-        run: python manage.py test
+        run: python manage.py test --settings=config.test_settings
 
   frontend-tests:
     name: Frontend build (Node.js ${{ matrix.node-version }})

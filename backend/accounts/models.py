@@ -1,6 +1,10 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 
+CUSTOMER_ROLE = "Customer"
+SUPPLIER_ROLE = "Supplier"
+ADMIN_ROLE = "Admin"
+
 
 class Role(models.Model):
     role_id = models.AutoField(primary_key=True)
@@ -20,7 +24,7 @@ class UserManager(BaseUserManager):
         if not name:
             raise ValueError("The user name is required")
 
-        email = self.normalize_email(email)
+        email = self.normalize_email(email).strip().lower()
         user = self.model(email=email, name=name, role=role, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -68,3 +72,23 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.user.name
+
+
+class EmailVerificationToken(models.Model):
+    token_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="email_verification_tokens",
+    )
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "email_verification_tokens"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Email verification token for {self.user.email}"
