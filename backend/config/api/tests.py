@@ -26,6 +26,13 @@ class ApiContractTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"success": True, "data": {"status": "ok"}})
 
+    def test_api_routes_use_slashless_canonical_urls(self):
+        canonical = self.client.get("/api/v1/health")
+        trailing_slash = self.client.get("/api/v1/health/")
+
+        self.assertEqual(canonical.status_code, 200)
+        self.assertEqual(trailing_slash.status_code, 404)
+
     def test_method_error_uses_error_envelope(self):
         response = self.client.post(reverse("api-health"), {})
 

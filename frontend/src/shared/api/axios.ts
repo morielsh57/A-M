@@ -53,12 +53,19 @@ export const createApiThunk = <TData, TArgs = void>(
       } catch (e: unknown) {
         const axiosError = e as AxiosError;
         const responseData = axiosError?.response?.data;
+        const structuredError = responseData as {
+          message?: string;
+          msg?: string;
+          detail?: string;
+          error?: { message?: string };
+        } | undefined;
         const responseMessage = typeof responseData === 'string'
           ? responseData
           : (
-            (responseData as { message?: string; msg?: string; detail?: string } | undefined)?.message
-            || (responseData as { message?: string; msg?: string; detail?: string } | undefined)?.msg
-            || (responseData as { message?: string; msg?: string; detail?: string } | undefined)?.detail
+            structuredError?.error?.message
+            || structuredError?.message
+            || structuredError?.msg
+            || structuredError?.detail
           );
 
         return rejectWithValue({
@@ -113,14 +120,21 @@ const refreshAccessToken = async (baseURL: string): Promise<string | null> => {
 
   try {
     const refreshClient = axios.create({ baseURL });
-    const response = await refreshClient.post<{ access: string }>(API_ROUTES.AUTH.REFRESH, {
-      refresh: refreshToken,
-    });
+    const response = await refreshClient.post<{
+      success: boolean;
+      data: { access: string; refresh?: string };
+    }>(API_ROUTES.AUTH.REFRESH, { refresh: refreshToken });
 
-    const newAccessToken = response.data?.access;
+    const newAccessToken = response.data?.data?.access;
     if (!newAccessToken) return null;
 
     setItemInLocalStorage(AUTH_LOCAL_STORAGE_KEYS.ACCESS_TOKEN, newAccessToken);
+    if (response.data.data.refresh) {
+      setItemInLocalStorage(
+        AUTH_LOCAL_STORAGE_KEYS.REFRESH_TOKEN,
+        response.data.data.refresh,
+      );
+    }
     return newAccessToken;
   } catch (error) {
     return null;
