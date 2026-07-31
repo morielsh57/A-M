@@ -38,4 +38,5 @@ export const API_ROUTES = {
     SIGNUP: '/users/signup',
     REFRESH: '/auth/refresh',
   },
+  USERS: '/users',
 } as const;

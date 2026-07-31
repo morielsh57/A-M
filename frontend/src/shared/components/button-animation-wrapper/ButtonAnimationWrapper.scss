@@ -1,0 +1,18 @@
+
+// Apply animation to .button-animation elements, except disabled
+.button-animation:not(:disabled) {
+  // Ensures sharp rendering (prevents visual blurring on scale transition)
+  transform: translateZ(0);
+  transition: transform 500ms cubic-bezier(0.18, 1.4, 0.32, 1),
+    background-color 0.2s, color 0.2s;
+
+  // Scale down slightly on press
+  &:active {
+    transform: scale3d(0.96, 0.96, 1);
+    transition-duration: 150ms;
+  }
+
+  &:hover {
+    cursor: pointer !important;
+  }
+}

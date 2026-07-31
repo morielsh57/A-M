@@ -5,9 +5,13 @@ import type { TypedUseSelectorHook } from 'react-redux';
 import { useDispatch, useSelector } from 'react-redux';
 import { injectStoreAxiosInterceptors } from '../shared/api/interceptors';
 import { sharedStoreReducer } from '../shared/store/shared.store';
+import { authStoreReducer } from './auth/auth.store';
+import { userStoreReducer } from '../shared/store/user.store';
 
 export const rootReducer = {
   sharedStoreReducer,
+  authStoreReducer,
+  userStoreReducer,
 };
 
 enableMapSet();
