@@ -6,6 +6,7 @@ import mainLogo from '../../../assets/images/main-logo.png';
 import SearchInput from './SearchInput';
 import CartButton from './CartButton';
 import ClientNavbar from '../client-navbar/ClientNavbar';
+import AppLogo from '../../components/app-logo/AppLogo';
 import "./Header.scss";
 
 const Header: React.FC = () => {
@@ -15,12 +16,11 @@ const Header: React.FC = () => {
       <div className="row justify-content-around align-items-center col-11 mx-auto">
         <CartButton />
         <div className="col-4 text-center">
-          <Link to={APP_ROUTING_PATHS.APP_HOME_PAGE} className="text-decoration-none">
-            <img src={mainLogo} alt="logo" className="logo" />
-          </Link>
+          <AppLogo />
         </div>
         <div className="col-4 text-end d-flex align-items-center border-1 border-white justify-content-end">
           <SearchInput view="desktop" />
+          {/* TODO: add user avatar when login complete */}
           {localStorage[AUTH_LOCAL_STORAGE_KEYS.ACCESS_TOKEN] ? (
             <>user avatar will be here</>
           ) : (

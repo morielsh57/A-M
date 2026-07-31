@@ -6,11 +6,13 @@ import './Main.scss';
 
 const Main: React.FC = () => {
   return (
-    <div className="client-main-container">
+    <main className="client-main-container">
       <Header />
-      <Outlet />
-      <ClientFooter />
-    </div>
+      <div className="client-main-scrollable-content-container">
+        <Outlet />
+        <ClientFooter />
+      </div>
+    </main>
   );
 };
 
