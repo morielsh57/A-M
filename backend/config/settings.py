@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "accounts",
     "catalogue",
     "carts",
@@ -110,3 +111,27 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 AUTH_USER_MODEL = "accounts.User"
+
+# All API endpoints share these defaults. Individual views may tighten
+# authentication and permissions, but should not redefine the wire format.
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_RENDERER_CLASSES": ["config.api.renderers.EnvelopedJSONRenderer"],
+    "EXCEPTION_HANDLER": "config.api.exceptions.api_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "config.api.pagination.StandardPageNumberPagination",
+    "PAGE_SIZE": 20,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "A&M Store API",
+    "DESCRIPTION": (
+        "REST API for the A&M clothing store. Successful JSON responses use "
+        "`{\"success\": true, \"data\": ...}`. Errors use "
+        "`{\"success\": false, \"error\": {\"code\": ..., \"message\": ..., "
+        "\"details\": ...}}`. Endpoints marked with a lock require authentication; "
+        "each operation documents any additional role requirement."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_SETTINGS": {"persistAuthorization": True},
+}
