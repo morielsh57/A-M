@@ -12,6 +12,7 @@ import Home from './client/home/Home';
 import { ProtectedLoginRoute } from '../app/guards/client/ProtectedLoginRoute';
 import ClientLogin from '../app/auth/client/client-login/ClientLogin';
 import paletteColors from '../shared/styles/colors.module.scss';
+import ClientSignup from '../app/auth/client/client-signup/ClientSignup';
 
 const AppAMFashion: React.FC = (props) => {
   const theme = createTheme(
@@ -35,7 +36,12 @@ const AppAMFashion: React.FC = (props) => {
       text: {
         primary: paletteColors.natural9,
         secondary: paletteColors.purple6,
-      }
+        disabled: paletteColors.purple6,
+      },
+      action: {
+        disabled: paletteColors.deepPink4,
+        disabledBackground: paletteColors.deepPink1,
+      },
     },
   }
 );
@@ -52,7 +58,10 @@ const AppAMFashion: React.FC = (props) => {
                     <ProtectedLoginRoute>
                       <ClientLogin />
                     </ProtectedLoginRoute>} />
-                  <Route path={APP_ROUTING_PATHS.SIGNUP} element={<>Sign Up will be here</>} />
+                  <Route path={APP_ROUTING_PATHS.SIGNUP} element={  
+                    <ProtectedLoginRoute>
+                      <ClientSignup />
+                    </ProtectedLoginRoute>} />
                   <Route index element={<Navigate to={APP_ROUTING_PATHS.AUTH_LOGIN_PAGE} replace />} />
                 </Route>
                 <Route path={APP_ROUTING_PATHS.APP} element={<Main />}>

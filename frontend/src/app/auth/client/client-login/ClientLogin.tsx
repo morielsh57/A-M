@@ -1,39 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import Typography from "@material-ui/core/Typography";
 import Container from "@material-ui/core/Container";
+import CircularProgress from "@mui/material/CircularProgress";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { EAPIStatus } from '../../../../shared/api/models';
 import { ILoginRequest } from '../../auth.types';
-import { useAppDispatch } from '../../../store';
+import { useAppDispatch, useAppSelector } from '../../../store';
 import { loginRequest } from '../../auth.store';
 import { APP_ROUTING_PATHS } from '../../../routing';
 import AppLogo from '../../../../shared/components/app-logo/AppLogo';
-import { useLoginStyles } from './clientLogin.utils';
+import { useClientAuthFormStyles } from '../shared/clientAuthForm.utils';
 import ButtonAnimationWrapper from '../../../../shared/components/button-animation-wrapper/ButtonAnimationWrapper';
 import paletteColors from '../../../../shared/styles/colors.module.scss';
-import './ClientLogin.scss';
+import '../shared/ClientAuthForm.scss';
 
 const ClientLogin: React.FC = () => {
-  const classes = useLoginStyles();
+  const classes = useClientAuthFormStyles();
   const [loginErrorMsg, setLoginErrorMsg] = useState<string | null>(null);
-  let dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
+  const { loginRes } = useAppSelector((store) => store.authStoreReducer);
   const {
     register,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     handleSubmit,
   } = useForm<ILoginRequest>();
+  const isLoginButtonDisabled = isSubmitting || loginRes.status === EAPIStatus.PENDING;
 
-  let emailRef = register("email", {
+  const emailRef = register("email", {
     required: true,
     pattern: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
   });
-  let passRef = register("password", { required: true, minLength: 8 });
+  const passRef = register("password", { required: true, minLength: 8 });
 
-  const formSend = (data: ILoginRequest) => {
+  const formSend = async (data: ILoginRequest) => {
     setLoginErrorMsg(null);
     dispatch(loginRequest(data))
       .unwrap()
@@ -41,9 +45,9 @@ const ClientLogin: React.FC = () => {
   };
 
   return (
-    <div className="client-login-page">
+    <div className="client-auth-page">
       <CssBaseline />
-      <Container component="main" maxWidth="xs" className="client-login-inner-container">
+      <Container component="main" maxWidth="xs" className="client-auth-inner-container">
         <div className="mx-auto text-center">
           <AppLogo />
         </div>
@@ -87,7 +91,7 @@ const ClientLogin: React.FC = () => {
               )}
             </div>
             {loginErrorMsg && (
-              <div className="text-danger text-center">{loginErrorMsg}</div>
+              <div className="text-danger text-center" style={{ whiteSpace: 'pre-line', marginBottom: '4px'}}>{loginErrorMsg}</div>
             )}
 
             <Button
@@ -96,14 +100,19 @@ const ClientLogin: React.FC = () => {
               variant="contained"
               color="primary"
               className={classes.submit}
+              disabled={isLoginButtonDisabled}
             >
-              Log In
+              {isLoginButtonDisabled ? (
+                <CircularProgress size={22} color="inherit" />
+              ) : (
+                'Log In'
+              )}
             </Button>
             <ButtonAnimationWrapper>
               <div className="mt-3 text-center">
                 <Link
                   to={APP_ROUTING_PATHS.AUTH_SIGNUP_PAGE}
-                  className="sign-up-link text-decoration-none"
+                  className="auth-link text-decoration-none"
                 >
                   {"Don't have an account? Sign Up"}
                 </Link>
