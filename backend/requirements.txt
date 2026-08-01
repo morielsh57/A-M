@@ -1,0 +1,7 @@
+Django==6.0.7
+django-cors-headers==4.9.0
+djangorestframework==3.17.1
+drf-spectacular==0.30.0
+mysqlclient==2.2.8
+python-dotenv==1.2.2
+uvicorn==0.52.0

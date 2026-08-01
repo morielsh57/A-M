@@ -18,11 +18,17 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = "django-insecure-bpb-(9$q#s&qjb^=tdg!e=^shcp_i-+15&&0_m5daks-axwpht"
+SECRET_KEY = os.getenv("SECRET_KEY") or (
+    "django-insecure-bpb-(9$q#s&qjb^=tdg!e=^shcp_i-+15&&0_m5daks-axwpht"
+)
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -31,7 +37,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
+    "drf_spectacular",
     "accounts",
     "catalogue",
     "carts",
@@ -43,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -70,6 +79,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+DB_SSL_CA = os.getenv("DB_SSL_CA", "").strip()
+DB_OPTIONS = {"charset": "utf8mb4"}
+if DB_SSL_CA:
+    db_ssl_ca_path = Path(DB_SSL_CA)
+    if not db_ssl_ca_path.is_absolute():
+        db_ssl_ca_path = BASE_DIR / db_ssl_ca_path
+    DB_OPTIONS["ssl"] = {"ca": str(db_ssl_ca_path)}
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -78,9 +95,7 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "3306"),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-        },
+        "OPTIONS": DB_OPTIONS,
     }
 }
 
@@ -110,3 +125,66 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 AUTH_USER_MODEL = "accounts.User"
+
+EMAIL_BACKEND = os.getenv(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend",
+)
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "am.fashion.service@gmail.com")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL",
+    "A&M Fashion <am.fashion.service@gmail.com>",
+)
+
+BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "https://localhost:8000").rstrip("/")
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "https://localhost:3001").rstrip("/")
+FRONTEND_VERIFICATION_SUCCESS_URL = os.getenv(
+    "FRONTEND_VERIFICATION_SUCCESS_URL",
+    f"{FRONTEND_BASE_URL}/app",
+)
+EMAIL_VERIFICATION_TIMEOUT_SECONDS = int(
+    os.getenv("EMAIL_VERIFICATION_TIMEOUT_SECONDS", "3600")
+)
+
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", FRONTEND_BASE_URL).split(",")
+    if origin.strip()
+]
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", FRONTEND_BASE_URL).split(",")
+    if origin.strip()
+]
+
+# All API endpoints share these defaults. Individual views may tighten
+# authentication and permissions, but should not redefine the wire format.
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_RENDERER_CLASSES": ["config.api.renderers.EnvelopedJSONRenderer"],
+    "EXCEPTION_HANDLER": "config.api.exceptions.api_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "config.api.pagination.StandardPageNumberPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_THROTTLE_RATES": {
+        "verification_resend_email": "1/minute",
+        "verification_resend_ip": "1/minute",
+    },
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "A&M Store API",
+    "DESCRIPTION": (
+        "REST API for the A&M clothing store. Successful JSON responses use "
+        "`{\"success\": true, \"data\": ...}`. Errors use "
+        "`{\"success\": false, \"error\": {\"code\": ..., \"message\": ..., "
+        "\"details\": ...}}`. Endpoints marked with a lock require authentication; "
+        "each operation documents any additional role requirement."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_SETTINGS": {"persistAuthorization": True},
+}
