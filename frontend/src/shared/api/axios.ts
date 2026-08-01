@@ -52,8 +52,17 @@ export const createApiThunk = <TData, TArgs = void>(
         // eslint-disable-next-line
       } catch (e: unknown) {
         const axiosError = e as AxiosError;
+        const responseData = axiosError?.response?.data;
+        const responseMessage = typeof responseData === 'string'
+          ? responseData
+          : (
+            (responseData as { message?: string; msg?: string; detail?: string } | undefined)?.message
+            || (responseData as { message?: string; msg?: string; detail?: string } | undefined)?.msg
+            || (responseData as { message?: string; msg?: string; detail?: string } | undefined)?.detail
+          );
+
         return rejectWithValue({
-          message: axiosError?.message,
+          message: responseMessage || axiosError?.message,
           code: axiosError?.response?.status ?? axiosError?.status,
           axiosError,
         });

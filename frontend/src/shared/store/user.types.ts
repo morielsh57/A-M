@@ -1,9 +1,21 @@
+export enum EUserRole {
+  ADMIN = 'Admin',
+  SUPPLIER = 'Supplier',
+  CUSTOMER = 'Customer',
+}
+
+export interface IUserNotification {
+  notification_id?: string;
+  orderNumber?: string | number;
+  isRead?: boolean;
+  type?: string;
+}
 
 export interface IUser {
   user_id: string;
   name: string;
   email: string;
-  role: "supplier" | "admin" | "customer";
+  role: EUserRole;
   phone: string;
   address: string;
   avatar?: string;
@@ -11,7 +23,18 @@ export interface IUser {
   date_created: Date;
 }
 
-export interface IGetUserByIdResponse {
+export interface IGetUserResponse {
   data: IUser;
+  msg: string;
+}
+
+export interface IAdminOrSupplierUser extends IUser {
+  unreadCounter?: number;
+  notifications?: IUserNotification[];
+  supplier_id?: string | number;
+}
+
+export interface IGetAdminOrSupplierByIdResponse {
+  data: IAdminOrSupplierUser;
   msg: string;
 }

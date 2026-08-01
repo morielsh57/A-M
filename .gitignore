@@ -8,10 +8,10 @@ backend/.env.example
 !**/.env.example
 .DS_Store
 backend/.env
-
+ 
 # dependencies
 node_modules/
-
+ 
 # production
 dist/
 build

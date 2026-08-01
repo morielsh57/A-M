@@ -1,26 +1,31 @@
 import type { ActionReducerMapBuilder } from '@reduxjs/toolkit';
 import {  createReducer } from '@reduxjs/toolkit';
-import { AUTH_LOCAL_STORAGE_KEYS } from '../constants';
 import { apiService, createApiThunk } from '../../shared/api/axios';
 import { APIRequestState, type IAPIRequestState } from '../../shared/api/models';
 import { createAPIReducerCases, type ApiDataStateType } from '../../shared/store/utils';
-import { setItemInLocalStorage } from '../../shared/utils/localStorage.utils';
 import { ILoginRequest, ILoginResponse, ISignUpRequest } from './auth.types';
 import { API_ROUTES } from '../routing';
 
 export interface AuthStoreState extends ApiDataStateType {
   signupRes: IAPIRequestState<void>;
   loginRes: IAPIRequestState<ILoginResponse>;
+  adminLoginRes: IAPIRequestState<ILoginResponse>;
 }
 
 const initialState: AuthStoreState = {
   signupRes: APIRequestState.create<void>(),
   loginRes: APIRequestState.create<ILoginResponse>(),
+  adminLoginRes: APIRequestState.create<ILoginResponse>(),
 };
 
 export const loginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
   'auth/login',
   (payload) => apiService.post<ILoginResponse>(API_ROUTES.AUTH.LOGIN, payload),
+);
+
+export const adminLoginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
+  'auth/adminLogin',
+  (payload) => apiService.post<ILoginResponse>(API_ROUTES.AUTH.LOGIN, { ...payload, isAdmin: true }),
 );
 
 export const signupRequest = createApiThunk<void, ISignUpRequest>(
@@ -42,9 +47,22 @@ export const authStoreReducer = createReducer(initialState, (builder) => {
   });
 
   createAPIReducerCases(loginRequest, 'loginRes', apiBuilder, {
-    onFulfilled: (_, payload) => {
-      setItemInLocalStorage(AUTH_LOCAL_STORAGE_KEYS.ACCESS_TOKEN, payload.access);
-      setItemInLocalStorage(AUTH_LOCAL_STORAGE_KEYS.REFRESH_TOKEN, payload.refresh);
+    onPending: (state) => {
+      state.loginRes.error = undefined;
+      state.loginRes.data = undefined;
+    },
+    onFulfilled: (state) => {
+      state.loginRes.error = undefined;
+    },
+  });
+
+  createAPIReducerCases(adminLoginRequest, 'adminLoginRes', apiBuilder, {
+    onPending: (state) => {
+      state.adminLoginRes.error = undefined;
+      state.adminLoginRes.data = undefined;
+    },
+    onFulfilled: (state) => {
+      state.adminLoginRes.error = undefined;
     },
   });
 });

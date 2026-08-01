@@ -1,0 +1,144 @@
+@import "../../../../shared/styles/colors.scss";
+
+.admin-auth-page {
+  min-height: 100dvh;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: $natural1;
+
+  .admin-auth-shell {
+    width: 100%;
+    min-height: 100dvh;
+    background: $natural1;
+    box-shadow: 0 0 0 1px rgba($natural9, 0.08);
+
+    .admin-auth-header {
+      width: 100%;
+      background-color: $natural9;
+      color: $natural1;
+      padding: 1.2rem 2rem;
+      text-align: left;
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.6rem, 3vw, 2.1rem);
+        font-weight: 500;
+      }
+    }
+
+    .admin-auth-body {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 90px 24px 30px;
+
+      .admin-auth-form-wrap {
+        width: 100%;
+        max-width: 520px;
+
+        .admin-auth-card {
+          width: 100%;
+          margin-top: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          background: transparent;
+          box-shadow: none;
+
+          .admin-auth-avatar {
+            margin: 0 auto 0.9rem;
+            width: 50px;
+            height: 50px;
+            background-color: $purple6;
+            color: $natural1;
+          }
+
+          .admin-auth-title {
+            color: $natural9;
+            font-size: clamp(1.8rem, 2.4vw, 2.1rem);
+            font-weight: 400;
+            margin-bottom: 1rem;
+          }
+
+          .admin-auth-form {
+            width: 100%;
+            margin-top: 8px;
+
+            .admin-auth-input {
+              width: 100%;
+              min-height: 72px;
+              padding: 1.2rem 1.3rem;
+              font-size: 1.1rem;
+              border: 1px solid rgba($natural6, 0.8);
+              border-radius: 8px;
+              background-color: $natural1;
+              outline: none;
+              transition: all 0.2s ease-in-out;
+
+              &:focus {
+                box-shadow: 0 0 0 2px $natural4;
+              }
+            }
+
+            .admin-auth-submit {
+              min-height: 46px;
+              margin-top: 1.4rem;
+              border-radius: 4px;
+              background-color: $purple6;
+              color: $natural1;
+              box-shadow: 0 4px 12px rgba($purple6, 0.28);
+              font-size: 1.05rem;
+              font-weight: 700;
+              letter-spacing: 0.04em;
+              text-transform: uppercase;
+              transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+              &:hover {
+                background-color: $purple7;
+                box-shadow: 0 6px 16px rgba($purple7, 0.24);
+              }
+            }
+          }
+
+          .admin-auth-link {
+            color: $natural9;
+            font-size: 1rem;
+
+            &:hover {
+              color: $deepPink9;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .admin-auth-shell {
+      .admin-auth-header {
+        padding: 1rem 1.25rem;
+      }
+
+      .admin-auth-body {
+        min-height: calc(100dvh - 74px);
+        padding: 72px 16px 36px;
+
+        .admin-auth-form-wrap {
+          .admin-auth-card {
+            .admin-auth-title {
+              font-size: 1.6rem;
+            }
+
+            .admin-auth-form {
+              .admin-auth-input {
+                min-height: 64px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
