@@ -79,6 +79,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
+DB_SSL_CA = os.getenv("DB_SSL_CA", "").strip()
+DB_OPTIONS = {"charset": "utf8mb4"}
+if DB_SSL_CA:
+    db_ssl_ca_path = Path(DB_SSL_CA)
+    if not db_ssl_ca_path.is_absolute():
+        db_ssl_ca_path = BASE_DIR / db_ssl_ca_path
+    DB_OPTIONS["ssl"] = {"ca": str(db_ssl_ca_path)}
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -87,9 +95,7 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "3306"),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-        },
+        "OPTIONS": DB_OPTIONS,
     }
 }
 
