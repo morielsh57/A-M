@@ -6,35 +6,34 @@ import { APIRequestState, type IAPIRequestState } from '../api/models';
 import { createAPIReducerCases, type ApiDataStateType } from './utils';
 import {
   IAdminOrSupplierUser,
-  IGetAdminOrSupplierByIdResponse,
-  IGetUserByIdResponse,
+  IGetUserResponse,
   IUser,
 } from './user.types';
 import { getItemFromLocalStorage, removeItemFromLocalStorage, setItemInLocalStorage } from '../utils/localStorage.utils';
 import { API_ROUTES } from '../../app/routing';
 
 export interface UserStoreState extends ApiDataStateType {
-  getUserByIdRequest: IAPIRequestState<IGetUserByIdResponse>;
-  getAdminOrSupplierByIdRequest: IAPIRequestState<IGetAdminOrSupplierByIdResponse>;
+  getCurrentUserRequest: IAPIRequestState<IGetUserResponse>;
+  getCurrentAdminOrSupplierRequest: IAPIRequestState<IGetUserResponse>;
   user?: IUser;
   adminOrSupplierUser?: IAdminOrSupplierUser;
 }
 
 const initialState: UserStoreState = {
-  getUserByIdRequest: APIRequestState.create<IGetUserByIdResponse>(),
-  getAdminOrSupplierByIdRequest: APIRequestState.create<IGetAdminOrSupplierByIdResponse>(),
+  getCurrentUserRequest: APIRequestState.create<IGetUserResponse>(),
+  getCurrentAdminOrSupplierRequest: APIRequestState.create<IGetUserResponse>(),
   user: getItemFromLocalStorage(AUTH_LOCAL_STORAGE_KEYS.USER) || undefined,
   adminOrSupplierUser: getItemFromLocalStorage(AUTH_LOCAL_STORAGE_KEYS.ADMIN_OR_SUPPLIER_USER) || undefined,
 };
 
-export const getUserById = createApiThunk(
-  'user/userById',
-  (params?: {id?: number}) => apiService.get<IGetUserByIdResponse>(`${API_ROUTES.USERS}/${params?.id}`),
+export const getCurrentUser = createApiThunk(
+  'user/currentUser',
+  () => apiService.get<IGetUserResponse>(API_ROUTES.USERS_ME),
 );
 
-export const getAdminOrSupplierById = createApiThunk(
-  'user/adminOrSupplierById',
-  (params?: {id?: number}) => apiService.get<IGetAdminOrSupplierByIdResponse>(`${API_ROUTES.USERS}/${params?.id}`),
+export const getCurrentAdminOrSupplier = createApiThunk(
+  'user/currentAdminOrSupplier',
+  () => apiService.get<IGetUserResponse>(API_ROUTES.USERS_ME),
 );
 
 export const clearCurrentUser = createAction('user/clearCurrentUser');
@@ -43,7 +42,7 @@ export const clearCurrentAdminOrSupplierUser = createAction('user/clearCurrentAd
 export const userStoreReducer = createReducer(initialState, (builder) => {
   const apiBuilder = builder as unknown as ActionReducerMapBuilder<ApiDataStateType>;
 
-  createAPIReducerCases(getUserById, 'getUserByIdRequest', apiBuilder, {
+  createAPIReducerCases(getCurrentUser, 'getCurrentUserRequest', apiBuilder, {
     onFulfilled: (state, payload) => {
       const user = payload.data ?? {};
       state.user = user;
@@ -51,7 +50,7 @@ export const userStoreReducer = createReducer(initialState, (builder) => {
     },
   });
 
-  createAPIReducerCases(getAdminOrSupplierById, 'getAdminOrSupplierByIdRequest', apiBuilder, {
+  createAPIReducerCases(getCurrentAdminOrSupplier, 'getCurrentAdminOrSupplierRequest', apiBuilder, {
     onFulfilled: (state, payload) => {
       const user = payload.data ?? {};
       state.adminOrSupplierUser = user;

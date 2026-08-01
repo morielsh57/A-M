@@ -23,7 +23,7 @@ export interface IUser {
   date_created: Date;
 }
 
-export interface IGetUserByIdResponse {
+export interface IGetUserResponse {
   data: IUser;
   msg: string;
 }

@@ -39,4 +39,5 @@ export const API_ROUTES = {
     REFRESH: '/auth/refresh',
   },
   USERS: '/users',
+  USERS_ME: '/users/me',
 } as const;

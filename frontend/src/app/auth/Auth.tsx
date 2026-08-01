@@ -4,12 +4,12 @@ import { useAppDispatch, useAppSelector } from '../store';
 import { removeItemFromLocalStorage, setItemInLocalStorage } from '../../shared/utils/localStorage.utils';
 import { AUTH_LOCAL_STORAGE_KEYS } from '../constants';
 import { useApiData } from '../../shared/hooks/useApiData';
-import { getUserIdFromToken, isUserAdminOrSupplier } from './auth.utils';
+import { isUserAdminOrSupplier } from './auth.utils';
 import {
   clearCurrentAdminOrSupplierUser,
   clearCurrentUser,
-  getAdminOrSupplierById,
-  getUserById,
+  getCurrentAdminOrSupplier,
+  getCurrentUser,
 } from '../../shared/store/user.store';
 import { APP_ROUTING_PATHS } from '../routing';
 import { useToasts } from 'react-toast-notifications';
@@ -40,19 +40,9 @@ export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
     }
 
     persistTokens(loginData.access, loginData.refresh);
-    const userId = getUserIdFromToken(loginData.access);
-
-    if (!userId) {
-      addToast('welcome to our store, you logged in', {
-        appearance: 'success',
-        autoDismiss: true,
-      });
-      navigate(APP_ROUTING_PATHS.APP);
-      return;
-    }
 
     try {
-      const userData = await dispatch(getUserById({ id: userId })).unwrap();
+      const userData = await dispatch(getCurrentUser()).unwrap();
       addToast(`welcome ${userData.data?.name || ''} to our store, you logged in`, {
         appearance: 'success',
         autoDismiss: true,
@@ -81,24 +71,13 @@ export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
     }
 
     persistTokens(loginData.access, loginData.refresh);
-    const userId = getUserIdFromToken(loginData.access);
-
-    if (userId) {
-      await dispatch(getAdminOrSupplierById({ id: userId })).finally(() => {
-        addToast('Welcome to the admin panel. You are now logged in.', {
-          appearance: 'success',
-          autoDismiss: true,
-        });
-        navigate(APP_ROUTING_PATHS.ADMIN_HOME_PAGE);
+    dispatch(getCurrentAdminOrSupplier()).finally(() => {
+      addToast('Welcome to the admin panel. You are now logged in.', {
+        appearance: 'success',
+        autoDismiss: true,
       });
-      return;
-    }
-
-    addToast('Welcome to the admin panel. You are now logged in.', {
-      appearance: 'success',
-      autoDismiss: true,
+      navigate(APP_ROUTING_PATHS.ADMIN_HOME_PAGE);
     });
-    navigate(APP_ROUTING_PATHS.ADMIN_HOME_PAGE);
   };
 
   useApiData(loginRes, {

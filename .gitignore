@@ -1,14 +1,17 @@
 backend/venv/
+backend/.certs/
 __pycache__/
 *.pyc
 .env*
 **/.env
+backend/.env.example
+!**/.env.example
 .DS_Store
 backend/.env
-
+ 
 # dependencies
 node_modules/
-
+ 
 # production
 dist/
 build
