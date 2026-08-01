@@ -23,10 +23,10 @@ from config.api.views import HealthCheckView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/v1/auth/", include("accounts.urls")),
-    path("api/v1/health/", HealthCheckView.as_view(), name="api-health"),
-    path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),
+    path("api/v1/health", HealthCheckView.as_view(), name="api-health"),
+    path("api/schema", SpectacularAPIView.as_view(), name="api-schema"),
     path(
-        "api/docs/",
+        "api/docs",
         SpectacularSwaggerView.as_view(url_name="api-schema"),
         name="api-docs",
     ),

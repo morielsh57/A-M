@@ -18,14 +18,28 @@ const initialState: AuthStoreState = {
   adminLoginRes: APIRequestState.create<ILoginResponse>(),
 };
 
+interface LoginAPIResponse {
+  success: boolean;
+  data: ILoginResponse;
+}
+
 export const loginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
   'auth/login',
-  (payload) => apiService.post<ILoginResponse>(API_ROUTES.AUTH.LOGIN, payload),
+  async (payload) => {
+    const response = await apiService.post<LoginAPIResponse>(API_ROUTES.AUTH.LOGIN, payload);
+    return response.data.data;
+  },
 );
 
 export const adminLoginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
   'auth/adminLogin',
-  (payload) => apiService.post<ILoginResponse>(API_ROUTES.AUTH.LOGIN, { ...payload, isAdmin: true }),
+  async (payload) => {
+    const response = await apiService.post<LoginAPIResponse>(
+      API_ROUTES.AUTH.LOGIN,
+      { ...payload, isAdmin: true },
+    );
+    return response.data.data;
+  },
 );
 
 export const signupRequest = createApiThunk<void, ISignUpRequest>(

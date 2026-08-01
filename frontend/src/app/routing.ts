@@ -34,9 +34,9 @@ export const APP_ROUTING_PATHS = {
 
 export const API_ROUTES = {
   AUTH: {
-    LOGIN: '/users/login',
-    SIGNUP: '/api/v1/auth/register/',
-    REFRESH: '/auth/refresh',
+    LOGIN: '/auth/login',
+    SIGNUP: '/auth/register',
+    REFRESH: '/auth/token/refresh',
   },
   USERS: '/users',
   USERS_ME: '/users/me',

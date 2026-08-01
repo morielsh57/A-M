@@ -46,7 +46,7 @@ class RegistrationApiTests(TestCase):
 
     def raw_token_from_email(self, index=-1):
         url = next(
-            part for part in mail.outbox[index].body.split() if "verify-email/?" in part
+            part for part in mail.outbox[index].body.split() if "verify-email?" in part
         )
         return parse_qs(urlparse(url).query)["token"][0]
 

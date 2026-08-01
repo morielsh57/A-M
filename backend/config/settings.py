@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -23,6 +24,10 @@ SECRET_KEY = os.getenv("SECRET_KEY") or (
 )
 
 DEBUG = True
+
+# API routes use a slashless canonical form. Requests are never redirected by
+# Django merely to add a trailing slash.
+APPEND_SLASH = False
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -39,6 +44,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
     "accounts",
     "catalogue",
@@ -149,6 +155,13 @@ FRONTEND_VERIFICATION_SUCCESS_URL = os.getenv(
 EMAIL_VERIFICATION_TIMEOUT_SECONDS = int(
     os.getenv("EMAIL_VERIFICATION_TIMEOUT_SECONDS", "3600")
 )
+FRONTEND_PASSWORD_RESET_URL = os.getenv(
+    "FRONTEND_PASSWORD_RESET_URL",
+    f"{FRONTEND_BASE_URL}/app",
+)
+PASSWORD_RESET_TIMEOUT_SECONDS = int(
+    os.getenv("PASSWORD_RESET_TIMEOUT_SECONDS", "3600")
+)
 
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
@@ -164,6 +177,9 @@ CSRF_TRUSTED_ORIGINS = [
 # All API endpoints share these defaults. Individual views may tighten
 # authentication and permissions, but should not redefine the wire format.
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_RENDERER_CLASSES": ["config.api.renderers.EnvelopedJSONRenderer"],
     "EXCEPTION_HANDLER": "config.api.exceptions.api_exception_handler",
@@ -172,7 +188,24 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "verification_resend_email": "1/minute",
         "verification_resend_ip": "1/minute",
+        "password_reset_email": "1/minute",
+        "password_reset_ip": "5/hour",
     },
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        seconds=int(os.getenv("JWT_ACCESS_TOKEN_LIFETIME_SECONDS", "900"))
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        seconds=int(os.getenv("JWT_REFRESH_TOKEN_LIFETIME_SECONDS", "604800"))
+    ),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "CHECK_REVOKE_TOKEN": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "USER_ID_FIELD": "user_id",
+    "USER_ID_CLAIM": "user_id",
 }
 
 SPECTACULAR_SETTINGS = {
