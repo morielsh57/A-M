@@ -22,7 +22,7 @@ const Header: React.FC = () => {
         </div>
         <div className="col-4 text-end d-flex align-items-center border-1 border-white justify-content-end">
           <SearchInput view="desktop" />
-          {!isLoggedIn ? (
+          {isLoggedIn ? (
             <ClientUserMenu />
           ) : (
             <Link to={APP_ROUTING_PATHS.AUTH_LOGIN_PAGE} className="btn btn-outline-purple fw-bold">LogIn</Link>

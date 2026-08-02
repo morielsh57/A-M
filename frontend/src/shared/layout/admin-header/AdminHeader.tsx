@@ -30,7 +30,7 @@ const AdminHeader: React.FC = () => {
   const user = adminOrSupplierUser;
   // TODO: get supplier notificatino form the backend when  the backend updated
   const notifications: IUserNotification[] = [];
-  const shouldShowBell = user?.role !== EUserRole.SUPPLIER;
+  const shouldShowBell = user?.role === EUserRole.SUPPLIER;
 
   const notificationItems: MenuProps['items'] = notifications.length
     ? notifications.map((item) => ({
