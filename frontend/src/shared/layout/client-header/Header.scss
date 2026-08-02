@@ -3,12 +3,7 @@
 .client-store-header {
   background: $pink0;
 
-  .menuAvatarClient:hover {
-    background: $pink2 !important;
-    transition: 1ms;
-  }
-
-  .cart-header-btn{
+  .cart-header-btn {
     background: transparent;
     border: none;
     display: flex;

@@ -23,18 +23,8 @@ export interface IUser {
   date_created: Date;
 }
 
-export interface IGetUserResponse {
-  data: IUser;
-  msg: string;
-}
-
 export interface IAdminOrSupplierUser extends IUser {
   unreadCounter?: number;
   notifications?: IUserNotification[];
   supplier_id?: string | number;
-}
-
-export interface IGetAdminOrSupplierByIdResponse {
-  data: IAdminOrSupplierUser;
-  msg: string;
 }

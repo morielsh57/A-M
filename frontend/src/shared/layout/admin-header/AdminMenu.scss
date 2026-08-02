@@ -1,0 +1,54 @@
+@import "../../styles/colors.scss";
+
+// Dropdown menu
+$adminMenuBgColor: $natural1;
+$adminMenuOptionBgColor: transparent;
+$adminMenuOptionHoverBgColor: $natural4;
+$adminMenuOptionTextColor: $natural9;
+$adminMenuOptionHoverTextColor: $natural9;
+$adminMenuOptionIconColor: $natural7;
+$adminMenuShadowColor: rgba($natural9, 0.28);
+$adminMenuSoftShadowColor: rgba($natural9, 0.18);
+$adminMenuBorderRadius: 8px;
+
+.admin-header {
+  &__notifications-dropdown,
+  &__user-dropdown {
+    filter:
+      drop-shadow(0 4px 8px $adminMenuShadowColor)
+      drop-shadow(0 18px 28px $adminMenuSoftShadowColor);
+
+    .ant-dropdown-menu {
+      background: $adminMenuBgColor !important;
+      border: 0;
+      padding: 2px !important;
+      box-shadow: none;
+      border-radius: $adminMenuBorderRadius !important;
+    }
+
+    .ant-dropdown-menu-item {
+      background: $adminMenuOptionBgColor;
+      color: $adminMenuOptionTextColor;
+      font-weight: 600;
+      border-radius: $adminMenuBorderRadius !important;
+    }
+
+    .ant-dropdown-menu-item:hover {
+      background: $adminMenuOptionHoverBgColor !important;
+      color: $adminMenuOptionHoverTextColor;
+    }
+
+    .ant-dropdown-menu-item-icon {
+      color: $adminMenuOptionIconColor;
+    }
+
+    .ant-dropdown-arrow {
+      &::before,
+      &::after {
+        background: $adminMenuBgColor !important;
+        border: 0;
+        box-shadow: none;
+      }
+    }
+  }
+}

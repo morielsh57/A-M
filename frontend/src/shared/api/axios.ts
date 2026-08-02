@@ -1,6 +1,12 @@
 import type { EnhancedStore } from '@reduxjs/toolkit';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import type { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import axios, { AxiosHeaders } from 'axios';
 import { AUTH_LOCAL_STORAGE_KEYS } from '../../app/constants';
 import { API_ROUTES, APP_ROUTING_PATHS } from '../../app/routing';
@@ -32,7 +38,68 @@ export const injectStoreAxios = (_store: EnhancedStore) => {
 /**
  * The api thunk callback type (because we cannot import it from redux toolkit
  */
-type ApiThunkCallback<TData, TArgs> = (args: TArgs) => Promise<AxiosResponse<TData> | TData>;
+type ApiThunkCallback<TData, TArgs> = (args: TArgs) => Promise<TData> | TData;
+
+interface ApiSuccessResponse<TData> {
+  success: boolean;
+  data: TData;
+  meta?: unknown;
+}
+
+export interface ApiService {
+  request<TResponse = unknown, TRequestData = unknown>(
+    config: AxiosRequestConfig<TRequestData>,
+  ): Promise<TResponse>;
+  get<TResponse = unknown, TRequestData = unknown>(
+    url: string,
+    config?: AxiosRequestConfig<TRequestData>,
+  ): Promise<TResponse>;
+  delete<TResponse = unknown, TRequestData = unknown>(
+    url: string,
+    config?: AxiosRequestConfig<TRequestData>,
+  ): Promise<TResponse>;
+  head<TResponse = unknown, TRequestData = unknown>(
+    url: string,
+    config?: AxiosRequestConfig<TRequestData>,
+  ): Promise<TResponse>;
+  options<TResponse = unknown, TRequestData = unknown>(
+    url: string,
+    config?: AxiosRequestConfig<TRequestData>,
+  ): Promise<TResponse>;
+  post<TResponse = unknown, TRequestData = unknown>(
+    url: string,
+    data?: TRequestData,
+    config?: AxiosRequestConfig<TRequestData>,
+  ): Promise<TResponse>;
+  put<TResponse = unknown, TRequestData = unknown>(
+    url: string,
+    data?: TRequestData,
+    config?: AxiosRequestConfig<TRequestData>,
+  ): Promise<TResponse>;
+  patch<TResponse = unknown, TRequestData = unknown>(
+    url: string,
+    data?: TRequestData,
+    config?: AxiosRequestConfig<TRequestData>,
+  ): Promise<TResponse>;
+}
+
+const unwrapApiResponse = <TData>(
+  response: AxiosResponse<ApiSuccessResponse<TData> | TData>,
+): TData => {
+  const payload = response.data;
+
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'success' in payload &&
+    payload.success === true &&
+    'data' in payload
+  ) {
+    return payload.data as TData;
+  }
+
+  return payload as TData;
+};
 
 /**
  * Create an api thunk, which will run the provided promise and await it
@@ -47,8 +114,7 @@ export const createApiThunk = <TData, TArgs = void>(
     typePrefix,
     async (args, { rejectWithValue }) => {
       try {
-        const response = await requestCallback(args as TArgs);
-        return (response as AxiosResponse<TData>)?.data ?? (response as TData);
+        return await requestCallback(args as TArgs);
         // eslint-disable-next-line
       } catch (e: unknown) {
         const axiosError = e as AxiosError;
@@ -120,19 +186,20 @@ const refreshAccessToken = async (baseURL: string): Promise<string | null> => {
 
   try {
     const refreshClient = axios.create({ baseURL });
-    const response = await refreshClient.post<{
-      success: boolean;
-      data: { access: string; refresh?: string };
-    }>(API_ROUTES.AUTH.REFRESH, { refresh: refreshToken });
+    const response = await refreshClient.post<ApiSuccessResponse<{
+      access: string;
+      refresh?: string;
+    }>>(API_ROUTES.AUTH.REFRESH, { refresh: refreshToken });
+    const refreshData = unwrapApiResponse(response);
 
-    const newAccessToken = response.data?.data?.access;
+    const newAccessToken = refreshData.access;
     if (!newAccessToken) return null;
 
     setItemInLocalStorage(AUTH_LOCAL_STORAGE_KEYS.ACCESS_TOKEN, newAccessToken);
-    if (response.data.data.refresh) {
+    if (refreshData.refresh) {
       setItemInLocalStorage(
         AUTH_LOCAL_STORAGE_KEYS.REFRESH_TOKEN,
-        response.data.data.refresh,
+        refreshData.refresh,
       );
     }
     return newAccessToken;
@@ -141,7 +208,70 @@ const refreshAccessToken = async (baseURL: string): Promise<string | null> => {
   }
 };
 
-function createAxiosInstance(baseURL: string): AxiosInstance {
+function createApiService(instance: AxiosInstance): ApiService {
+  return {
+    request: async <TResponse, TRequestData = unknown>(
+      config: AxiosRequestConfig<TRequestData>,
+    ) => {
+      const response = await instance.request<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(config);
+      return unwrapApiResponse(response);
+    },
+    get: async <TResponse, TRequestData = unknown>(
+      url: string,
+      config?: AxiosRequestConfig<TRequestData>,
+    ) => {
+      const response = await instance.get<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(url, config);
+      return unwrapApiResponse(response);
+    },
+    delete: async <TResponse, TRequestData = unknown>(
+      url: string,
+      config?: AxiosRequestConfig<TRequestData>,
+    ) => {
+      const response = await instance.delete<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(url, config);
+      return unwrapApiResponse(response);
+    },
+    head: async <TResponse, TRequestData = unknown>(
+      url: string,
+      config?: AxiosRequestConfig<TRequestData>,
+    ) => {
+      const response = await instance.head<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(url, config);
+      return unwrapApiResponse(response);
+    },
+    options: async <TResponse, TRequestData = unknown>(
+      url: string,
+      config?: AxiosRequestConfig<TRequestData>,
+    ) => {
+      const response = await instance.options<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(url, config);
+      return unwrapApiResponse(response);
+    },
+    post: async <TResponse, TRequestData = unknown>(
+      url: string,
+      data?: TRequestData,
+      config?: AxiosRequestConfig<TRequestData>,
+    ) => {
+      const response = await instance.post<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(url, data, config);
+      return unwrapApiResponse(response);
+    },
+    put: async <TResponse, TRequestData = unknown>(
+      url: string,
+      data?: TRequestData,
+      config?: AxiosRequestConfig<TRequestData>,
+    ) => {
+      const response = await instance.put<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(url, data, config);
+      return unwrapApiResponse(response);
+    },
+    patch: async <TResponse, TRequestData = unknown>(
+      url: string,
+      data?: TRequestData,
+      config?: AxiosRequestConfig<TRequestData>,
+    ) => {
+      const response = await instance.patch<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(url, data, config);
+      return unwrapApiResponse(response);
+    },
+  };
+}
+
+function createAxiosInstance(baseURL: string): ApiService {
   const instance = axios.create({
     baseURL,
   });
@@ -186,5 +316,5 @@ function createAxiosInstance(baseURL: string): AxiosInstance {
     },
   );
 
-  return instance;
+  return createApiService(instance);
 }
