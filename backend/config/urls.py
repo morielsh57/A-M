@@ -23,6 +23,7 @@ from config.api.views import HealthCheckView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/v1/auth/", include("accounts.urls")),
+    path("api/v1/admin/dashboard/", include("accounts.dashboard_urls")),
     path("api/v1/users/", include("accounts.profile_urls")),
     path("api/v1/health", HealthCheckView.as_view(), name="api-health"),
     path("api/schema", SpectacularAPIView.as_view(), name="api-schema"),

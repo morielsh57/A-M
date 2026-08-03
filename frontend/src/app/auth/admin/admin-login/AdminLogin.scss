@@ -19,12 +19,8 @@
       color: $natural1;
       padding: 1.2rem 2rem;
       text-align: left;
-
-      h1 {
-        margin: 0;
-        font-size: clamp(1.6rem, 3vw, 2.1rem);
-        font-weight: 500;
-      }
+      display: flex;
+      align-items: center;
     }
 
     .admin-auth-body {

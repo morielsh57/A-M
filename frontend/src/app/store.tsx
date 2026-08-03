@@ -7,11 +7,13 @@ import { injectStoreAxiosInterceptors } from '../shared/api/interceptors';
 import { sharedStoreReducer } from '../shared/store/shared.store';
 import { authStoreReducer } from './auth/auth.store';
 import { userStoreReducer } from '../shared/store/user.store';
+import { adminHomeStoreReducer } from '../components/admin/home/AdminHome.store';
 
 export const rootReducer = {
   sharedStoreReducer,
   authStoreReducer,
   userStoreReducer,
+  adminHomeStoreReducer,
 };
 
 enableMapSet();

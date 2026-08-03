@@ -7,6 +7,7 @@ import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppSelector } from '../../../app/store';
 import { EUserRole, IUserNotification } from '../../store/user.types';
 import AdminUserMenu from './AdminUserMenu';
+import AdminLogo from '../../components/admin-logo/AdminLogo';
 import './AdminHeader.scss';
 
 const decodeTypeNot = (type?: string): string => {
@@ -67,12 +68,7 @@ const AdminHeader: React.FC = () => {
 
   return (
     <header className="admin-header">
-      <div className="admin-header__brand">
-        <Link to={APP_ROUTING_PATHS.ADMIN_HOME_PAGE} className="admin-header__title text-decoration-none">
-          A&amp;M Fashion{`\n`}{getPanelType()} Panel
-        </Link>
-      </div>
-
+      <AdminLogo />
       <div className="admin-header__actions">
         {shouldShowBell && (
           <Dropdown
