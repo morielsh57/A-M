@@ -1,8 +1,34 @@
+@import "../../../shared/styles/layout.scss";
+@import "../../../shared/styles/colors.scss";
+
+$innerMainContainerPadding: 24px;
+
 .admin-main-container {
-  min-height: 100dvh;
-  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: $natural1;
 
   .admin-main-scrollable-content-container {
-    padding: 24px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: $innerMainContainerPadding;
+    transition: padding-left 0.34s ease;
+  }
+
+  &--nav-open {
+    .admin-main-scrollable-content-container {
+      padding-left: $adminNavbarWidth + $innerMainContainerPadding;
+    }
+  }
+
+  @media (max-width: 600px) {
+    &--nav-open {
+      .admin-main-scrollable-content-container {
+        padding-left: $innerMainContainerPadding;
+      }
+    }
   }
 }
