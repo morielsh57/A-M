@@ -1,0 +1,244 @@
+@import "../../styles/colors.scss";
+@import "../../styles/layout.scss";
+
+$adminNavbarTopOffset: 102px;
+$adminNavbarHeaderOffset: var(--admin-header-height, #{$adminNavbarTopOffset});
+$adminNavbarBgColor: $natural1;
+$adminNavbarSurfaceColor: $natural2;
+$adminNavbarBorderColor: $natural4;
+$adminNavbarTextColor: $natural7;
+$adminNavbarTitleColor: $natural9;
+$adminNavbarHoverTextColor: $purple6;
+$adminNavbarActiveTextColor: $purple7;
+$adminNavbarActiveBgColor: $purple1;
+$adminNavbarShadowColor: rgba($natural9, 0.14);
+$adminNavbarToggleBgColor: $natural9;
+$adminNavbarToggleTextColor: $natural1;
+$adminNavbarToggleHoverBgColor: $purple7;
+
+.admin-navbar {
+  position: fixed;
+  top: $adminNavbarHeaderOffset;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  width: $adminNavbarWidth;
+  overflow: hidden;
+  overflow-y: auto;
+  border-right: 1px solid $adminNavbarBorderColor;
+  background: $adminNavbarBgColor;
+  box-shadow: 16px 0 34px $adminNavbarShadowColor;
+  transition:
+    width 0.34s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+
+  &--closed {
+    width: 0;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  &__inner {
+    width: $adminNavbarWidth;
+    height: 100%;
+    padding: 22px 16px 28px;
+    opacity: 1;
+    transform: translateX(0);
+    transition:
+      opacity 0.2s ease,
+      transform 0.34s ease;
+  }
+
+  &--closed &__inner {
+    opacity: 0;
+    transform: translateX(-18px);
+    pointer-events: none;
+  }
+
+  &__header {
+    padding: 0 8px 18px;
+    border-bottom: 1px solid $adminNavbarBorderColor;
+  }
+
+  &__eyebrow {
+    display: block;
+    margin-bottom: 4px;
+    color: $adminNavbarHoverTextColor;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    color: $adminNavbarTitleColor;
+    font-size: 1.08rem;
+    font-weight: 800;
+  }
+
+  &__sections {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 16px;
+  }
+
+  &__section {
+    border-radius: 12px;
+  }
+
+  &__section-button,
+  &__section-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 48px;
+    gap: 12px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: $adminNavbarTextColor;
+    font: inherit;
+    font-weight: 800;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      background: $adminNavbarSurfaceColor;
+      color: $adminNavbarHoverTextColor;
+      transform: translateX(3px);
+    }
+  }
+
+  &__section-button--open,
+  &__section-link--active {
+    background: $adminNavbarActiveBgColor;
+    color: $adminNavbarActiveTextColor;
+  }
+
+  &__section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    color: inherit;
+    font-size: 1.05rem;
+  }
+
+  &__section-chevron {
+    margin-left: auto;
+    color: inherit;
+    font-size: 0.78rem;
+    transition: transform 0.22s ease;
+  }
+
+  &__section-button--open &__section-chevron {
+    transform: rotate(180deg);
+  }
+
+  &__section-items {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows 0.25s ease,
+      opacity 0.2s ease;
+  }
+
+  &__section-items--open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  &__section-items-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__item {
+    position: relative;
+    display: block;
+    margin: 4px 0 0 34px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    color: $adminNavbarTextColor;
+    font-size: 0.94rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      padding-left 0.2s ease;
+
+    &:hover {
+      background: $adminNavbarSurfaceColor;
+      color: $adminNavbarHoverTextColor;
+      padding-left: 16px;
+    }
+  }
+
+  &__item--active {
+    background: $adminNavbarActiveBgColor;
+    color: $adminNavbarActiveTextColor;
+  }
+
+  &__toggle {
+    position: fixed;
+    top: calc(#{$adminNavbarHeaderOffset} + ((100dvh - #{$adminNavbarHeaderOffset}) / 2));
+    left: 0;
+    z-index: 60;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 86px;
+    border: 0;
+    border-radius: 0 12px 12px 0;
+    background: $adminNavbarToggleBgColor;
+    color: $adminNavbarToggleTextColor;
+    box-shadow: 10px 12px 26px $adminNavbarShadowColor;
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition:
+      left 0.34s ease,
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+
+    &:hover {
+      background: $adminNavbarToggleHoverBgColor;
+      box-shadow: 12px 16px 30px $adminNavbarShadowColor;
+    }
+  }
+
+  &__toggle--open {
+    left: $adminNavbarWidth;
+  }
+
+  @media (max-width: 768px) {
+    width: min(85vw, $adminNavbarWidth);
+
+    &--closed {
+      width: 0;
+    }
+
+    &__inner {
+      width: min(85vw, $adminNavbarWidth);
+    }
+
+    &__toggle {
+      width: 30px;
+      height: 78px;
+
+      &--open {
+        left: min(85vw, $adminNavbarWidth);
+      }
+    }
+  }
+}

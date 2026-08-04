@@ -14,7 +14,6 @@ $dashboardWarningColor: $gold9;
 $dashboardWarningBgColor: $gold1;
 
 .admin-home {
-  min-height: calc(100dvh - 110px);
   padding: 32px;
   background:
     linear-gradient(180deg, $dashboardBgColor 0%, $natural1 58%),
