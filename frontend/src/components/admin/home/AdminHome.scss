@@ -1,0 +1,140 @@
+@import "../../../shared/styles/colors.scss";
+
+$dashboardBgColor: $natural2;
+$dashboardPanelBgColor: $natural1;
+$dashboardTitleColor: $natural9;
+$dashboardMutedTextColor: $natural6;
+$dashboardBorderColor: $natural4;
+$dashboardShadowColor: rgba($natural9, 0.08);
+$dashboardAccentColor: $purple6;
+$dashboardAccentSoftColor: $purple1;
+$dashboardSuccessColor: $green7;
+$dashboardSuccessBgColor: $green1;
+$dashboardWarningColor: $gold9;
+$dashboardWarningBgColor: $gold1;
+
+.admin-home {
+  min-height: calc(100dvh - 110px);
+  padding: 32px;
+  background:
+    linear-gradient(180deg, $dashboardBgColor 0%, $natural1 58%),
+    $dashboardBgColor;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    max-width: 1180px;
+    margin: 0 auto 24px;
+  }
+
+  &__eyebrow {
+    margin: 0 0 6px;
+    color: $dashboardAccentColor;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    color: $dashboardTitleColor;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  &__subtitle {
+    margin: 8px 0 0;
+    color: $dashboardMutedTextColor;
+    font-size: 0.98rem;
+  }
+
+  &__date {
+    padding: 10px 14px;
+    border: 1px solid $dashboardBorderColor;
+    border-radius: 8px;
+    background: $dashboardPanelBgColor;
+    color: $dashboardMutedTextColor;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    box-shadow: 0 10px 24px $dashboardShadowColor;
+  }
+
+  &__metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    max-width: 1180px;
+    margin: 0 auto 24px;
+  }
+
+  &__metrics--supplier {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  &__panel {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 22px;
+    border: 1px solid $dashboardBorderColor;
+    border-radius: 8px;
+    background: $dashboardPanelBgColor;
+    box-shadow: 0 16px 36px $dashboardShadowColor;
+  }
+
+  &__panel-title {
+    margin: 0 0 18px;
+    color: $dashboardTitleColor;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  &__activity-row {
+    display: grid;
+    grid-template-columns: 12px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid $dashboardBorderColor;
+    color: $dashboardMutedTextColor;
+  }
+
+  &__activity-row:first-of-type {
+    border-top: 0;
+  }
+
+  &__activity-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: $dashboardAccentColor;
+  }
+
+  &__activity-label {
+    color: $dashboardTitleColor;
+    font-weight: 600;
+  }
+
+  &__activity-time {
+    color: $dashboardMutedTextColor;
+    font-size: 0.88rem;
+  }
+
+  @media (max-width: 768px) {
+    padding: 22px 16px;
+
+    &__header {
+      display: block;
+    }
+
+    &__date {
+      display: inline-flex;
+      margin-top: 16px;
+    }
+
+    &__metrics {
+      grid-template-columns: 1fr;
+    }
+  }
+}

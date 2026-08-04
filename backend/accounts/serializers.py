@@ -200,3 +200,24 @@ class MessageDataSerializer(serializers.Serializer):
 class MessageResponseSerializer(serializers.Serializer):
     success = serializers.BooleanField(default=True)
     data = MessageDataSerializer()
+
+
+class DashboardOverviewDataSerializer(serializers.Serializer):
+    dashboard_type = serializers.CharField()
+    customer_amount = serializers.IntegerField(required=False)
+    active_customer_trend_percent = serializers.FloatField(required=False)
+    current_period_active_customers = serializers.IntegerField(required=False)
+    previous_period_active_customers = serializers.IntegerField(required=False)
+    supplier_product_amount = serializers.IntegerField(required=False)
+    supplier_low_stock_product_amount = serializers.IntegerField(required=False)
+    supplier_order_amount = serializers.IntegerField(required=False)
+    supplier_order_trend_percent = serializers.FloatField(required=False)
+    revenue_amount = serializers.FloatField()
+    revenue_trend_percent = serializers.FloatField()
+    current_period_revenue = serializers.FloatField()
+    previous_period_revenue = serializers.FloatField()
+
+
+class DashboardOverviewResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=True)
+    data = DashboardOverviewDataSerializer()

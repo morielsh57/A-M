@@ -15,6 +15,7 @@ import { adminLoginRequest } from '../../auth.store';
 import type { ILoginRequest } from '../../auth.types';
 import ButtonAnimationWrapper from '../../../../shared/components/button-animation-wrapper/ButtonAnimationWrapper';
 import '../../client/shared/ClientAuthForm.scss';
+import AdminLogo from '../../../../shared/components/admin-logo/AdminLogo';
 import './AdminLogin.scss';
 
 const AdminLogin: React.FC = () => {
@@ -43,7 +44,7 @@ const AdminLogin: React.FC = () => {
       <CssBaseline />
       <Container component="main" maxWidth={false} disableGutters className="admin-auth-shell">
         <div className="admin-auth-header">
-          <h1>A&amp;M Fashion Admin & Supplier Panel</h1>
+          <AdminLogo />
         </div>
         <div className="admin-auth-body">
           <div className="admin-auth-form-wrap">

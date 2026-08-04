@@ -39,6 +39,9 @@ export const API_ROUTES = {
     REFRESH: '/auth/token/refresh',
     LOGOUT: '/auth/logout',
   },
+  ADMIN: {
+    DASHBOARD_OVERVIEW: '/admin/dashboard/overview',
+  },
   USERS: '/users',
   USERS_ME: '/users/me',
 } as const;

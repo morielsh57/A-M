@@ -1,0 +1,94 @@
+@import "../../../shared/styles/colors.scss";
+
+$infoBoxBgColor: $natural1;
+$infoBoxBorderColor: $natural4;
+$infoBoxShadowColor: rgba($natural9, 0.08);
+$infoBoxTitleColor: $natural6;
+$infoBoxValueColor: $natural9;
+$infoBoxIconBgColor: $purple1;
+$infoBoxIconColor: $purple6;
+$infoBoxTrendBgColor: $green1;
+$infoBoxTrendTextColor: $green7;
+$infoBoxMutedTextColor: $natural6;
+
+.admin-home-info-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-height: 172px;
+  padding: 22px;
+  overflow: hidden;
+  border: 1px solid $infoBoxBorderColor;
+  border-radius: 8px;
+  background: $infoBoxBgColor;
+  box-shadow: 0 16px 36px $infoBoxShadowColor;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: $infoBoxIconColor;
+  }
+
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  &__label {
+    margin: 0 0 8px;
+    color: $infoBoxTitleColor;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  &__value {
+    color: $infoBoxValueColor;
+    font-size: 2.15rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 46px;
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+    background: $infoBoxIconBgColor;
+    color: $infoBoxIconColor;
+    font-size: 1.35rem;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+  }
+
+  &__trend {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: $infoBoxTrendBgColor;
+    color: $infoBoxTrendTextColor;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  &__caption {
+    color: $infoBoxMutedTextColor;
+    font-size: 0.86rem;
+    text-align: right;
+  }
+}
