@@ -43,7 +43,7 @@ export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     try {
       const userData = await dispatch(getCurrentUser()).unwrap();
-      addToast(`welcome ${userData.data?.name || ''} to our store, you logged in`, {
+      addToast(`welcome ${userData?.name || ''} to our store, you logged in`, {
         appearance: 'success',
         autoDismiss: true,
       });

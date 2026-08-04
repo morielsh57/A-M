@@ -6,34 +6,33 @@ import { APIRequestState, type IAPIRequestState } from '../api/models';
 import { createAPIReducerCases, type ApiDataStateType } from './utils';
 import {
   IAdminOrSupplierUser,
-  IGetUserResponse,
   IUser,
 } from './user.types';
 import { getItemFromLocalStorage, removeItemFromLocalStorage, setItemInLocalStorage } from '../utils/localStorage.utils';
 import { API_ROUTES } from '../../app/routing';
 
 export interface UserStoreState extends ApiDataStateType {
-  getCurrentUserRequest: IAPIRequestState<IGetUserResponse>;
-  getCurrentAdminOrSupplierRequest: IAPIRequestState<IGetUserResponse>;
+  getCurrentUserRequest: IAPIRequestState<IUser>;
+  getCurrentAdminOrSupplierRequest: IAPIRequestState<IAdminOrSupplierUser>;
   user?: IUser;
   adminOrSupplierUser?: IAdminOrSupplierUser;
 }
 
 const initialState: UserStoreState = {
-  getCurrentUserRequest: APIRequestState.create<IGetUserResponse>(),
-  getCurrentAdminOrSupplierRequest: APIRequestState.create<IGetUserResponse>(),
+  getCurrentUserRequest: APIRequestState.create<IUser>(),
+  getCurrentAdminOrSupplierRequest: APIRequestState.create<IAdminOrSupplierUser>(),
   user: getItemFromLocalStorage(AUTH_LOCAL_STORAGE_KEYS.USER) || undefined,
   adminOrSupplierUser: getItemFromLocalStorage(AUTH_LOCAL_STORAGE_KEYS.ADMIN_OR_SUPPLIER_USER) || undefined,
 };
 
 export const getCurrentUser = createApiThunk(
   'user/currentUser',
-  () => apiService.get<IGetUserResponse>(API_ROUTES.USERS_ME),
+  () => apiService.get<IUser>(API_ROUTES.USERS_ME),
 );
 
 export const getCurrentAdminOrSupplier = createApiThunk(
   'user/currentAdminOrSupplier',
-  () => apiService.get<IGetUserResponse>(API_ROUTES.USERS_ME),
+  () => apiService.get<IAdminOrSupplierUser>(API_ROUTES.USERS_ME),
 );
 
 export const clearCurrentUser = createAction('user/clearCurrentUser');
@@ -44,7 +43,7 @@ export const userStoreReducer = createReducer(initialState, (builder) => {
 
   createAPIReducerCases(getCurrentUser, 'getCurrentUserRequest', apiBuilder, {
     onFulfilled: (state, payload) => {
-      const user = payload.data ?? {};
+      const user = payload ?? {};
       state.user = user;
       setItemInLocalStorage(AUTH_LOCAL_STORAGE_KEYS.USER, user);
     },
@@ -52,7 +51,7 @@ export const userStoreReducer = createReducer(initialState, (builder) => {
 
   createAPIReducerCases(getCurrentAdminOrSupplier, 'getCurrentAdminOrSupplierRequest', apiBuilder, {
     onFulfilled: (state, payload) => {
-      const user = payload.data ?? {};
+      const user = payload ?? {};
       state.adminOrSupplierUser = user;
       setItemInLocalStorage(AUTH_LOCAL_STORAGE_KEYS.ADMIN_OR_SUPPLIER_USER, user);
     },

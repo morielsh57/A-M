@@ -43,7 +43,7 @@ const AdminLogin: React.FC = () => {
       <CssBaseline />
       <Container component="main" maxWidth={false} disableGutters className="admin-auth-shell">
         <div className="admin-auth-header">
-          <h1>A&amp;M Fashion Admin Panel</h1>
+          <h1>A&amp;M Fashion Admin & Supplier Panel</h1>
         </div>
         <div className="admin-auth-body">
           <div className="admin-auth-form-wrap">

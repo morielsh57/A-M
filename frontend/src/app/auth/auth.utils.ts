@@ -4,8 +4,8 @@ import { EUserRole } from '../../shared/store/user.types';
 export const getUserIdFromToken = (token: string | null): number | undefined => {
   if (!token) return undefined;
   try {
-    const decodedToken = jwtDecode<{ id?: number | string }>(token);
-    const rawId = decodedToken.id;
+    const decodedToken = jwtDecode<{ user_id?: number | string }>(token);
+    const rawId = decodedToken.user_id;
     if (rawId === undefined || rawId === null) return undefined;
     const parsedId = Number(rawId);
     return Number.isNaN(parsedId) ? undefined : parsedId;

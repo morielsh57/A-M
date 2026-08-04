@@ -37,6 +37,7 @@ export const API_ROUTES = {
     LOGIN: '/auth/login',
     SIGNUP: '/auth/register',
     REFRESH: '/auth/token/refresh',
+    LOGOUT: '/auth/logout',
   },
   USERS: '/users',
   USERS_ME: '/users/me',
