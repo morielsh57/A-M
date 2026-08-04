@@ -96,7 +96,10 @@ jobs:
   deploy-backend:
     name: Deploy backend to Render
     needs: backend-tests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      secrets.RENDER_DEPLOY_HOOK_URL != ''
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render deployment
