@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from catalogue.models import Product
+from products.models import ProductVariant
 
 
 class Cart(models.Model):
@@ -28,8 +28,8 @@ class CartProduct(models.Model):
         on_delete=models.CASCADE,
         related_name="cart_products",
     )
-    product = models.ForeignKey(
-        Product,
+    variant = models.ForeignKey(
+        ProductVariant,
         on_delete=models.PROTECT,
         related_name="cart_products",
     )
@@ -41,4 +41,4 @@ class CartProduct(models.Model):
         db_table = "cart_products"
 
     def __str__(self):
-        return f"Cart {self.cart_id} - Product {self.product_id}"
+        return f"Cart {self.cart_id} - Variant {self.variant_id}"

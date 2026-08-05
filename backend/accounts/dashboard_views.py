@@ -12,7 +12,7 @@ from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, User
 from accounts.permissions import HasAnyRole
 from accounts.serializers import DashboardOverviewResponseSerializer
 from carts.models import CartProduct
-from catalogue.models import Product
+from products.models import Product
 from orders.models import Order
 
 
@@ -104,7 +104,7 @@ class DashboardOverviewView(APIView):
     ):
         supplier_products = Product.objects.filter(supplier__user=supplier_user)
         supplier_order_items = CartProduct.objects.filter(
-            product__supplier__user=supplier_user,
+            variant__product__supplier__user=supplier_user,
             cart__orders__order_status=Order.Status.COMPLETED,
         )
 
@@ -130,8 +130,8 @@ class DashboardOverviewView(APIView):
             "dashboard_type": SUPPLIER_ROLE,
             "supplier_product_amount": supplier_products.count(),
             "supplier_low_stock_product_amount": supplier_products.filter(
-                quantity__lte=5,
-            ).count(),
+                variants__quantity__lte=5,
+            ).distinct().count(),
             "supplier_order_amount": current_orders_count,
             "supplier_order_trend_percent": calculate_trend_percent(
                 current_orders_count,

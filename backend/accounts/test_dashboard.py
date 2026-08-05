@@ -9,8 +9,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supplier, User
 from carts.models import Cart, CartProduct
-from catalogue.models import Category, Product
+from catalogue.models import Category
 from orders.models import Order
+from products.models import Product, ProductVariant
 
 
 class DashboardOverviewApiTests(TestCase):
@@ -67,14 +68,21 @@ class DashboardOverviewApiTests(TestCase):
         return order
 
     def create_supplier_product(self, name, quantity=20):
-        return Product.objects.create(
+        product = Product.objects.create(
             catalog_number=f"catalog-{name}",
             name=name,
             price=Decimal("100.00"),
-            quantity=quantity,
             category=self.category,
             supplier=self.supplier_profile,
         )
+        ProductVariant.objects.create(
+            product=product,
+            color="Black",
+            size="M",
+            quantity=quantity,
+            images=[],
+        )
+        return product
 
     def test_admin_can_view_customer_and_revenue_dashboard_metrics(self):
         now = timezone.now()
@@ -105,7 +113,7 @@ class DashboardOverviewApiTests(TestCase):
         order = self.create_completed_order(Decimal("500.00"), now - timedelta(days=3))
         CartProduct.objects.create(
             cart=order.cart,
-            product=product,
+            variant=product.variants.first(),
             quantity=2,
             unit_price=Decimal("100.00"),
             total_price=Decimal("200.00"),
