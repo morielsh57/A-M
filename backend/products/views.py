@@ -194,6 +194,10 @@ class AdminProductDetailView(APIView):
                 raise PermissionDenied("You do not have permission to manage this product.")
         return product
 
+    def require_admin(self, request):
+        if request.user.role.role_name != ADMIN_ROLE:
+            raise PermissionDenied("Only admins can delete products or variants.")
+
 
 class AdminProductVariantCreateView(AdminProductDetailView):
     @extend_schema(
@@ -255,7 +259,7 @@ class AdminProductVariantDetailView(AdminProductDetailView):
     @extend_schema(
         summary="Delete a product variant",
         description=(
-            "Authenticated Admin/Supplier endpoint. Deletes one variant only when it is "
+            "Authenticated Admin endpoint. Deletes one variant only when it is "
             "not referenced by cart/order history."
         ),
         responses={
@@ -268,6 +272,7 @@ class AdminProductVariantDetailView(AdminProductDetailView):
         tags=["Admin Products"],
     )
     def delete(self, request, product_id, variant_id):
+        self.require_admin(request)
         self.get_product(request, product_id)
         variant = self.get_variant(product_id, variant_id)
         if variant.cart_products.exists():

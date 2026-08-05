@@ -250,6 +250,125 @@ class ProductVariantApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("variant_id", response.json()["error"]["details"])
 
+    def test_supplier_can_create_and_update_only_own_products_and_variants(self):
+        self.authorize(self.supplier_user)
+
+        create_product_response = self.client.post(
+            reverse("admin-product-list"),
+            {
+                "catalog_number": "SUP-100",
+                "name": "Supplier Product",
+                "price": "19.99",
+                "category_id": self.category.category_id,
+                "supplier_id": self.supplier.supplier_id,
+            },
+            format="json",
+        )
+        self.assertEqual(create_product_response.status_code, 201)
+        created_product_id = create_product_response.json()["data"]["product_id"]
+        patch_product_response = self.client.patch(
+            reverse(
+                "admin-product-detail",
+                kwargs={"product_id": self.product.product_id},
+            ),
+            {"name": "Supplier Rename"},
+            format="json",
+        )
+        create_variant_response = self.client.post(
+            reverse(
+                "admin-product-variant-create",
+                kwargs={"product_id": created_product_id},
+            ),
+            {"color": "Red", "size": "S", "quantity": 2, "images": []},
+            format="json",
+        )
+        self.assertEqual(create_variant_response.status_code, 201)
+        created_variant_id = create_variant_response.json()["data"]["variants"][0]["variant_id"]
+        patch_variant_response = self.client.patch(
+            reverse(
+                "admin-product-variant-detail",
+                kwargs={
+                    "product_id": created_product_id,
+                    "variant_id": created_variant_id,
+                },
+            ),
+            {"quantity": 1},
+            format="json",
+        )
+        delete_variant_response = self.client.delete(
+            reverse(
+                "admin-product-variant-detail",
+                kwargs={
+                    "product_id": self.product.product_id,
+                    "variant_id": self.black_medium.variant_id,
+                },
+            )
+        )
+
+        self.assertEqual(
+            create_product_response.json()["data"]["supplier_id"],
+            self.supplier.supplier_id,
+        )
+        self.assertEqual(patch_product_response.status_code, 200)
+        self.assertEqual(patch_product_response.json()["data"]["name"], "Supplier Rename")
+        self.assertEqual(patch_variant_response.status_code, 200)
+        self.assertEqual(
+            patch_variant_response.json()["data"]["variants"][0]["quantity"],
+            1,
+        )
+        self.assertEqual(delete_variant_response.status_code, 403)
+
+    def test_supplier_cannot_update_or_add_variants_to_another_supplier_product(self):
+        other_supplier_user = self.create_user("other-supplier@example.com", SUPPLIER_ROLE)
+        other_supplier = Supplier.objects.create(user=other_supplier_user)
+        other_product = Product.objects.create(
+            catalog_number="OTHER-100",
+            name="Other Supplier Product",
+            price=Decimal("39.99"),
+            category=self.category,
+            supplier=other_supplier,
+        )
+        other_variant = ProductVariant.objects.create(
+            product=other_product,
+            color="Blue",
+            size="M",
+            quantity=4,
+            images=[],
+        )
+        self.authorize(self.supplier_user)
+
+        patch_product_response = self.client.patch(
+            reverse(
+                "admin-product-detail",
+                kwargs={"product_id": other_product.product_id},
+            ),
+            {"name": "Not Mine"},
+            format="json",
+        )
+        create_variant_response = self.client.post(
+            reverse(
+                "admin-product-variant-create",
+                kwargs={"product_id": other_product.product_id},
+            ),
+            {"color": "Green", "size": "S", "quantity": 1, "images": []},
+            format="json",
+        )
+        patch_variant_response = self.client.patch(
+            reverse(
+                "admin-product-variant-detail",
+                kwargs={
+                    "product_id": other_product.product_id,
+                    "variant_id": other_variant.variant_id,
+                },
+            ),
+            {"quantity": 1},
+            format="json",
+        )
+
+        self.assertEqual(patch_product_response.status_code, 403)
+        self.assertEqual(create_variant_response.status_code, 403)
+        self.assertEqual(patch_variant_response.status_code, 403)
+
 
 class ProductVariantMigrationTests(TransactionTestCase):
     migrate_from = [("catalogue", "0001_initial")]
