@@ -9,6 +9,7 @@ const SIGNUP_SEGMENT = 'signup';
 const ADMIN_AUTH_SEGMENT = 'auth';
 const ADMIN_LOGIN_SEGMENT = 'login';
 const ADMIN_HOME_SEGMENT = 'home';
+const ADMIN_PROFILE_SEGMENT = 'profile';
 const ADMIN_WOMEN_PRODUCTS_SEGMENT = 'products/women';
 const ADMIN_MEN_PRODUCTS_SEGMENT = 'products/men';
 const ADMIN_GIRLS_PRODUCTS_SEGMENT = 'products/girls';
@@ -32,6 +33,7 @@ export const APP_ROUTING_PATHS = {
     AUTH: ADMIN_AUTH_SEGMENT,
     LOGIN: ADMIN_LOGIN_SEGMENT,
     HOME: ADMIN_HOME_SEGMENT,
+    PROFILE: ADMIN_PROFILE_SEGMENT,
     WOMEN_PRODUCTS: ADMIN_WOMEN_PRODUCTS_SEGMENT,
     MEN_PRODUCTS: ADMIN_MEN_PRODUCTS_SEGMENT,
     GIRLS_PRODUCTS: ADMIN_GIRLS_PRODUCTS_SEGMENT,
@@ -60,6 +62,7 @@ export const API_ROUTES = {
     SIGNUP: '/auth/register',
     REFRESH: '/auth/token/refresh',
     LOGOUT: '/auth/logout',
+    PASSWORD_CHANGE: '/auth/password/change',
   },
   ADMIN: {
     DASHBOARD_OVERVIEW: '/admin/dashboard/overview',

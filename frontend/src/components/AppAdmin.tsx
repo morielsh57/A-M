@@ -4,6 +4,7 @@ import AdminLogin from '../app/auth/admin/admin-login/AdminLogin';
 import { ProtectedAdminRoute } from '../app/guards/admin/ProtectedAdminRoute';
 import AdminMain from './admin/main/AdminMain';
 import AdminHome from './admin/home/AdminHome';
+import AdminProfile from './admin/profile/AdminProfile';
 
 function AppAdmin() {
   return (
@@ -18,6 +19,7 @@ function AppAdmin() {
         }
       >
         <Route path={APP_ROUTING_PATHS.ADMIN.HOME} element={<AdminHome />} />
+        <Route path={APP_ROUTING_PATHS.ADMIN.PROFILE} element={<AdminProfile />} />
       </Route>
       <Route path="*" element={<Navigate to={APP_ROUTING_PATHS.ADMIN_HOME_PAGE} replace />} />
     </Routes>

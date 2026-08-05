@@ -123,7 +123,7 @@ export const createApiThunk = <TData, TArgs = void>(
           message?: string;
           msg?: string;
           detail?: string;
-          error?: { message?: string };
+          error?: { message?: string; details?: unknown };
         } | undefined;
         const responseMessage = typeof responseData === 'string'
           ? responseData
@@ -137,6 +137,7 @@ export const createApiThunk = <TData, TArgs = void>(
         return rejectWithValue({
           message: responseMessage || axiosError?.message,
           code: axiosError?.response?.status ?? axiosError?.status,
+          details: structuredError?.error?.details,
           axiosError,
         });
       }
