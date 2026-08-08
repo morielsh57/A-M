@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 
 from catalogue.models import Category
 
@@ -14,12 +16,29 @@ class CategorySerializer(serializers.ModelSerializer):
             "main_category_name",
             "sub_category_name",
             "parent_category_id",
+            "is_active",
             "date_created",
         )
         read_only_fields = ("category_id", "date_created")
 
+    @extend_schema_field(OpenApiTypes.INT)
     def get_parent_category_id(self, category):
         return category.parent_category_id
+
+
+class MainCategorySerializer(CategorySerializer):
+    subcategories = CategorySerializer(
+        source="active_subcategories",
+        many=True,
+        read_only=True,
+    )
+
+    class Meta(CategorySerializer.Meta):
+        fields = CategorySerializer.Meta.fields + ("subcategories",)
+
+
+class CategoryCountSerializer(serializers.Serializer):
+    count = serializers.IntegerField(min_value=0)
 
 
 class CategoryWriteSerializer(serializers.ModelSerializer):
@@ -37,6 +56,7 @@ class CategoryWriteSerializer(serializers.ModelSerializer):
             "main_category_name",
             "sub_category_name",
             "parent_category_id",
+            "is_active",
         )
 
 

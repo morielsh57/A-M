@@ -1,10 +1,77 @@
 from collections import OrderedDict
 
 from rest_framework import serializers
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 
 from accounts.models import SUPPLIER_ROLE, Supplier
 from catalogue.models import Category
 from products.models import Product, ProductImage, ProductVariant
+
+
+class ProductCatalogueQuerySerializer(serializers.Serializer):
+    search = serializers.CharField(required=False, allow_blank=True, trim_whitespace=True)
+    category = serializers.IntegerField(required=False, min_value=1)
+    main_category = serializers.IntegerField(required=False, min_value=1)
+    sub_category = serializers.IntegerField(required=False, min_value=1)
+    size = serializers.CharField(required=False, allow_blank=False, trim_whitespace=True)
+    color = serializers.CharField(required=False, allow_blank=False, trim_whitespace=True)
+    min_price = serializers.DecimalField(
+        required=False,
+        max_digits=10,
+        decimal_places=2,
+        min_value=0,
+    )
+    max_price = serializers.DecimalField(
+        required=False,
+        max_digits=10,
+        decimal_places=2,
+        min_value=0,
+    )
+    in_stock = serializers.BooleanField(required=False)
+    ordering = serializers.ChoiceField(
+        required=False,
+        choices=(
+            "name",
+            "-name",
+            "price",
+            "-price",
+            "rating",
+            "-rating",
+            "date_created",
+            "-date_created",
+        ),
+    )
+
+    def validate(self, attrs):
+        if "category" in attrs and (
+            "main_category" in attrs or "sub_category" in attrs
+        ):
+            raise serializers.ValidationError(
+                {"category": ["Use category or main_category/sub_category, not both."]}
+            )
+        minimum = attrs.get("min_price")
+        maximum = attrs.get("max_price")
+        if minimum is not None and maximum is not None and minimum > maximum:
+            raise serializers.ValidationError(
+                {"max_price": ["Maximum price must be greater than or equal to minimum price."]}
+            )
+        return attrs
+
+
+class ProductAutocompleteQuerySerializer(serializers.Serializer):
+    search = serializers.CharField(required=True, allow_blank=False, trim_whitespace=True)
+    limit = serializers.IntegerField(required=False, min_value=1, max_value=20, default=10)
+
+
+class ProductAutocompleteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ("product_id", "name", "catalog_number")
+
+
+class ProductCountSerializer(serializers.Serializer):
+    count = serializers.IntegerField(min_value=0)
 
 
 def get_user_supplier_profile(user):
@@ -58,14 +125,28 @@ def get_color_representatives(product):
 
 class ProductVariantSerializer(serializers.ModelSerializer):
     images = serializers.SerializerMethodField()
+    in_stock = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductVariant
-        fields = ("variant_id", "color", "size", "quantity", "is_active", "images")
+        fields = (
+            "variant_id",
+            "color",
+            "size",
+            "quantity",
+            "in_stock",
+            "is_active",
+            "images",
+        )
         read_only_fields = ("variant_id",)
 
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
     def get_images(self, variant):
         return get_variant_image_urls(variant)
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_in_stock(self, variant):
+        return variant.quantity > 0
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -87,6 +168,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
             "is_active",
         )
 
+    @extend_schema_field(OpenApiTypes.INT)
     def get_variant_id(self, image):
         return image.variant_id
 
@@ -99,10 +181,15 @@ class ProductColorOptionSerializer(serializers.Serializer):
 
 
 class ProductCardSerializer(serializers.ModelSerializer):
+    category_id = serializers.IntegerField(source="category.category_id", read_only=True)
     selected_color = serializers.SerializerMethodField()
     selected_variant_id = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     colors = serializers.SerializerMethodField()
+    sizes = serializers.SerializerMethodField()
+    in_stock = serializers.SerializerMethodField()
+    average_rating = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Product
@@ -112,10 +199,15 @@ class ProductCardSerializer(serializers.ModelSerializer):
             "name",
             "price",
             "fabric",
+            "category_id",
             "selected_color",
             "selected_variant_id",
             "images",
             "colors",
+            "sizes",
+            "in_stock",
+            "average_rating",
+            "rating_count",
         )
 
     def get_selected_variant(self, product):
@@ -123,20 +215,24 @@ class ProductCardSerializer(serializers.ModelSerializer):
         color_representatives = get_color_representatives(product)
         return get_representative_variant(color_representatives) or get_representative_variant(variants)
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_selected_color(self, product):
         variant = self.get_selected_variant(product)
         return variant.color if variant else None
 
+    @extend_schema_field(OpenApiTypes.INT)
     def get_selected_variant_id(self, product):
         variant = self.get_selected_variant(product)
         return variant.variant_id if variant else None
 
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
     def get_images(self, product):
         variant = self.get_selected_variant(product)
         if variant:
             return get_variant_image_urls(variant)
         return [image.secure_url for image in product.images.all() if image.is_active]
 
+    @extend_schema_field(ProductColorOptionSerializer(many=True))
     def get_colors(self, product):
         color_options = []
         variants = list(product.variants.all())
@@ -155,12 +251,28 @@ class ProductCardSerializer(serializers.ModelSerializer):
             )
         return ProductColorOptionSerializer(color_options, many=True).data
 
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
+    def get_sizes(self, product):
+        return list(
+            OrderedDict.fromkeys(
+                variant.size for variant in product.variants.all() if variant.size
+            )
+        )
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_in_stock(self, product):
+        return any(variant.quantity > 0 for variant in product.variants.all())
+
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     category_id = serializers.IntegerField(source="category.category_id")
     supplier_id = serializers.SerializerMethodField()
     variants = ProductVariantSerializer(many=True, read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
+    in_stock = serializers.SerializerMethodField()
+    total_quantity = serializers.SerializerMethodField()
+    average_rating = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Product
@@ -178,10 +290,23 @@ class ProductDetailSerializer(serializers.ModelSerializer):
             "is_active",
             "images",
             "variants",
+            "in_stock",
+            "total_quantity",
+            "average_rating",
+            "rating_count",
         )
 
+    @extend_schema_field(OpenApiTypes.INT)
     def get_supplier_id(self, product):
         return product.supplier_id
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_in_stock(self, product):
+        return any(variant.quantity > 0 for variant in product.variants.all())
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_total_quantity(self, product):
+        return sum(variant.quantity for variant in product.variants.all())
 
 
 class AdminProductListSerializer(serializers.ModelSerializer):

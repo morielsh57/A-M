@@ -57,6 +57,44 @@ class CategoryApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["data"]["short_id"], "men-shirts")
 
+    def test_public_can_list_main_categories_with_nested_subcategories(self):
+        response = self.client.get(reverse("main-category-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("meta", response.json())
+        self.assertEqual(len(response.json()["data"]), 1)
+        main_category = response.json()["data"][0]
+        self.assertEqual(main_category["category_id"], self.parent_category.category_id)
+        self.assertEqual(
+            [category["category_id"] for category in main_category["subcategories"]],
+            [self.category.category_id],
+        )
+
+    def test_public_main_categories_exclude_inactive_subcategories(self):
+        self.category.is_active = False
+        self.category.save(update_fields=["is_active"])
+
+        response = self.client.get(reverse("main-category-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"][0]["subcategories"], [])
+
+    def test_public_category_count_includes_active_main_and_subcategories(self):
+        response = self.client.get(reverse("category-count"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"], {"count": 2})
+        self.assertNotIn("meta", response.json())
+
+    def test_public_category_count_excludes_inactive_category_trees(self):
+        self.parent_category.is_active = False
+        self.parent_category.save(update_fields=["is_active"])
+
+        response = self.client.get(reverse("category-count"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"], {"count": 0})
+
     def test_admin_can_patch_category(self):
         self.client.force_authenticate(user=self.admin)
 
@@ -80,3 +118,22 @@ class CategoryApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+    def test_public_list_excludes_inactive_categories_and_children(self):
+        self.parent_category.is_active = False
+        self.parent_category.save(update_fields=["is_active"])
+
+        response = self.client.get(reverse("category-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"], [])
+
+    def test_public_detail_returns_404_for_inactive_category(self):
+        self.category.is_active = False
+        self.category.save(update_fields=["is_active"])
+
+        response = self.client.get(
+            reverse("category-detail", kwargs={"category_id": self.category.category_id})
+        )
+
+        self.assertEqual(response.status_code, 404)

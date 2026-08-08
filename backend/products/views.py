@@ -1,4 +1,18 @@
-from django.db.models import Prefetch
+from django.db.models import (
+    Avg,
+    Case,
+    Count,
+    DecimalField,
+    Exists,
+    IntegerField,
+    OuterRef,
+    Prefetch,
+    Q,
+    Value,
+    When,
+)
+from django.db.models.functions import Coalesce
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
@@ -8,6 +22,7 @@ from rest_framework.views import APIView
 
 from accounts.models import ADMIN_ROLE, SUPPLIER_ROLE
 from accounts.permissions import HasAnyRole
+from catalogue.models import Category
 from config.api.pagination import StandardPageNumberPagination
 from config.api.serializers import ErrorResponseSerializer
 from products.models import Product, ProductImage, ProductVariant
@@ -17,7 +32,11 @@ from products.serializers import (
     AdminProductVariantWriteSerializer,
     AdminProductWriteSerializer,
     MessageSerializer,
+    ProductAutocompleteQuerySerializer,
+    ProductAutocompleteSerializer,
     ProductCardSerializer,
+    ProductCatalogueQuerySerializer,
+    ProductCountSerializer,
     ProductDetailSerializer,
     get_user_supplier_profile,
 )
@@ -35,9 +54,20 @@ def get_product_queryset(active_only=False):
         variants = variants.filter(is_active=True)
         images = images.filter(is_active=True)
 
-    products = Product.objects.select_related("category", "supplier").prefetch_related(
-        Prefetch("variants", queryset=variants),
-        Prefetch("images", queryset=images),
+    products = (
+        Product.objects.select_related("category", "supplier")
+        .prefetch_related(
+            Prefetch("variants", queryset=variants),
+            Prefetch("images", queryset=images),
+        )
+        .annotate(
+            average_rating=Coalesce(
+                Avg("reviews__stars"),
+                Value(0),
+                output_field=DecimalField(max_digits=3, decimal_places=2),
+            ),
+            rating_count=Count("reviews", distinct=True),
+        )
     )
     if active_only:
         products = products.filter(is_active=True)
@@ -49,6 +79,112 @@ def filter_products_by_category(queryset, request):
     if not category_id:
         return queryset
     return queryset.filter(category_id=category_id)
+
+
+def filter_public_products(queryset, filters):
+    search = filters.get("search")
+    if search:
+        queryset = queryset.filter(
+            Q(name__icontains=search)
+            | Q(catalog_number__icontains=search)
+            | Q(description__icontains=search)
+            | Q(information__icontains=search)
+            | Q(tags__icontains=search)
+            | Q(fabric__icontains=search)
+        )
+
+    category_id = filters.get("category")
+    if category_id is not None:
+        category = (
+            Category.objects.filter(category_id=category_id, is_active=True)
+            .exclude(parent_category__is_active=False)
+            .first()
+        )
+        if category is None:
+            raise ValidationError({"category": ["Category was not found."]})
+        if category.parent_category_id is None:
+            queryset = queryset.filter(
+                Q(category=category)
+                | Q(category__parent_category=category, category__is_active=True)
+            )
+        else:
+            queryset = queryset.filter(category=category)
+
+    main_category_id = filters.get("main_category")
+    main_category = None
+    if main_category_id is not None:
+        main_category = Category.objects.filter(
+            category_id=main_category_id,
+            parent_category_id__isnull=True,
+            is_active=True,
+        ).first()
+        if main_category is None:
+            raise ValidationError({"main_category": ["Main category was not found."]})
+        queryset = queryset.filter(
+            Q(category=main_category)
+            | Q(category__parent_category=main_category, category__is_active=True)
+        )
+
+    sub_category_id = filters.get("sub_category")
+    if sub_category_id is not None:
+        sub_category = (
+            Category.objects.filter(
+                category_id=sub_category_id,
+                parent_category_id__isnull=False,
+                is_active=True,
+                parent_category__is_active=True,
+            )
+            .select_related("parent_category")
+            .first()
+        )
+        if sub_category is None:
+            raise ValidationError({"sub_category": ["Subcategory was not found."]})
+        if main_category is not None and sub_category.parent_category_id != main_category.pk:
+            raise ValidationError(
+                {"sub_category": ["Subcategory does not belong to the selected main category."]}
+            )
+        queryset = queryset.filter(category=sub_category)
+
+    if "min_price" in filters:
+        queryset = queryset.filter(price__gte=filters["min_price"])
+    if "max_price" in filters:
+        queryset = queryset.filter(price__lte=filters["max_price"])
+
+    size = filters.get("size")
+    color = filters.get("color")
+    has_availability_filter = "in_stock" in filters
+    if size or color or has_availability_filter:
+        matching_variants = ProductVariant.objects.filter(
+            product_id=OuterRef("pk"),
+            is_active=True,
+        )
+        if size:
+            matching_variants = matching_variants.filter(size__iexact=size)
+        if color:
+            matching_variants = matching_variants.filter(color__iexact=color)
+
+        if has_availability_filter and filters["in_stock"]:
+            matching_variants = matching_variants.filter(quantity__gt=0)
+            queryset = queryset.filter(Exists(matching_variants))
+        elif has_availability_filter:
+            queryset = queryset.filter(Exists(matching_variants)).filter(
+                ~Exists(matching_variants.filter(quantity__gt=0))
+            )
+        else:
+            queryset = queryset.filter(Exists(matching_variants))
+
+    ordering = filters.get("ordering", "-date_created")
+    ordering_map = {
+        "name": ("name", "product_id"),
+        "-name": ("-name", "product_id"),
+        "price": ("price", "product_id"),
+        "-price": ("-price", "product_id"),
+        "rating": ("average_rating", "product_id"),
+        "-rating": ("-average_rating", "product_id"),
+        "date_created": ("date_created", "product_id"),
+        "-date_created": ("-date_created", "product_id"),
+    }
+    return queryset.order_by(*ordering_map[ordering])
 
 
 def paginate_queryset(request, queryset, serializer_class):
@@ -68,20 +204,147 @@ class ProductListView(APIView):
             "display color, selected variant, images for that color, and color swatches."
         ),
         parameters=[
+            OpenApiParameter("search", str, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("main_category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("sub_category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("size", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("color", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("min_price", OpenApiTypes.DECIMAL, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("max_price", OpenApiTypes.DECIMAL, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("in_stock", bool, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter(
+                "ordering",
+                str,
+                OpenApiParameter.QUERY,
+                required=False,
+                enum=[
+                    "name", "-name", "price", "-price", "rating", "-rating",
+                    "date_created", "-date_created",
+                ],
+            ),
             OpenApiParameter("page", int, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("page_size", int, OpenApiParameter.QUERY, required=False),
         ],
-        responses={200: ProductCardSerializer(many=True)},
+        responses={200: ProductCardSerializer(many=True), 400: ErrorResponseSerializer},
         auth=[],
         tags=["Products"],
     )
     def get(self, request):
-        products = filter_products_by_category(
-            get_product_queryset(active_only=True).order_by("-date_created", "product_id"),
-            request,
+        query_serializer = ProductCatalogueQuerySerializer(data=request.query_params.dict())
+        query_serializer.is_valid(raise_exception=True)
+        public_products = get_product_queryset(active_only=True).filter(
+            category__is_active=True,
+        ).exclude(
+            category__parent_category_id__isnull=False,
+            category__parent_category__is_active=False,
+        )
+        products = filter_public_products(
+            public_products,
+            query_serializer.validated_data,
         )
         return paginate_queryset(request, products, ProductCardSerializer)
+
+
+class ProductAutocompleteView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="Autocomplete product search",
+        description=(
+            "Public endpoint. Returns a limited list of active products matching a partial "
+            "product name, tag, description, information, fabric, or variant color. Results "
+            "are prioritized in that order."
+        ),
+        parameters=[
+            OpenApiParameter("search", str, OpenApiParameter.QUERY, required=True),
+            OpenApiParameter("limit", int, OpenApiParameter.QUERY, required=False),
+        ],
+        responses={200: ProductAutocompleteSerializer(many=True), 400: ErrorResponseSerializer},
+        auth=[],
+        tags=["Products"],
+    )
+    def get(self, request):
+        query_serializer = ProductAutocompleteQuerySerializer(data=request.query_params.dict())
+        query_serializer.is_valid(raise_exception=True)
+        search = query_serializer.validated_data["search"]
+        limit = query_serializer.validated_data["limit"]
+
+        color_matches = ProductVariant.objects.filter(
+            product_id=OuterRef("pk"),
+            color__icontains=search,
+            is_active=True,
+        )
+        products = (
+            Product.objects.annotate(color_matches=Exists(color_matches))
+            .filter(
+                Q(name__icontains=search)
+                | Q(tags__icontains=search)
+                | Q(description__icontains=search)
+                | Q(information__icontains=search)
+                | Q(fabric__icontains=search)
+                | Q(color_matches=True),
+                is_active=True,
+                category__is_active=True,
+            )
+            .annotate(
+                match_priority=Case(
+                    When(name__icontains=search, then=Value(1)),
+                    When(tags__icontains=search, then=Value(2)),
+                    When(description__icontains=search, then=Value(3)),
+                    When(information__icontains=search, then=Value(4)),
+                    When(fabric__icontains=search, then=Value(5)),
+                    When(color_matches=True, then=Value(6)),
+                    output_field=IntegerField(),
+                )
+            )
+            .exclude(
+                category__parent_category_id__isnull=False,
+                category__parent_category__is_active=False,
+            )
+            .order_by("match_priority", "name", "product_id")[:limit]
+        )
+        return Response(ProductAutocompleteSerializer(products, many=True).data)
+
+
+class ProductCountView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="Count matching catalogue products",
+        description=(
+            "Public endpoint. Returns only the number of active products matching the same "
+            "search and filters as the public product catalogue."
+        ),
+        parameters=[
+            OpenApiParameter("search", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("main_category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("sub_category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("size", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("color", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("min_price", OpenApiTypes.DECIMAL, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("max_price", OpenApiTypes.DECIMAL, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("in_stock", bool, OpenApiParameter.QUERY, required=False),
+        ],
+        responses={200: ProductCountSerializer, 400: ErrorResponseSerializer},
+        auth=[],
+        tags=["Products"],
+    )
+    def get(self, request):
+        query_serializer = ProductCatalogueQuerySerializer(data=request.query_params.dict())
+        query_serializer.is_valid(raise_exception=True)
+        public_products = get_product_queryset(active_only=True).filter(
+            category__is_active=True,
+        ).exclude(
+            category__parent_category_id__isnull=False,
+            category__parent_category__is_active=False,
+        )
+        products = filter_public_products(
+            public_products,
+            query_serializer.validated_data,
+        )
+        return Response({"count": products.count()})
 
 
 class ProductDetailView(APIView):
