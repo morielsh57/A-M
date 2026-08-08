@@ -80,7 +80,6 @@ class DashboardOverviewApiTests(TestCase):
             color="Black",
             size="M",
             quantity=quantity,
-            images=[],
         )
         return product
 

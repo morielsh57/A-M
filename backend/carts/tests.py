@@ -37,7 +37,6 @@ class CartVariantApiTests(TestCase):
             color="Black",
             size="M",
             quantity=3,
-            images=["/media/products/cart-black.jpg"],
         )
 
     def test_customer_can_add_variant_to_cart(self):
