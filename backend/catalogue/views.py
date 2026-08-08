@@ -1,12 +1,15 @@
 from django.db.models import Prefetch
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.exceptions import NotFound
+from django.db.models import ProtectedError
+from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import ADMIN_ROLE
-from accounts.permissions import HasAnyRole
+from accounts.permissions import IsAdministrator
 from catalogue.models import Category
 from catalogue.serializers import (
     CategorySerializer,
@@ -27,8 +30,6 @@ def paginate_queryset(request, queryset, serializer_class):
 
 
 class CategoryListView(APIView):
-    permission_classes = [AllowAny]
-
     @extend_schema(
         summary="List categories",
         description="Public endpoint. Returns category records for catalogue navigation.",
@@ -51,6 +52,24 @@ class CategoryListView(APIView):
             "category_id",
         )
         return paginate_queryset(request, categories, CategorySerializer)
+
+    @extend_schema(
+        summary="Create a category or subcategory",
+        description="Authenticated Admin endpoint.",
+        request=CategoryWriteSerializer,
+        responses={201: CategorySerializer, 400: ErrorResponseSerializer},
+        tags=["Catalogue"],
+    )
+    def post(self, request):
+        serializer = CategoryWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        category = serializer.save()
+        return Response(CategorySerializer(category).data, status=status.HTTP_201_CREATED)
+
+    def get_permissions(self):
+        if self.request and self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAuthenticated(), IsAdministrator()]
 
 
 class MainCategoryListView(APIView):
@@ -154,13 +173,18 @@ class CategoryDetailView(APIView):
     )
     def delete(self, request, category_id):
         category = self.get_category(category_id)
-        category.delete()
+        try:
+            category.delete()
+        except ProtectedError as exc:
+            raise ValidationError(
+                {"category_id": ["Categories assigned to products cannot be deleted."]}
+            ) from exc
         return Response({"message": "Category deleted successfully."})
 
     def get_permissions(self):
         if self.request and self.request.method == "GET":
             return [AllowAny()]
-        return [IsAuthenticated(), HasAnyRole()]
+        return [IsAuthenticated(), IsAdministrator()]
 
     def get_category(self, category_id):
         category = Category.objects.select_related("parent_category").filter(

@@ -80,6 +80,13 @@ class DashboardOverviewView(APIView):
 
         return {
             "dashboard_type": ADMIN_ROLE,
+            "user_amount": User.objects.count(),
+            "order_amount": Order.objects.count(),
+            "low_stock_product_amount": Product.objects.filter(
+                is_active=True,
+                variants__is_active=True,
+                variants__quantity__lte=5,
+            ).distinct().count(),
             "customer_amount": active_customers.count(),
             "active_customer_trend_percent": calculate_trend_percent(
                 current_customers_count,

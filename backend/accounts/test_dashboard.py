@@ -96,6 +96,10 @@ class DashboardOverviewApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         data = response.json()["data"]
+        self.assertEqual(data["dashboard_type"], ADMIN_ROLE)
+        self.assertEqual(data["user_amount"], User.objects.count())
+        self.assertEqual(data["order_amount"], Order.objects.count())
+        self.assertIn("low_stock_product_amount", data)
         self.assertEqual(data["customer_amount"], 4)
         self.assertEqual(data["current_period_active_customers"], 2)
         self.assertEqual(data["previous_period_active_customers"], 1)
@@ -105,7 +109,7 @@ class DashboardOverviewApiTests(TestCase):
         self.assertEqual(data["previous_period_revenue"], 100.0)
         self.assertEqual(data["revenue_trend_percent"], 200.0)
 
-    def test_supplier_can_view_dashboard_metrics(self):
+    def test_supplier_can_view_supplier_scoped_dashboard_metrics(self):
         now = timezone.now()
         product = self.create_supplier_product("supplier-product")
         self.create_supplier_product("low-stock-product", quantity=3)
