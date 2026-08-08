@@ -10,7 +10,7 @@ from accounts.models import ADMIN_ROLE, SUPPLIER_ROLE
 from accounts.permissions import HasAnyRole
 from config.api.pagination import StandardPageNumberPagination
 from config.api.serializers import ErrorResponseSerializer
-from products.models import Product, ProductVariant
+from products.models import Product, ProductImage, ProductVariant
 from products.serializers import (
     AdminProductDetailSerializer,
     AdminProductListSerializer,
@@ -23,10 +23,25 @@ from products.serializers import (
 )
 
 
-def get_product_queryset():
-    return Product.objects.select_related("category", "supplier").prefetch_related(
-        Prefetch("variants", queryset=ProductVariant.objects.order_by("variant_id"))
+def get_product_queryset(active_only=False):
+    variants = ProductVariant.objects.order_by("variant_id").prefetch_related(
+        Prefetch(
+            "product_images",
+            queryset=ProductImage.objects.order_by("display_order", "image_id"),
+        )
     )
+    images = ProductImage.objects.order_by("display_order", "image_id")
+    if active_only:
+        variants = variants.filter(is_active=True)
+        images = images.filter(is_active=True)
+
+    products = Product.objects.select_related("category", "supplier").prefetch_related(
+        Prefetch("variants", queryset=variants),
+        Prefetch("images", queryset=images),
+    )
+    if active_only:
+        products = products.filter(is_active=True)
+    return products
 
 
 def filter_products_by_category(queryset, request):
@@ -63,7 +78,7 @@ class ProductListView(APIView):
     )
     def get(self, request):
         products = filter_products_by_category(
-            get_product_queryset().order_by("-date_created", "product_id"),
+            get_product_queryset(active_only=True).order_by("-date_created", "product_id"),
             request,
         )
         return paginate_queryset(request, products, ProductCardSerializer)
@@ -80,7 +95,7 @@ class ProductDetailView(APIView):
         tags=["Products"],
     )
     def get(self, request, product_id):
-        product = get_product_queryset().filter(product_id=product_id).first()
+        product = get_product_queryset(active_only=True).filter(product_id=product_id).first()
         if product is None:
             raise NotFound("Product was not found.")
         return Response(ProductDetailSerializer(product).data)
