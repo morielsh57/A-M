@@ -1,0 +1,36 @@
+@import "../../styles/colors.scss";
+
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+
+  &--primary {
+    background: $purple6;
+    color: $natural1;
+
+    &:hover:not(:disabled) {
+      background: $purple7;
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.68;
+  }
+}

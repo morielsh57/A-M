@@ -11,6 +11,7 @@ class Category(models.Model):
         null=True,
     )
     date_created = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
     parent_category = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,

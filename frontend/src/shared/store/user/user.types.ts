@@ -23,6 +23,12 @@ export interface IUser {
   date_created: Date;
 }
 
+export interface IUpdateUserProfileRequest {
+  name: string;
+  phone: string;
+  address: string;
+}
+
 export interface IAdminOrSupplierUser extends IUser {
   unreadCounter?: number;
   notifications?: IUserNotification[];

@@ -10,6 +10,7 @@ export enum EAPIStatus {
 export interface IAPIError {
   message?: string;
   code?: number;
+  details?: unknown;
   axiosError?: AxiosError;
 }
 

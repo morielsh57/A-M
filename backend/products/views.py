@@ -1,4 +1,18 @@
-from django.db.models import Prefetch
+from django.db.models import (
+    Avg,
+    Case,
+    Count,
+    DecimalField,
+    Exists,
+    IntegerField,
+    OuterRef,
+    Prefetch,
+    Q,
+    Value,
+    When,
+)
+from django.db.models.functions import Coalesce
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
@@ -8,25 +22,58 @@ from rest_framework.views import APIView
 
 from accounts.models import ADMIN_ROLE, SUPPLIER_ROLE
 from accounts.permissions import HasAnyRole
+from catalogue.models import Category
 from config.api.pagination import StandardPageNumberPagination
 from config.api.serializers import ErrorResponseSerializer
-from products.models import Product, ProductVariant
+from products.models import Product, ProductImage, ProductVariant
 from products.serializers import (
     AdminProductDetailSerializer,
+    AdminProductImageWriteSerializer,
     AdminProductListSerializer,
     AdminProductVariantWriteSerializer,
     AdminProductWriteSerializer,
     MessageSerializer,
+    ProductAutocompleteQuerySerializer,
+    ProductAutocompleteSerializer,
     ProductCardSerializer,
+    ProductCatalogueQuerySerializer,
+    ProductCountSerializer,
     ProductDetailSerializer,
+    ProductImageSerializer,
     get_user_supplier_profile,
 )
 
 
-def get_product_queryset():
-    return Product.objects.select_related("category", "supplier").prefetch_related(
-        Prefetch("variants", queryset=ProductVariant.objects.order_by("variant_id"))
+def get_product_queryset(active_only=False):
+    variants = ProductVariant.objects.order_by("variant_id").prefetch_related(
+        Prefetch(
+            "product_images",
+            queryset=ProductImage.objects.order_by("display_order", "image_id"),
+        )
     )
+    images = ProductImage.objects.order_by("display_order", "image_id")
+    if active_only:
+        variants = variants.filter(is_active=True)
+        images = images.filter(is_active=True)
+
+    products = (
+        Product.objects.select_related("category", "supplier")
+        .prefetch_related(
+            Prefetch("variants", queryset=variants),
+            Prefetch("images", queryset=images),
+        )
+        .annotate(
+            average_rating=Coalesce(
+                Avg("reviews__stars"),
+                Value(0),
+                output_field=DecimalField(max_digits=3, decimal_places=2),
+            ),
+            rating_count=Count("reviews", distinct=True),
+        )
+    )
+    if active_only:
+        products = products.filter(is_active=True)
+    return products
 
 
 def filter_products_by_category(queryset, request):
@@ -34,6 +81,112 @@ def filter_products_by_category(queryset, request):
     if not category_id:
         return queryset
     return queryset.filter(category_id=category_id)
+
+
+def filter_public_products(queryset, filters):
+    search = filters.get("search")
+    if search:
+        queryset = queryset.filter(
+            Q(name__icontains=search)
+            | Q(catalog_number__icontains=search)
+            | Q(description__icontains=search)
+            | Q(information__icontains=search)
+            | Q(tags__icontains=search)
+            | Q(fabric__icontains=search)
+        )
+
+    category_id = filters.get("category")
+    if category_id is not None:
+        category = (
+            Category.objects.filter(category_id=category_id, is_active=True)
+            .exclude(parent_category__is_active=False)
+            .first()
+        )
+        if category is None:
+            raise ValidationError({"category": ["Category was not found."]})
+        if category.parent_category_id is None:
+            queryset = queryset.filter(
+                Q(category=category)
+                | Q(category__parent_category=category, category__is_active=True)
+            )
+        else:
+            queryset = queryset.filter(category=category)
+
+    main_category_id = filters.get("main_category")
+    main_category = None
+    if main_category_id is not None:
+        main_category = Category.objects.filter(
+            category_id=main_category_id,
+            parent_category_id__isnull=True,
+            is_active=True,
+        ).first()
+        if main_category is None:
+            raise ValidationError({"main_category": ["Main category was not found."]})
+        queryset = queryset.filter(
+            Q(category=main_category)
+            | Q(category__parent_category=main_category, category__is_active=True)
+        )
+
+    sub_category_id = filters.get("sub_category")
+    if sub_category_id is not None:
+        sub_category = (
+            Category.objects.filter(
+                category_id=sub_category_id,
+                parent_category_id__isnull=False,
+                is_active=True,
+                parent_category__is_active=True,
+            )
+            .select_related("parent_category")
+            .first()
+        )
+        if sub_category is None:
+            raise ValidationError({"sub_category": ["Subcategory was not found."]})
+        if main_category is not None and sub_category.parent_category_id != main_category.pk:
+            raise ValidationError(
+                {"sub_category": ["Subcategory does not belong to the selected main category."]}
+            )
+        queryset = queryset.filter(category=sub_category)
+
+    if "min_price" in filters:
+        queryset = queryset.filter(price__gte=filters["min_price"])
+    if "max_price" in filters:
+        queryset = queryset.filter(price__lte=filters["max_price"])
+
+    size = filters.get("size")
+    color = filters.get("color")
+    has_availability_filter = "in_stock" in filters
+    if size or color or has_availability_filter:
+        matching_variants = ProductVariant.objects.filter(
+            product_id=OuterRef("pk"),
+            is_active=True,
+        )
+        if size:
+            matching_variants = matching_variants.filter(size__iexact=size)
+        if color:
+            matching_variants = matching_variants.filter(color__iexact=color)
+
+        if has_availability_filter and filters["in_stock"]:
+            matching_variants = matching_variants.filter(quantity__gt=0)
+            queryset = queryset.filter(Exists(matching_variants))
+        elif has_availability_filter:
+            queryset = queryset.filter(Exists(matching_variants)).filter(
+                ~Exists(matching_variants.filter(quantity__gt=0))
+            )
+        else:
+            queryset = queryset.filter(Exists(matching_variants))
+
+    ordering = filters.get("ordering", "-date_created")
+    ordering_map = {
+        "name": ("name", "product_id"),
+        "-name": ("-name", "product_id"),
+        "price": ("price", "product_id"),
+        "-price": ("-price", "product_id"),
+        "rating": ("average_rating", "product_id"),
+        "-rating": ("-average_rating", "product_id"),
+        "date_created": ("date_created", "product_id"),
+        "-date_created": ("-date_created", "product_id"),
+    }
+    return queryset.order_by(*ordering_map[ordering])
 
 
 def paginate_queryset(request, queryset, serializer_class):
@@ -53,20 +206,147 @@ class ProductListView(APIView):
             "display color, selected variant, images for that color, and color swatches."
         ),
         parameters=[
+            OpenApiParameter("search", str, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("main_category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("sub_category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("size", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("color", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("min_price", OpenApiTypes.DECIMAL, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("max_price", OpenApiTypes.DECIMAL, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("in_stock", bool, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter(
+                "ordering",
+                str,
+                OpenApiParameter.QUERY,
+                required=False,
+                enum=[
+                    "name", "-name", "price", "-price", "rating", "-rating",
+                    "date_created", "-date_created",
+                ],
+            ),
             OpenApiParameter("page", int, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("page_size", int, OpenApiParameter.QUERY, required=False),
         ],
-        responses={200: ProductCardSerializer(many=True)},
+        responses={200: ProductCardSerializer(many=True), 400: ErrorResponseSerializer},
         auth=[],
         tags=["Products"],
     )
     def get(self, request):
-        products = filter_products_by_category(
-            get_product_queryset().order_by("-date_created", "product_id"),
-            request,
+        query_serializer = ProductCatalogueQuerySerializer(data=request.query_params.dict())
+        query_serializer.is_valid(raise_exception=True)
+        public_products = get_product_queryset(active_only=True).filter(
+            category__is_active=True,
+        ).exclude(
+            category__parent_category_id__isnull=False,
+            category__parent_category__is_active=False,
+        )
+        products = filter_public_products(
+            public_products,
+            query_serializer.validated_data,
         )
         return paginate_queryset(request, products, ProductCardSerializer)
+
+
+class ProductAutocompleteView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="Autocomplete product search",
+        description=(
+            "Public endpoint. Returns a limited list of active products matching a partial "
+            "product name, tag, description, information, fabric, or variant color. Results "
+            "are prioritized in that order."
+        ),
+        parameters=[
+            OpenApiParameter("search", str, OpenApiParameter.QUERY, required=True),
+            OpenApiParameter("limit", int, OpenApiParameter.QUERY, required=False),
+        ],
+        responses={200: ProductAutocompleteSerializer(many=True), 400: ErrorResponseSerializer},
+        auth=[],
+        tags=["Products"],
+    )
+    def get(self, request):
+        query_serializer = ProductAutocompleteQuerySerializer(data=request.query_params.dict())
+        query_serializer.is_valid(raise_exception=True)
+        search = query_serializer.validated_data["search"]
+        limit = query_serializer.validated_data["limit"]
+
+        color_matches = ProductVariant.objects.filter(
+            product_id=OuterRef("pk"),
+            color__icontains=search,
+            is_active=True,
+        )
+        products = (
+            Product.objects.annotate(color_matches=Exists(color_matches))
+            .filter(
+                Q(name__icontains=search)
+                | Q(tags__icontains=search)
+                | Q(description__icontains=search)
+                | Q(information__icontains=search)
+                | Q(fabric__icontains=search)
+                | Q(color_matches=True),
+                is_active=True,
+                category__is_active=True,
+            )
+            .annotate(
+                match_priority=Case(
+                    When(name__icontains=search, then=Value(1)),
+                    When(tags__icontains=search, then=Value(2)),
+                    When(description__icontains=search, then=Value(3)),
+                    When(information__icontains=search, then=Value(4)),
+                    When(fabric__icontains=search, then=Value(5)),
+                    When(color_matches=True, then=Value(6)),
+                    output_field=IntegerField(),
+                )
+            )
+            .exclude(
+                category__parent_category_id__isnull=False,
+                category__parent_category__is_active=False,
+            )
+            .order_by("match_priority", "name", "product_id")[:limit]
+        )
+        return Response(ProductAutocompleteSerializer(products, many=True).data)
+
+
+class ProductCountView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="Count matching catalogue products",
+        description=(
+            "Public endpoint. Returns only the number of active products matching the same "
+            "search and filters as the public product catalogue."
+        ),
+        parameters=[
+            OpenApiParameter("search", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("main_category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("sub_category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("size", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("color", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("min_price", OpenApiTypes.DECIMAL, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("max_price", OpenApiTypes.DECIMAL, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("in_stock", bool, OpenApiParameter.QUERY, required=False),
+        ],
+        responses={200: ProductCountSerializer, 400: ErrorResponseSerializer},
+        auth=[],
+        tags=["Products"],
+    )
+    def get(self, request):
+        query_serializer = ProductCatalogueQuerySerializer(data=request.query_params.dict())
+        query_serializer.is_valid(raise_exception=True)
+        public_products = get_product_queryset(active_only=True).filter(
+            category__is_active=True,
+        ).exclude(
+            category__parent_category_id__isnull=False,
+            category__parent_category__is_active=False,
+        )
+        products = filter_public_products(
+            public_products,
+            query_serializer.validated_data,
+        )
+        return Response({"count": products.count()})
 
 
 class ProductDetailView(APIView):
@@ -80,7 +360,7 @@ class ProductDetailView(APIView):
         tags=["Products"],
     )
     def get(self, request, product_id):
-        product = get_product_queryset().filter(product_id=product_id).first()
+        product = get_product_queryset(active_only=True).filter(product_id=product_id).first()
         if product is None:
             raise NotFound("Product was not found.")
         return Response(ProductDetailSerializer(product).data)
@@ -93,8 +373,8 @@ class AdminProductListCreateView(APIView):
     @extend_schema(
         summary="List admin products",
         description=(
-            "Authenticated Admin/Supplier endpoint. Returns product groups for admin tables. "
-            "Suppliers only see their own products."
+            "Authenticated Admin/Supplier endpoint. Admins see all products; suppliers "
+            "see only their own products."
         ),
         parameters=[
             OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
@@ -142,13 +422,33 @@ class AdminProductListCreateView(APIView):
         return products
 
 
-class AdminProductDetailView(APIView):
+class AdminProductAccessMixin:
     permission_classes = [IsAuthenticated, HasAnyRole]
     allowed_roles = frozenset({ADMIN_ROLE, SUPPLIER_ROLE})
 
+    def get_product(self, request, product_id):
+        product = get_product_queryset().filter(product_id=product_id).first()
+        if product is None:
+            raise NotFound("Product was not found.")
+        if request.user.role.role_name == SUPPLIER_ROLE:
+            supplier_profile = get_user_supplier_profile(request.user)
+            if (
+                supplier_profile is None
+                or product.supplier_id != supplier_profile.supplier_id
+            ):
+                raise PermissionDenied("You do not have permission to manage this product.")
+        return product
+
+    def require_admin(self, request):
+        if request.user.role.role_name != ADMIN_ROLE:
+            raise PermissionDenied("Only admins can delete products or variants.")
+
+
+class AdminProductDetailView(AdminProductAccessMixin, APIView):
+
     @extend_schema(
         summary="View admin product details",
-        description="Authenticated Admin/Supplier endpoint. Returns product data and variants.",
+        description="Authenticated Admin/Supplier endpoint. Suppliers can view their own products.",
         responses={200: AdminProductDetailSerializer, 404: ErrorResponseSerializer},
         tags=["Admin Products"],
     )
@@ -158,7 +458,7 @@ class AdminProductDetailView(APIView):
 
     @extend_schema(
         summary="Update an admin product",
-        description="Authenticated Admin/Supplier endpoint. Updates shared product fields only.",
+        description="Authenticated Admin/Supplier endpoint. Suppliers can add variants to their own products.",
         request=AdminProductWriteSerializer,
         responses={
             200: AdminProductDetailSerializer,
@@ -181,28 +481,32 @@ class AdminProductDetailView(APIView):
         product = serializer.save()
         return Response(AdminProductDetailSerializer(product).data)
 
-    def get_product(self, request, product_id):
-        product = get_product_queryset().filter(product_id=product_id).first()
-        if product is None:
-            raise NotFound("Product was not found.")
-        if request.user.role.role_name == SUPPLIER_ROLE:
-            supplier_profile = get_user_supplier_profile(request.user)
-            if (
-                supplier_profile is None
-                or product.supplier_id != supplier_profile.supplier_id
-            ):
-                raise PermissionDenied("You do not have permission to manage this product.")
-        return product
+    @extend_schema(
+        summary="Delete an unreferenced product",
+        description=(
+            "Authenticated Admin endpoint. Products referenced by carts or reviews "
+            "must be deactivated instead of deleted."
+        ),
+        responses={204: None, 400: ErrorResponseSerializer, 404: ErrorResponseSerializer},
+        tags=["Admin Products"],
+    )
+    def delete(self, request, product_id):
+        self.require_admin(request)
+        product = self.get_product(request, product_id)
+        if product.reviews.exists() or product.variants.filter(
+            cart_products__isnull=False,
+        ).exists():
+            raise ValidationError(
+                {"product_id": ["Referenced products must be deactivated instead of deleted."]}
+            )
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def require_admin(self, request):
-        if request.user.role.role_name != ADMIN_ROLE:
-            raise PermissionDenied("Only admins can delete products or variants.")
 
-
-class AdminProductVariantCreateView(AdminProductDetailView):
+class AdminProductVariantCreateView(AdminProductAccessMixin, APIView):
     @extend_schema(
         summary="Create a product variant",
-        description="Authenticated Admin/Supplier endpoint. Creates one color/size variant.",
+        description="Authenticated Admin/Supplier endpoint. Suppliers can update their own products.",
         request=AdminProductVariantWriteSerializer,
         responses={
             201: ProductDetailSerializer,
@@ -228,10 +532,10 @@ class AdminProductVariantCreateView(AdminProductDetailView):
         )
 
 
-class AdminProductVariantDetailView(AdminProductDetailView):
+class AdminProductVariantDetailView(AdminProductAccessMixin, APIView):
     @extend_schema(
         summary="Update a product variant",
-        description="Authenticated Admin/Supplier endpoint. Updates one color/size variant.",
+        description="Authenticated Admin/Supplier endpoint. Suppliers can update their own products.",
         request=AdminProductVariantWriteSerializer,
         responses={
             200: ProductDetailSerializer,
@@ -280,7 +584,7 @@ class AdminProductVariantDetailView(AdminProductDetailView):
                 {"variant_id": ["This variant is referenced by cart or order history."]}
             )
         variant.delete()
-        return Response({"message": "Product variant deleted successfully."})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_variant(self, product_id, variant_id):
         variant = ProductVariant.objects.filter(
@@ -290,3 +594,49 @@ class AdminProductVariantDetailView(AdminProductDetailView):
         if variant is None:
             raise NotFound("Product variant was not found.")
         return variant
+
+
+class AdminProductImageListCreateView(AdminProductAccessMixin, APIView):
+    serializer_class = ProductImageSerializer
+
+    def get(self, request, product_id):
+        product = self.get_product(request, product_id)
+        return Response(ProductImageSerializer(product.images.all(), many=True).data)
+
+    def post(self, request, product_id):
+        product = self.get_product(request, product_id)
+        serializer = AdminProductImageWriteSerializer(
+            data=request.data,
+            context={"product": product},
+        )
+        serializer.is_valid(raise_exception=True)
+        image = serializer.save(product=product)
+        return Response(ProductImageSerializer(image).data, status=status.HTTP_201_CREATED)
+
+
+class AdminProductImageDetailView(AdminProductAccessMixin, APIView):
+    serializer_class = ProductImageSerializer
+
+    def patch(self, request, product_id, image_id):
+        product = self.get_product(request, product_id)
+        image = self.get_image(product_id, image_id)
+        serializer = AdminProductImageWriteSerializer(
+            image,
+            data=request.data,
+            partial=True,
+            context={"product": product},
+        )
+        serializer.is_valid(raise_exception=True)
+        return Response(ProductImageSerializer(serializer.save()).data)
+
+    def delete(self, request, product_id, image_id):
+        self.get_product(request, product_id)
+        image = self.get_image(product_id, image_id)
+        image.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def get_image(self, product_id, image_id):
+        image = ProductImage.objects.filter(product_id=product_id, image_id=image_id).first()
+        if image is None:
+            raise NotFound("Product image was not found.")
+        return image

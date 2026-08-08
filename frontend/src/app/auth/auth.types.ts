@@ -8,6 +8,12 @@ export interface ILoginResponse {
   refresh: string;
 }
 
+export interface IChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+  new_password_confirm: string;
+}
+
 export interface ISignUpRequest {
   name: string;
   email: string;
