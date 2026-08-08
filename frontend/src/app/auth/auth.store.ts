@@ -3,19 +3,21 @@ import {  createReducer } from '@reduxjs/toolkit';
 import { apiService, createApiThunk } from '../../shared/api/axios';
 import { APIRequestState, type IAPIRequestState } from '../../shared/api/models';
 import { createAPIReducerCases, type ApiDataStateType } from '../../shared/store/utils';
-import { ILoginRequest, ILoginResponse, ISignUpRequest } from './auth.types';
+import { IChangePasswordRequest, ILoginRequest, ILoginResponse, ISignUpRequest } from './auth.types';
 import { API_ROUTES } from '../routing';
 
 export interface AuthStoreState extends ApiDataStateType {
   signupRes: IAPIRequestState<void>;
   loginRes: IAPIRequestState<ILoginResponse>;
   adminLoginRes: IAPIRequestState<ILoginResponse>;
+  changePasswordRes: IAPIRequestState<void>;
 }
 
 const initialState: AuthStoreState = {
   signupRes: APIRequestState.create<void>(),
   loginRes: APIRequestState.create<ILoginResponse>(),
   adminLoginRes: APIRequestState.create<ILoginResponse>(),
+  changePasswordRes: APIRequestState.create<void>(),
 };
 
 export const loginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
@@ -31,6 +33,11 @@ export const adminLoginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
 export const signupRequest = createApiThunk<void, ISignUpRequest>(
   'auth/signup',
   (payload) => apiService.post<void>(API_ROUTES.AUTH.SIGNUP, payload),
+);
+
+export const changePasswordRequest = createApiThunk<void, IChangePasswordRequest>(
+  'auth/changePassword',
+  (payload) => apiService.post<void, IChangePasswordRequest>(API_ROUTES.AUTH.PASSWORD_CHANGE, payload),
 );
 
 export const authStoreReducer = createReducer(initialState, (builder) => {
@@ -63,6 +70,16 @@ export const authStoreReducer = createReducer(initialState, (builder) => {
     },
     onFulfilled: (state) => {
       state.adminLoginRes.error = undefined;
+    },
+  });
+
+  createAPIReducerCases(changePasswordRequest, 'changePasswordRes', apiBuilder, {
+    onPending: (state) => {
+      state.changePasswordRes.error = undefined;
+      state.changePasswordRes.data = undefined;
+    },
+    onFulfilled: (state) => {
+      state.changePasswordRes.error = undefined;
     },
   });
 });

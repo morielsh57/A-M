@@ -26,7 +26,7 @@ const AdminUserMenu: React.FC = () => {
 
   const handleProfileMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key === 'profile') {
-      navigate(APP_ROUTING_PATHS.ADMIN_HOME_PAGE);
+      navigate(APP_ROUTING_PATHS.ADMIN_PAGE(APP_ROUTING_PATHS.ADMIN.PROFILE));
       return;
     }
 

@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   AppstoreOutlined,
+  DashboardOutlined,
   DownOutlined,
   LeftOutlined,
   RightOutlined,
   ShoppingCartOutlined,
   TagsOutlined,
   TeamOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { NavLink, useLocation } from 'react-router-dom';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
@@ -37,6 +39,18 @@ interface AdminNavbarSection {
 const createAdminPath = (segment: string) => APP_ROUTING_PATHS.ADMIN_PAGE(segment);
 
 const adminNavbarSections: AdminNavbarSection[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    icon: <DashboardOutlined />,
+    path: createAdminPath(APP_ROUTING_PATHS.ADMIN.HOME),
+  },
+  {
+    id: 'account',
+    label: 'Profile',
+    icon: <UserOutlined />,
+    path: createAdminPath(APP_ROUTING_PATHS.ADMIN.PROFILE),
+  },
   {
     id: 'products',
     label: 'Products',
