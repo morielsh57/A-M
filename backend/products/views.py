@@ -3,19 +3,19 @@ from django.db.models.functions import Coalesce
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.models import ADMIN_ROLE, SUPPLIER_ROLE
-from accounts.permissions import HasAnyRole
+from accounts.permissions import IsAdministrator
 from catalogue.models import Category
 from config.api.pagination import StandardPageNumberPagination
 from config.api.serializers import ErrorResponseSerializer
 from products.models import Product, ProductImage, ProductVariant
 from products.serializers import (
     AdminProductDetailSerializer,
+    AdminProductImageWriteSerializer,
     AdminProductListSerializer,
     AdminProductVariantWriteSerializer,
     AdminProductWriteSerializer,
@@ -23,7 +23,7 @@ from products.serializers import (
     ProductCardSerializer,
     ProductCatalogueQuerySerializer,
     ProductDetailSerializer,
-    get_user_supplier_profile,
+    ProductImageSerializer,
 )
 
 
@@ -212,14 +212,12 @@ class ProductDetailView(APIView):
 
 
 class AdminProductListCreateView(APIView):
-    permission_classes = [IsAuthenticated, HasAnyRole]
-    allowed_roles = frozenset({ADMIN_ROLE, SUPPLIER_ROLE})
+    permission_classes = [IsAuthenticated, IsAdministrator]
 
     @extend_schema(
         summary="List admin products",
         description=(
-            "Authenticated Admin/Supplier endpoint. Returns product groups for admin tables. "
-            "Suppliers only see their own products."
+            "Authenticated Admin endpoint. Returns product groups for management tables."
         ),
         parameters=[
             OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
@@ -238,7 +236,7 @@ class AdminProductListCreateView(APIView):
 
     @extend_schema(
         summary="Create an admin product",
-        description="Authenticated Admin/Supplier endpoint. Creates shared product data only.",
+        description="Authenticated Admin endpoint. Creates shared product data only.",
         request=AdminProductWriteSerializer,
         responses={
             201: AdminProductDetailSerializer,
@@ -261,19 +259,24 @@ class AdminProductListCreateView(APIView):
         )
 
     def get_scoped_queryset(self, request):
-        products = get_product_queryset()
-        if request.user.role.role_name == SUPPLIER_ROLE:
-            return products.filter(supplier__user=request.user)
-        return products
+        return get_product_queryset()
 
 
-class AdminProductDetailView(APIView):
-    permission_classes = [IsAuthenticated, HasAnyRole]
-    allowed_roles = frozenset({ADMIN_ROLE, SUPPLIER_ROLE})
+class AdminProductAccessMixin:
+    permission_classes = [IsAuthenticated, IsAdministrator]
+
+    def get_product(self, request, product_id):
+        product = get_product_queryset().filter(product_id=product_id).first()
+        if product is None:
+            raise NotFound("Product was not found.")
+        return product
+
+
+class AdminProductDetailView(AdminProductAccessMixin, APIView):
 
     @extend_schema(
         summary="View admin product details",
-        description="Authenticated Admin/Supplier endpoint. Returns product data and variants.",
+        description="Authenticated Admin endpoint. Returns product data and variants.",
         responses={200: AdminProductDetailSerializer, 404: ErrorResponseSerializer},
         tags=["Admin Products"],
     )
@@ -283,7 +286,7 @@ class AdminProductDetailView(APIView):
 
     @extend_schema(
         summary="Update an admin product",
-        description="Authenticated Admin/Supplier endpoint. Updates shared product fields only.",
+        description="Authenticated Admin endpoint. Updates shared product fields only.",
         request=AdminProductWriteSerializer,
         responses={
             200: AdminProductDetailSerializer,
@@ -306,28 +309,31 @@ class AdminProductDetailView(APIView):
         product = serializer.save()
         return Response(AdminProductDetailSerializer(product).data)
 
-    def get_product(self, request, product_id):
-        product = get_product_queryset().filter(product_id=product_id).first()
-        if product is None:
-            raise NotFound("Product was not found.")
-        if request.user.role.role_name == SUPPLIER_ROLE:
-            supplier_profile = get_user_supplier_profile(request.user)
-            if (
-                supplier_profile is None
-                or product.supplier_id != supplier_profile.supplier_id
-            ):
-                raise PermissionDenied("You do not have permission to manage this product.")
-        return product
+    @extend_schema(
+        summary="Delete an unreferenced product",
+        description=(
+            "Authenticated Admin endpoint. Products referenced by carts or reviews "
+            "must be deactivated instead of deleted."
+        ),
+        responses={204: None, 400: ErrorResponseSerializer, 404: ErrorResponseSerializer},
+        tags=["Admin Products"],
+    )
+    def delete(self, request, product_id):
+        product = self.get_product(request, product_id)
+        if product.reviews.exists() or product.variants.filter(
+            cart_products__isnull=False,
+        ).exists():
+            raise ValidationError(
+                {"product_id": ["Referenced products must be deactivated instead of deleted."]}
+            )
+        product.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def require_admin(self, request):
-        if request.user.role.role_name != ADMIN_ROLE:
-            raise PermissionDenied("Only admins can delete products or variants.")
 
-
-class AdminProductVariantCreateView(AdminProductDetailView):
+class AdminProductVariantCreateView(AdminProductAccessMixin, APIView):
     @extend_schema(
         summary="Create a product variant",
-        description="Authenticated Admin/Supplier endpoint. Creates one color/size variant.",
+        description="Authenticated Admin endpoint. Creates one color/size variant.",
         request=AdminProductVariantWriteSerializer,
         responses={
             201: ProductDetailSerializer,
@@ -353,10 +359,10 @@ class AdminProductVariantCreateView(AdminProductDetailView):
         )
 
 
-class AdminProductVariantDetailView(AdminProductDetailView):
+class AdminProductVariantDetailView(AdminProductAccessMixin, APIView):
     @extend_schema(
         summary="Update a product variant",
-        description="Authenticated Admin/Supplier endpoint. Updates one color/size variant.",
+        description="Authenticated Admin endpoint. Updates one color/size variant.",
         request=AdminProductVariantWriteSerializer,
         responses={
             200: ProductDetailSerializer,
@@ -397,7 +403,6 @@ class AdminProductVariantDetailView(AdminProductDetailView):
         tags=["Admin Products"],
     )
     def delete(self, request, product_id, variant_id):
-        self.require_admin(request)
         self.get_product(request, product_id)
         variant = self.get_variant(product_id, variant_id)
         if variant.cart_products.exists():
@@ -405,7 +410,7 @@ class AdminProductVariantDetailView(AdminProductDetailView):
                 {"variant_id": ["This variant is referenced by cart or order history."]}
             )
         variant.delete()
-        return Response({"message": "Product variant deleted successfully."})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_variant(self, product_id, variant_id):
         variant = ProductVariant.objects.filter(
@@ -415,3 +420,49 @@ class AdminProductVariantDetailView(AdminProductDetailView):
         if variant is None:
             raise NotFound("Product variant was not found.")
         return variant
+
+
+class AdminProductImageListCreateView(AdminProductAccessMixin, APIView):
+    serializer_class = ProductImageSerializer
+
+    def get(self, request, product_id):
+        product = self.get_product(request, product_id)
+        return Response(ProductImageSerializer(product.images.all(), many=True).data)
+
+    def post(self, request, product_id):
+        product = self.get_product(request, product_id)
+        serializer = AdminProductImageWriteSerializer(
+            data=request.data,
+            context={"product": product},
+        )
+        serializer.is_valid(raise_exception=True)
+        image = serializer.save(product=product)
+        return Response(ProductImageSerializer(image).data, status=status.HTTP_201_CREATED)
+
+
+class AdminProductImageDetailView(AdminProductAccessMixin, APIView):
+    serializer_class = ProductImageSerializer
+
+    def patch(self, request, product_id, image_id):
+        product = self.get_product(request, product_id)
+        image = self.get_image(product_id, image_id)
+        serializer = AdminProductImageWriteSerializer(
+            image,
+            data=request.data,
+            partial=True,
+            context={"product": product},
+        )
+        serializer.is_valid(raise_exception=True)
+        return Response(ProductImageSerializer(serializer.save()).data)
+
+    def delete(self, request, product_id, image_id):
+        self.get_product(request, product_id)
+        image = self.get_image(product_id, image_id)
+        image.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def get_image(self, product_id, image_id):
+        image = ProductImage.objects.filter(product_id=product_id, image_id=image_id).first()
+        if image is None:
+            raise NotFound("Product image was not found.")
+        return image

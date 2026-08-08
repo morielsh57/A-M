@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, User
-from accounts.permissions import HasAnyRole
+from accounts.permissions import IsAdministrator
 from accounts.serializers import DashboardOverviewResponseSerializer
 from carts.models import CartProduct
 from products.models import Product
@@ -24,8 +24,7 @@ def calculate_trend_percent(current_value, previous_value):
 
 
 class DashboardOverviewView(APIView):
-    permission_classes = [IsAuthenticated, HasAnyRole]
-    allowed_roles = frozenset({ADMIN_ROLE, SUPPLIER_ROLE})
+    permission_classes = [IsAuthenticated, IsAdministrator]
 
     @extend_schema(
         summary="View admin dashboard overview metrics",
@@ -40,15 +39,6 @@ class DashboardOverviewView(APIView):
         now = timezone.now()
         current_period_start = now - timedelta(days=30)
         previous_period_start = now - timedelta(days=60)
-
-        if request.user.role.role_name == SUPPLIER_ROLE:
-            return Response(
-                self.get_supplier_dashboard_data(
-                    request.user,
-                    current_period_start,
-                    previous_period_start,
-                )
-            )
 
         return Response(
             self.get_admin_dashboard_data(current_period_start, previous_period_start)
@@ -80,6 +70,13 @@ class DashboardOverviewView(APIView):
 
         return {
             "dashboard_type": ADMIN_ROLE,
+            "user_amount": User.objects.count(),
+            "order_amount": Order.objects.count(),
+            "low_stock_product_amount": Product.objects.filter(
+                is_active=True,
+                variants__is_active=True,
+                variants__quantity__lte=5,
+            ).distinct().count(),
             "customer_amount": active_customers.count(),
             "active_customer_trend_percent": calculate_trend_percent(
                 current_customers_count,

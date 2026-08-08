@@ -368,7 +368,7 @@ class ProductVariantApiTests(TestCase):
                 kwargs={"product_id": product_id, "variant_id": variant["variant_id"]},
             )
         )
-        self.assertEqual(delete_response.status_code, 200)
+        self.assertEqual(delete_response.status_code, 204)
         self.assertFalse(ProductVariant.objects.filter(variant_id=variant["variant_id"]).exists())
 
     def test_admin_cannot_delete_variant_referenced_by_cart(self):
@@ -395,9 +395,8 @@ class ProductVariantApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("variant_id", response.json()["error"]["details"])
 
-    def test_supplier_can_create_and_update_only_own_products_and_variants(self):
+    def test_supplier_cannot_use_admin_product_mutations(self):
         self.authorize(self.supplier_user)
-
         create_product_response = self.client.post(
             reverse("admin-product-list"),
             {
@@ -409,8 +408,6 @@ class ProductVariantApiTests(TestCase):
             },
             format="json",
         )
-        self.assertEqual(create_product_response.status_code, 201)
-        created_product_id = create_product_response.json()["data"]["product_id"]
         patch_product_response = self.client.patch(
             reverse(
                 "admin-product-detail",
@@ -422,19 +419,17 @@ class ProductVariantApiTests(TestCase):
         create_variant_response = self.client.post(
             reverse(
                 "admin-product-variant-create",
-                kwargs={"product_id": created_product_id},
+                kwargs={"product_id": self.product.product_id},
             ),
             {"color": "Red", "size": "S", "quantity": 2},
             format="json",
         )
-        self.assertEqual(create_variant_response.status_code, 201)
-        created_variant_id = create_variant_response.json()["data"]["variants"][0]["variant_id"]
         patch_variant_response = self.client.patch(
             reverse(
                 "admin-product-variant-detail",
                 kwargs={
-                    "product_id": created_product_id,
-                    "variant_id": created_variant_id,
+                    "product_id": self.product.product_id,
+                    "variant_id": self.black_medium.variant_id,
                 },
             ),
             {"quantity": 1},
@@ -450,17 +445,10 @@ class ProductVariantApiTests(TestCase):
             )
         )
 
-        self.assertEqual(
-            create_product_response.json()["data"]["supplier_id"],
-            self.supplier.supplier_id,
-        )
-        self.assertEqual(patch_product_response.status_code, 200)
-        self.assertEqual(patch_product_response.json()["data"]["name"], "Supplier Rename")
-        self.assertEqual(patch_variant_response.status_code, 200)
-        self.assertEqual(
-            patch_variant_response.json()["data"]["variants"][0]["quantity"],
-            1,
-        )
+        self.assertEqual(create_product_response.status_code, 403)
+        self.assertEqual(patch_product_response.status_code, 403)
+        self.assertEqual(create_variant_response.status_code, 403)
+        self.assertEqual(patch_variant_response.status_code, 403)
         self.assertEqual(delete_variant_response.status_code, 403)
 
     def test_supplier_cannot_update_or_add_variants_to_another_supplier_product(self):

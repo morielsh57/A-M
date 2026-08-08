@@ -96,6 +96,10 @@ class DashboardOverviewApiTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         data = response.json()["data"]
+        self.assertEqual(data["dashboard_type"], ADMIN_ROLE)
+        self.assertEqual(data["user_amount"], User.objects.count())
+        self.assertEqual(data["order_amount"], Order.objects.count())
+        self.assertIn("low_stock_product_amount", data)
         self.assertEqual(data["customer_amount"], 4)
         self.assertEqual(data["current_period_active_customers"], 2)
         self.assertEqual(data["previous_period_active_customers"], 1)
@@ -105,29 +109,12 @@ class DashboardOverviewApiTests(TestCase):
         self.assertEqual(data["previous_period_revenue"], 100.0)
         self.assertEqual(data["revenue_trend_percent"], 200.0)
 
-    def test_supplier_can_view_dashboard_metrics(self):
-        now = timezone.now()
-        product = self.create_supplier_product("supplier-product")
-        self.create_supplier_product("low-stock-product", quantity=3)
-        order = self.create_completed_order(Decimal("500.00"), now - timedelta(days=3))
-        CartProduct.objects.create(
-            cart=order.cart,
-            variant=product.variants.first(),
-            quantity=2,
-            unit_price=Decimal("100.00"),
-            total_price=Decimal("200.00"),
-        )
+    def test_supplier_cannot_view_admin_dashboard_metrics(self):
         self.authorize(self.supplier)
 
         response = self.client.get(reverse("admin-dashboard-overview"))
 
-        self.assertEqual(response.status_code, 200)
-        data = response.json()["data"]
-        self.assertEqual(data["dashboard_type"], SUPPLIER_ROLE)
-        self.assertEqual(data["supplier_product_amount"], 2)
-        self.assertEqual(data["supplier_low_stock_product_amount"], 1)
-        self.assertEqual(data["supplier_order_amount"], 1)
-        self.assertEqual(data["revenue_amount"], 200.0)
+        self.assertEqual(response.status_code, 403)
 
     def test_customer_cannot_view_dashboard_metrics(self):
         self.authorize(self.customer)

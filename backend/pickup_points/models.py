@@ -9,6 +9,7 @@ class PickUpPoint(models.Model):
     description = models.TextField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         db_table = "pick_up_points"
