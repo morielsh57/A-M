@@ -11,7 +11,7 @@ import {
 import { NavLink, useLocation } from 'react-router-dom';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppSelector } from '../../../app/store';
-import { EUserRole } from '../../store/user.types';
+import { EUserRole } from '../../store/user/user.types';
 import './AdminNavbar.scss';
 
 interface AdminNavbarProps {

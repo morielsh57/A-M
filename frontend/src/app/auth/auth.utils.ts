@@ -1,5 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
-import { EUserRole } from '../../shared/store/user.types';
+import { EUserRole } from '../../shared/store/user/user.types';
 
 export const getUserIdFromToken = (token: string | null): number | undefined => {
   if (!token) return undefined;
