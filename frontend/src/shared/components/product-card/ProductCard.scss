@@ -1,0 +1,413 @@
+@import '../../styles/colors.scss';
+
+.product-card {
+  --card-radius: 5px;
+
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  position: relative;
+  padding: 8px;
+  border: 1px solid rgba($purple6, 0.08);
+  border-radius: var(--card-radius);
+  background:
+    linear-gradient(145deg, rgba($natural1, 0.98), rgba($pink1, 0.72)),
+    $natural1;
+  box-shadow: 0 0 12px rgba($purple9, 0.08);
+  transition:
+    border-color 180ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+  overflow: hidden;
+
+  &:hover,
+  &:focus-within {
+    box-shadow: 0 24px 70px rgba($purple9, 0.14);
+    box-shadow: 0 0 8px rgba($purple9, 0.14);
+    transform: scale(1.01);
+
+    .product-card {
+      &__image {
+        transform: scale(1.055);
+      }
+
+      &__quick-view {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+
+  &:active {
+    transform: translateY(-2px) scale(0.995);
+  }
+
+  &__stretched-link,
+  &__color {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &__stretched-link {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: var(--card-radius);
+    outline: none;
+
+    &:focus-visible {
+      box-shadow:
+        0 0 0 3px $natural1,
+        0 0 0 6px rgba($deepPink8, 0.42);
+    }
+  }
+
+  &__media {
+    position: relative;
+    z-index: 1;
+    aspect-ratio: 4 / 5.25;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 26% 18%, rgba($pink3, 0.7), transparent 34%),
+      linear-gradient(160deg, $natural3, $pink1 55%, $natural1);
+  }
+
+  &__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 360ms ease;
+  }
+
+  &__quick-view {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba($natural1, 0.9);
+    color: $purple7;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0;
+    box-shadow: 0 10px 28px rgba($purple9, 0.16);
+    transform: translateY(8px);
+    transition:
+      opacity 180ms ease,
+      transform 180ms ease;
+  }
+
+  &__content {
+    display: flex;
+    position: relative;
+    z-index: 3;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 4px 2px;
+    pointer-events: none;
+  }
+
+  &__name {
+    margin: 0;
+    color: $purple9;
+    font-size: 0.95rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &__price {
+    color: $natural9;
+    font-size: 1.02rem;
+    font-weight: 800;
+  }
+
+  &__fabric {
+    min-width: 0;
+    color: $natural7;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__colors {
+    display: flex;
+    position: relative;
+    z-index: 5;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    pointer-events: auto;
+  }
+
+  &__color {
+    position: relative;
+    z-index: 6;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 1px solid rgba($purple6, 0.16);
+    border-radius: 999px;
+    background: $natural1;
+    outline: none;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      transform 160ms ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: rgba($deepPink8, 0.45);
+      box-shadow: 0 8px 18px rgba($purple9, 0.12);
+      transform: translateY(-1px);
+    }
+
+    &--selected {
+      border-color: $deepPink8;
+      box-shadow:
+        0 0 0 3px rgba($deepPink7, 0.14),
+        0 9px 22px rgba($purple9, 0.14);
+    }
+
+    &--out-of-stock {
+      pointer-events: none;
+      cursor: not-allowed;
+
+      &:hover,
+      &:focus-visible {
+        border-color: rgba($purple6, 0.16);
+        box-shadow: none;
+        transform: none;
+      }      
+    }
+  }
+
+  &__color-swatch {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border: 1px solid rgba($purple9, 0.14);
+    border-radius: inherit;
+    background-color: #d8c4a7;
+    box-shadow: inset 0 0 0 1px rgba($natural1, 0.38);
+  }
+
+  &__color--out-of-stock {
+    .product-card__color-swatch {
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: -3px;
+        width: 24px;
+        height: 2px;
+        border-radius: 999px;
+        background: $red8;
+        box-shadow: 0 0 0 1px rgba($natural1, 0.7);
+        transform: rotate(-42deg);
+      }
+    }
+  }
+}
+
+@media (max-width: 1199px) {
+  .product-card {
+    padding: 6px;
+
+    &__content {
+      gap: 8px;
+      padding: 10px 4px 4px;
+    }
+
+    &__name {
+      font-size: 0.84rem;
+    }
+
+    &__price {
+      font-size: 0.9rem;
+    }
+
+    &__fabric {
+      font-size: 0.62rem;
+    }
+
+    &__colors {
+      gap: 6px;
+      min-height: 28px;
+    }
+
+    &__color {
+      width: 23px;
+      height: 23px;
+    }
+
+    &__color-swatch {
+      width: 15px;
+      height: 15px;
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .product-card {
+    width: 100% !important;
+    padding: 0px;
+    box-shadow: 0 10px 28px rgba($purple9, 0.08);
+    border: none;
+
+    &:hover,
+    &:focus-within {
+      transform: scale(1.005);
+      box-shadow: 0 14px 34px rgba($purple9, 0.12);
+    }
+
+    &__media {
+      aspect-ratio: 4 / 5.35;
+    }
+
+    &__quick-view {
+      display: none;
+    }
+
+    &__content {
+      gap: 6px;
+      padding: 8px 6px 6px;
+    }
+
+    &__name {
+      font-size: 0.72rem;
+      line-height: 1.2;
+      font-weight: 600;
+    }
+
+    &__price {
+      font-size: 0.8rem;
+    }
+
+    &__fabric {
+      max-width: 100%;
+      font-size: 0.54rem;
+      letter-spacing: 0.07em;
+    }
+
+    &__colors {
+      gap: 7px;
+      min-height: 24px;
+    }
+
+    &__color {
+      width: 20px;
+      height: 20px;
+
+      &:hover,
+      &:focus-visible {
+        transform: translateY(-1px);
+      }
+    }
+
+    &__color-swatch {
+      width: 13px;
+      height: 13px;
+    }
+
+    &__color--out-of-stock {
+      .product-card__color-swatch {
+        &::after {
+          left: -2px;
+          width: 17px;
+          height: 1.5px;
+        }
+      }
+    }
+  }
+}
+
+@media (min-width: 500px) and (max-width: 699px) {
+  .product-card {
+    padding: 0;
+    border: none;
+    box-shadow: 0 8px 22px rgba($purple9, 0.07);
+
+    &:hover,
+    &:focus-within {
+      box-shadow: 0 12px 28px rgba($purple9, 0.11);
+      transform: scale(1.004);
+    }
+
+    &__media {
+      aspect-ratio: 4 / 4.6;
+    }
+
+    &__quick-view {
+      display: none;
+    }
+
+    &__content {
+      gap: 5px;
+      padding: 8px 6px 7px;
+    }
+
+    &__name {
+      font-size: 0.72rem;
+      line-height: 1.18;
+      font-weight: 650;
+    }
+
+    &__meta {
+      gap: 6px;
+    }
+
+    &__price {
+      font-size: 0.78rem;
+    }
+
+    &__fabric {
+      font-size: 0.52rem;
+      letter-spacing: 0.06em;
+    }
+
+    &__colors {
+      gap: 6px;
+      min-height: 22px;
+    }
+
+    &__color {
+      width: 19px;
+      height: 19px;
+    }
+
+    &__color-swatch {
+      width: 12px;
+      height: 12px;
+    }
+
+    &__color--out-of-stock {
+      .product-card__color-swatch {
+        &::after {
+          left: -2px;
+          width: 16px;
+          height: 1.5px;
+        }
+      }
+    }
+  }
+}

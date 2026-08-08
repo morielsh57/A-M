@@ -9,6 +9,7 @@ import { APP_ROUTING_PATHS } from "../app/routing";
 import RouteOutlet from "./util/routeOutlet";
 import Main from './client/main/Main';
 import Home from './client/home/Home';
+import ProductPage from './client/product-page/ProductPage';
 import { ProtectedLoginRoute } from '../app/guards/client/ProtectedLoginRoute';
 import ClientLogin from '../app/auth/client/client-login/ClientLogin';
 import paletteColors from '../shared/styles/colors.module.scss';
@@ -69,6 +70,7 @@ const AppAMFashion: React.FC = (props) => {
                   </Route>
                   <Route path={APP_ROUTING_PATHS.APP} element={<Main />}>
                     <Route index element={<Home />} />
+                    <Route path={`${APP_ROUTING_PATHS.PRODUCT}/:productId`} element={<ProductPage />} />
                   </Route>
                   <Route path={`${APP_ROUTING_PATHS.ADMIN.ROOT}/*`} element={<AppAdmin />} />
                   <Route path={APP_ROUTING_PATHS.ROOT} element={<Navigate to={APP_ROUTING_PATHS.APP_HOME_PAGE} replace />} />

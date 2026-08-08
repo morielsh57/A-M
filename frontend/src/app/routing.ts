@@ -1,6 +1,7 @@
 const ROOT_PATH = '/';
 const AUTH_PATH = '/auth';
 const APP_PATH = '/app';
+const PRODUCT_SEGMENT = 'product';
 const ADMIN_ROOT_PATH = '/admin';
 
 const LOGIN_SEGMENT = 'login';
@@ -25,6 +26,7 @@ export const APP_ROUTING_PATHS = {
   ROOT: ROOT_PATH,
   AUTH: AUTH_PATH,
   APP: APP_PATH,
+  PRODUCT: PRODUCT_SEGMENT,
   LOGIN: LOGIN_SEGMENT,
   SIGNUP: SIGNUP_SEGMENT,
   ADMIN: {
@@ -47,6 +49,9 @@ export const APP_ROUTING_PATHS = {
   AUTH_LOGIN_PAGE: `${AUTH_PATH}/${LOGIN_SEGMENT}`,
   AUTH_SIGNUP_PAGE: `${AUTH_PATH}/${SIGNUP_SEGMENT}`,
   APP_HOME_PAGE: APP_PATH,
+  APP_PRODUCT_PAGE: (productId: string | number, variantId?: string | number | null) => (
+    `${APP_PATH}/${PRODUCT_SEGMENT}/${productId}${variantId ? `?variant=${variantId}` : ''}`
+  ),
   ADMIN_LOGIN_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_AUTH_SEGMENT}/${ADMIN_LOGIN_SEGMENT}`,
   ADMIN_HOME_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_HOME_SEGMENT}`,
   ADMIN_PAGE: (segment: string) => `${ADMIN_ROOT_PATH}/${segment}`,
@@ -66,4 +71,6 @@ export const API_ROUTES = {
   },
   USERS: '/users',
   USERS_ME: '/users/me',
+  PRODUCTS: '/products',
+  PRODUCT_DETAIL: (productId: string | number) => `/products/${productId}`,
 } as const;
