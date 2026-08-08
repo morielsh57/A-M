@@ -10,7 +10,7 @@ import {
   clearCurrentUser,
   getCurrentAdminOrSupplier,
   getCurrentUser,
-} from '../../shared/store/user.store';
+} from '../../shared/store/user/user.store';
 import { APP_ROUTING_PATHS } from '../routing';
 import { useToasts } from 'react-toast-notifications';
 

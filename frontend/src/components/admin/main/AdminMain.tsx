@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { EAPIStatus } from '../../../shared/api/models';
 import { AUTH_LOCAL_STORAGE_KEYS } from '../../../app/constants';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
-import { getCurrentAdminOrSupplier } from '../../../shared/store/user.store';
+import { getCurrentAdminOrSupplier } from '../../../shared/store/user/user.store';
 import { getItemFromLocalStorage } from '../../../shared/utils/localStorage.utils';
 import AdminHeader from '../../../shared/layout/admin-header/AdminHeader';
 import AdminNavbar from '../../../shared/layout/admin-navbar/AdminNavbar';
