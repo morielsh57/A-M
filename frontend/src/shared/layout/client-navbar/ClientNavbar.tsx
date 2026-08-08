@@ -3,60 +3,62 @@ import { DownOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Link } from 'react-router-dom';
 import { Dropdown } from 'antd';
+import { APP_ROUTING_PATHS } from '../../../app/routing';
+import { useAppSelector } from '../../../app/store';
+import type { ICategory, IMainCategory } from '../../store/category/category.types';
 import ClientMobileNavbar from './ClientMobileNavbar';
 import './ClientNavbar.scss';
 
-const NAV_ITEMS = {
-  women: ['Tops', 'Pants', 'Drasses'],
-  men: ['Shirts', 'Pants'],
-  boys: ['Shirts', 'Pants'],
-  girls: ['Tops', 'Pants', 'Drasses'],
-} as const;
+const getMainCategoryLabel = (category: IMainCategory) => category.main_category_name;
 
-const createMenuItems = (section: string, items: readonly string[]): MenuProps['items'] =>
-  items.map((item) => ({
-    key: `${section}-${item}`,
+const getSubCategoryLabel = (category: ICategory) => (
+  category.sub_category_name || category.main_category_name
+);
+
+const createMenuItems = (category: IMainCategory): MenuProps['items'] =>
+  category.subcategories.map((subCategory) => ({
+    key: String(subCategory.category_id),
     className: 'menuItemNav',
-    label: <Link to="#">{item}</Link>,
+    label: (
+      <Link to={APP_ROUTING_PATHS.APP_CATEGORY_PAGE('sub', subCategory.category_id)}>
+        {getSubCategoryLabel(subCategory)}
+      </Link>
+    ),
   }));
 
 const ClientNavbar: React.FC = () => {
+  const { getMainCategoriesReq } = useAppSelector((store) => store.categoryStoreReducer);
+  const mainCategories = getMainCategoriesReq.data || [];
+
   return (
     <nav className="nav-client mx-md-auto text-light d-md-flex align-items-center justify-content-md-center py-md-3 py-2 w-100">
       <div className="desktop-navbar-contaienr d-md-flex d-none">
-        <Dropdown
-          className="me-5"
-          menu={{ items: createMenuItems('women', NAV_ITEMS.women), className: 'py-0' }}
-        >
-          <Link to="#" className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-            Women <DownOutlined className="nav-dropdown-icon" />
-          </Link>
-        </Dropdown>
-        <Dropdown
-          className="me-5"
-          menu={{ items: createMenuItems('men', NAV_ITEMS.men), className: 'py-0' }}
-        >
-          <Link to="#" className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-            Men <DownOutlined className="nav-dropdown-icon" />
-          </Link>
-        </Dropdown>
-        <Dropdown
-          className="me-5"
-          menu={{ items: createMenuItems('boys', NAV_ITEMS.boys), className: 'py-0' }}
-        >
-          <Link to="#" className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-            Boys <DownOutlined className="nav-dropdown-icon" />
-          </Link>
-        </Dropdown>
-        <Dropdown
-          className="me-5"
-          menu={{ items: createMenuItems('girls', NAV_ITEMS.girls), className: 'py-0' }}
-        >
-          <Link to="#" className="ant-dropdown-link" onClick={(e) => e.preventDefault()}>
-            Girls <DownOutlined className="nav-dropdown-icon" />
-          </Link>
-        </Dropdown>
-        <Link to="#" className="text-decoration-none text-white">Accessories</Link>
+        {mainCategories.map((category) => {
+          const categoryLink = APP_ROUTING_PATHS.APP_CATEGORY_PAGE('main', category.category_id);
+
+          if (!category.subcategories?.length) {
+            return (
+              <Link
+                key={String(category.category_id)}
+                to={categoryLink}
+                className="text-decoration-none text-white"
+              >
+                {getMainCategoryLabel(category)}
+              </Link>
+            );
+          }
+
+          return (
+            <Dropdown
+              key={String(category.category_id)}
+              menu={{ items: createMenuItems(category), className: 'py-0' }}
+            >
+              <Link to={categoryLink} className="ant-dropdown-link">
+                {getMainCategoryLabel(category)} <DownOutlined className="nav-dropdown-icon" />
+              </Link>
+            </Dropdown>
+          );
+        })}
       </div>
       <div className="d-md-none d-block">
         <ClientMobileNavbar />

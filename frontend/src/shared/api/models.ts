@@ -14,14 +14,28 @@ export interface IAPIError {
   axiosError?: AxiosError;
 }
 
-export interface IAPIRequestState<T = any> {
+export interface IPaginationMeta {
+  page: number;
+  page_size: number;
+  total_pages: number;
+  total_items: number;
+  next: string | null;
+  previous: string | null;
+}
+
+export interface IMeta {
+  pagination?: IPaginationMeta;
+}
+
+export interface IAPIRequestState<T = any, TMeta = IMeta> {
   status: EAPIStatus;
   error?: IAPIError;
   data?: T;
+  meta?: TMeta;
 }
 
 export abstract class APIRequestState {
-  static create<T>(): IAPIRequestState<T> {
+  static create<T, TMeta = IMeta>(): IAPIRequestState<T, TMeta> {
     return { status: EAPIStatus.IDLE };
   }
 }

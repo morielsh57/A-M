@@ -49,26 +49,6 @@
     color: $natural1;
   }
 
-  hr.hr-for-title {
-    height: 2px;
-    width: 90%;
-    border: none;
-    background: $purple5;
-  }
-
-  .title-with-hr {
-    margin-top: -38px;
-    text-align: center;
-    color: $purple6;
-  }
-
-  .title-with-hr > span {
-    background: $natural1;
-    padding: 8px;
-    position: relative;
-    z-index: 999;
-  }
-
   .text-purple {
     color: $purple7;
   }

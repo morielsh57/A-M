@@ -1,0 +1,14 @@
+@import "../../../shared/styles/colors.scss";
+
+.category-page {
+  background: $natural1;
+  flex: 0 0 auto;
+  padding: 24px 0 56px;
+
+  &__message {
+    color: $purple6;
+    font-size: 1rem;
+    margin: 34px auto 48px;
+    text-align: center;
+  }
+}

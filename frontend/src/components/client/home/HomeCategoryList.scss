@@ -1,0 +1,36 @@
+@import '../../../shared/styles/colors.scss';
+
+.home-page-categories {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 34px;
+
+  &__category-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__category-message {
+    color: $purple6;
+    font-size: 1rem;
+    margin: 12px 0 24px;
+  }
+
+  &__category-more {
+    color: $purple7;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: -16px 0 28px;
+    text-decoration: none;
+    transition: color 160ms ease, transform 160ms ease;
+
+    &:hover {
+      color: $deepPink7;
+      transform: translateY(-1px);
+    }
+  }
+}

@@ -1,0 +1,49 @@
+@import '../../styles/colors.scss';
+
+.app-breadcrumbs {
+  width: 90%;
+  margin: 0 auto 24px;
+
+  &__list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: inline-flex;
+    align-items: center;
+    color: $natural7;
+    font-size: 0.86rem;
+    letter-spacing: 0.01em;
+
+    a {
+      color: $purple7;
+      text-decoration: none;
+      transition: color 160ms ease;
+
+      &:hover {
+        color: $deepPink8;
+      }
+    }
+
+    &:not(:first-child)::before {
+      content: '/';
+      margin: 0 9px;
+      color: rgba($purple6, 0.45);
+    }
+  }
+
+  &__item--active {
+    color: $natural7;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-breadcrumbs {
+    margin-bottom: 36px;
+  }
+}

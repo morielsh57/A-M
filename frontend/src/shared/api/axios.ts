@@ -38,22 +38,24 @@ export const injectStoreAxios = (_store: EnhancedStore) => {
 /**
  * The api thunk callback type (because we cannot import it from redux toolkit
  */
-type ApiThunkCallback<TData, TArgs> = (args: TArgs) => Promise<TData> | TData;
+type ApiThunkCallback<TData, TArgs> = (
+  args: TArgs
+) => Promise<TData | ApiSuccessResponse<TData>> | TData | ApiSuccessResponse<TData>;
 
-interface ApiSuccessResponse<TData> {
+export interface ApiSuccessResponse<TData, TMeta = unknown> {
   success: boolean;
   data: TData;
-  meta?: unknown;
+  meta?: TMeta;
 }
 
 export interface ApiService {
-  request<TResponse = unknown, TRequestData = unknown>(
+  request<TResponse = unknown, TMeta = unknown, TRequestData = unknown>(
     config: AxiosRequestConfig<TRequestData>,
-  ): Promise<TResponse>;
-  get<TResponse = unknown, TRequestData = unknown>(
+  ): Promise<ApiSuccessResponse<TResponse, TMeta>>;
+  get<TResponse = unknown, TMeta = unknown, TRequestData = unknown>(
     url: string,
     config?: AxiosRequestConfig<TRequestData>,
-  ): Promise<TResponse>;
+  ): Promise<ApiSuccessResponse<TResponse, TMeta>>;
   delete<TResponse = unknown, TRequestData = unknown>(
     url: string,
     config?: AxiosRequestConfig<TRequestData>,
@@ -101,6 +103,35 @@ const unwrapApiResponse = <TData>(
   return payload as TData;
 };
 
+const unwrapApiResponseEnvelope = <TData, TMeta = unknown>(
+  response: AxiosResponse<ApiSuccessResponse<TData, TMeta> | TData>,
+): ApiSuccessResponse<TData, TMeta> => {
+  const payload = response.data;
+
+  if (
+    payload &&
+    typeof payload === 'object' &&
+    'success' in payload &&
+    'data' in payload
+  ) {
+    return payload as ApiSuccessResponse<TData, TMeta>;
+  }
+
+  return {
+    success: true,
+    data: payload as TData,
+  };
+};
+
+const isApiSuccessResponse = <TData>(
+  payload: TData | ApiSuccessResponse<TData>,
+): payload is ApiSuccessResponse<TData> => (
+    !!payload
+    && typeof payload === 'object'
+    && 'success' in payload
+    && 'data' in payload
+  );
+
 /**
  * Create an api thunk, which will run the provided promise and await it
  * @param typePrefix The type prefix of the action
@@ -110,11 +141,17 @@ export const createApiThunk = <TData, TArgs = void>(
   typePrefix: string,
   requestCallback: ApiThunkCallback<TData, TArgs>,
 ) => {
-  return createAsyncThunk<TData, TArgs, { rejectValue: IAPIError }>(
+  return createAsyncThunk<TData, TArgs, { rejectValue: IAPIError; fulfilledMeta: { apiMeta?: unknown } }>(
     typePrefix,
-    async (args, { rejectWithValue }) => {
+    async (args, { rejectWithValue, fulfillWithValue }) => {
       try {
-        return await requestCallback(args as TArgs);
+        const payload = await requestCallback(args as TArgs);
+
+        if (isApiSuccessResponse(payload)) {
+          return fulfillWithValue(payload.data, { apiMeta: payload.meta });
+        }
+
+        return fulfillWithValue(payload, {});
         // eslint-disable-next-line
       } catch (e: unknown) {
         const axiosError = e as AxiosError;
@@ -211,18 +248,18 @@ const refreshAccessToken = async (baseURL: string): Promise<string | null> => {
 
 function createApiService(instance: AxiosInstance): ApiService {
   return {
-    request: async <TResponse, TRequestData = unknown>(
+    request: async <TResponse, TMeta = unknown, TRequestData = unknown>(
       config: AxiosRequestConfig<TRequestData>,
     ) => {
-      const response = await instance.request<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(config);
-      return unwrapApiResponse(response);
+      const response = await instance.request<ApiSuccessResponse<TResponse, TMeta> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse, TMeta> | TResponse>, TRequestData>(config);
+      return unwrapApiResponseEnvelope<TResponse, TMeta>(response);
     },
-    get: async <TResponse, TRequestData = unknown>(
+    get: async <TResponse, TMeta = unknown, TRequestData = unknown>(
       url: string,
       config?: AxiosRequestConfig<TRequestData>,
     ) => {
-      const response = await instance.get<ApiSuccessResponse<TResponse> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse> | TResponse>, TRequestData>(url, config);
-      return unwrapApiResponse(response);
+      const response = await instance.get<ApiSuccessResponse<TResponse, TMeta> | TResponse, AxiosResponse<ApiSuccessResponse<TResponse, TMeta> | TResponse>, TRequestData>(url, config);
+      return unwrapApiResponseEnvelope<TResponse, TMeta>(response);
     },
     delete: async <TResponse, TRequestData = unknown>(
       url: string,

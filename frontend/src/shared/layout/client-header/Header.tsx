@@ -15,7 +15,7 @@ const Header: React.FC = () => {
   return (
     <header className="client-store-header pt-md-0 pt-3">
       <SearchInput view="mobile" />
-      <div className="row justify-content-around align-items-center col-11 mx-auto">
+      <div className="row justify-content-around align-items-center col-11 mx-auto py-2">
         <CartButton />
         <div className="col-4 text-center">
           <AppLogo />

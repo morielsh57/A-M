@@ -25,13 +25,9 @@ export interface IAdminProductListItem {
   total_quantity: number;
 }
 
-export type IAdminProductsListResponse = IAdminProductListItem[];
-
 export interface IAdminProductDetailRequestParams {
   product_id: ProductId;
 }
-
-export type IAdminProductDetailResponse = IProduct;
 
 export interface IAdminProductWriteRequest {
   catalog_number: string;
@@ -45,8 +41,6 @@ export interface IAdminProductWriteRequest {
   supplier_id?: SupplierId | null;
 }
 
-export type IAdminProductWriteResponse = IProduct;
-
 export interface IAdminProductVariantWriteRequest {
   color?: string | null;
   size?: string | null;
@@ -58,5 +52,3 @@ export interface IAdminProductVariantWriteRequestParams {
   product_id: ProductId;
   variant_id?: ProductVariantId;
 }
-
-export type IAdminProductVariantWriteResponse = IProduct;
