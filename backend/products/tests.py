@@ -473,12 +473,23 @@ class ProductVariantApiTests(TestCase):
 
         self.assertEqual(create_response.status_code, 201)
         product_id = create_response.json()["data"]["product_id"]
+        uploaded_image = ProductImage.objects.create(
+            product_id=product_id,
+            public_id="products/heavy-hoodie-green",
+            secure_url="https://res.cloudinary.com/am/image/upload/green.jpg",
+            width=1200,
+            height=1600,
+            format="jpg",
+            alt_text="Heavy hoodie in green",
+            is_primary=True,
+        )
         variant_response = self.client.post(
             reverse("admin-product-variant-create", kwargs={"product_id": product_id}),
             {
                 "color": "Green",
                 "size": "L",
                 "quantity": 6,
+                "image_ids": [uploaded_image.image_id],
             },
             format="json",
         )
@@ -487,6 +498,17 @@ class ProductVariantApiTests(TestCase):
         variant = variant_response.json()["data"]["variants"][0]
         self.assertEqual(variant["color"], "Green")
         self.assertEqual(variant["quantity"], 6)
+        self.assertEqual(
+            variant["images"],
+            ["https://res.cloudinary.com/am/image/upload/green.jpg"],
+        )
+        self.assertTrue(
+            ProductImage.objects.filter(
+                variant_id=variant["variant_id"],
+                public_id="products/heavy-hoodie-green",
+                is_primary=True,
+            ).exists()
+        )
 
         update_response = self.client.patch(
             reverse(
@@ -499,6 +521,7 @@ class ProductVariantApiTests(TestCase):
         self.assertEqual(update_response.status_code, 200)
         self.assertEqual(update_response.json()["data"]["variants"][0]["quantity"], 2)
 
+        ProductImage.objects.filter(public_id="products/heavy-hoodie-green").delete()
         delete_response = self.client.delete(
             reverse(
                 "admin-product-variant-detail",
@@ -507,6 +530,32 @@ class ProductVariantApiTests(TestCase):
         )
         self.assertEqual(delete_response.status_code, 204)
         self.assertFalse(ProductVariant.objects.filter(variant_id=variant["variant_id"]).exists())
+
+    def test_variant_creation_rejects_an_image_from_another_product_atomically(self):
+        self.authorize(self.admin)
+        other_product_image = ProductImage.objects.create(
+            product=self.other_product,
+            public_id="products/other-product",
+            secure_url="https://res.cloudinary.com/am/image/upload/other.jpg",
+        )
+        response = self.client.post(
+            reverse(
+                "admin-product-variant-create",
+                kwargs={"product_id": self.product.product_id},
+            ),
+            {
+                "color": "Blue",
+                "size": "L",
+                "quantity": 2,
+                "image_ids": [other_product_image.image_id],
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(
+            ProductVariant.objects.filter(product=self.product, color="Blue", size="L").exists()
+        )
 
     def test_admin_cannot_delete_variant_referenced_by_cart(self):
         self.authorize(self.admin)

@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import (
     Avg,
     Case,
@@ -5,6 +6,7 @@ from django.db.models import (
     DecimalField,
     Exists,
     IntegerField,
+    Max,
     OuterRef,
     Prefetch,
     Q,
@@ -17,6 +19,7 @@ from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -26,6 +29,7 @@ from catalogue.models import Category
 from config.api.pagination import StandardPageNumberPagination
 from config.api.serializers import ErrorResponseSerializer
 from products.models import Product, ProductImage, ProductVariant
+from products.cloudinary_service import destroy_product_image, upload_product_image
 from products.serializers import (
     AdminProductDetailSerializer,
     AdminProductImageWriteSerializer,
@@ -40,6 +44,8 @@ from products.serializers import (
     ProductCountSerializer,
     ProductDetailSerializer,
     ProductImageSerializer,
+    ProductImageReplaceSerializer,
+    ProductImageUploadSerializer,
     get_user_supplier_profile,
 )
 
@@ -493,6 +499,10 @@ class AdminProductDetailView(AdminProductAccessMixin, APIView):
     def delete(self, request, product_id):
         self.require_admin(request)
         product = self.get_product(request, product_id)
+        if product.images.exists():
+            raise ValidationError(
+                {"product_id": ["Delete the product images before deleting the product."]}
+            )
         if product.reviews.exists() or product.variants.filter(
             cart_products__isnull=False,
         ).exists():
@@ -579,6 +589,10 @@ class AdminProductVariantDetailView(AdminProductAccessMixin, APIView):
         self.require_admin(request)
         self.get_product(request, product_id)
         variant = self.get_variant(product_id, variant_id)
+        if variant.product_images.exists():
+            raise ValidationError(
+                {"variant_id": ["Delete the variant images before deleting the variant."]}
+            )
         if variant.cart_products.exists():
             raise ValidationError(
                 {"variant_id": ["This variant is referenced by cart or order history."]}
@@ -603,17 +617,6 @@ class AdminProductImageListCreateView(AdminProductAccessMixin, APIView):
         product = self.get_product(request, product_id)
         return Response(ProductImageSerializer(product.images.all(), many=True).data)
 
-    def post(self, request, product_id):
-        product = self.get_product(request, product_id)
-        serializer = AdminProductImageWriteSerializer(
-            data=request.data,
-            context={"product": product},
-        )
-        serializer.is_valid(raise_exception=True)
-        image = serializer.save(product=product)
-        return Response(ProductImageSerializer(image).data, status=status.HTTP_201_CREATED)
-
-
 class AdminProductImageDetailView(AdminProductAccessMixin, APIView):
     serializer_class = ProductImageSerializer
 
@@ -627,11 +630,20 @@ class AdminProductImageDetailView(AdminProductAccessMixin, APIView):
             context={"product": product},
         )
         serializer.is_valid(raise_exception=True)
-        return Response(ProductImageSerializer(serializer.save()).data)
+        with transaction.atomic():
+            if serializer.validated_data.get("is_primary"):
+                ProductImage.objects.filter(product=product, is_primary=True).exclude(
+                    pk=image.pk
+                ).update(is_primary=False)
+            image = serializer.save()
+        return Response(ProductImageSerializer(image).data)
 
     def delete(self, request, product_id, image_id):
         self.get_product(request, product_id)
         image = self.get_image(product_id, image_id)
+        if image.pending_delete_public_id:
+            destroy_product_image(image.pending_delete_public_id)
+        destroy_product_image(image.public_id)
         image.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -640,3 +652,115 @@ class AdminProductImageDetailView(AdminProductAccessMixin, APIView):
         if image is None:
             raise NotFound("Product image was not found.")
         return image
+
+
+class AdminProductImageUploadView(AdminProductAccessMixin, APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    serializer_class = ProductImageUploadSerializer
+
+    @extend_schema(
+        summary="Upload product images to Cloudinary",
+        request=ProductImageUploadSerializer,
+        responses={201: ProductImageSerializer(many=True), 400: ErrorResponseSerializer},
+        tags=["Admin Product Images"],
+    )
+    def post(self, request, product_id):
+        product = self.get_product(request, product_id)
+        serializer = ProductImageUploadSerializer(
+            data=request.data,
+            context={"product": product},
+        )
+        serializer.is_valid(raise_exception=True)
+        uploaded_assets = []
+        created_images = []
+        try:
+            with transaction.atomic():
+                Product.objects.select_for_update().get(pk=product.pk)
+                primary_index = serializer.validated_data.get("primary_image_index")
+                if primary_index is not None:
+                    ProductImage.objects.filter(product=product, is_primary=True).update(
+                        is_primary=False
+                    )
+                display_orders = serializer.validated_data.get("display_orders")
+                if display_orders is None:
+                    maximum = product.images.aggregate(value=Max("display_order"))["value"]
+                    next_order = (maximum if maximum is not None else -1) + 1
+                    display_orders = [
+                        next_order + position
+                        for position in range(len(serializer.validated_data["files"]))
+                    ]
+                alt_texts = serializer.validated_data.get(
+                    "alt_texts",
+                    [""] * len(serializer.validated_data["files"]),
+                )
+
+                for position, uploaded_file in enumerate(serializer.validated_data["files"]):
+                    asset = upload_product_image(uploaded_file, product.pk)
+                    uploaded_assets.append(asset)
+                    created_images.append(
+                        ProductImage.objects.create(
+                            product=product,
+                            public_id=asset["public_id"],
+                            secure_url=asset["secure_url"],
+                            width=asset["width"],
+                            height=asset["height"],
+                            format=asset["format"],
+                            alt_text=alt_texts[position],
+                            display_order=display_orders[position],
+                            is_primary=primary_index == position,
+                        )
+                    )
+        except Exception:
+            for asset in uploaded_assets:
+                destroy_product_image(asset.get("public_id"), suppress_errors=True)
+            raise
+
+        return Response(
+            ProductImageSerializer(created_images, many=True).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminProductImageReplaceView(AdminProductAccessMixin, APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    serializer_class = ProductImageReplaceSerializer
+
+    @extend_schema(
+        summary="Replace a Cloudinary product image",
+        request=ProductImageReplaceSerializer,
+        responses={200: ProductImageSerializer, 400: ErrorResponseSerializer},
+        tags=["Admin Product Images"],
+    )
+    def post(self, request, product_id, image_id):
+        product = self.get_product(request, product_id)
+        image = ProductImage.objects.filter(product=product, pk=image_id).first()
+        if image is None:
+            raise NotFound("Product image was not found.")
+        serializer = ProductImageReplaceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if image.pending_delete_public_id:
+            destroy_product_image(image.pending_delete_public_id)
+            image.pending_delete_public_id = None
+            image.save(update_fields=["pending_delete_public_id"])
+
+        asset = upload_product_image(serializer.validated_data["file"], product.pk)
+        old_public_id = image.public_id
+        try:
+            with transaction.atomic():
+                image = ProductImage.objects.select_for_update().get(pk=image.pk)
+                image.pending_delete_public_id = old_public_id
+                image.public_id = asset["public_id"]
+                image.secure_url = asset["secure_url"]
+                image.width = asset["width"]
+                image.height = asset["height"]
+                image.format = asset["format"]
+                image.save()
+        except Exception:
+            destroy_product_image(asset["public_id"], suppress_errors=True)
+            raise
+
+        if destroy_product_image(old_public_id, suppress_errors=True):
+            ProductImage.objects.filter(pk=image.pk).update(pending_delete_public_id=None)
+            image.pending_delete_public_id = None
+        return Response(ProductImageSerializer(image).data)
