@@ -8,12 +8,14 @@ import { sharedStoreReducer } from '../shared/store/shared.store';
 import { authStoreReducer } from './auth/auth.store';
 import { userStoreReducer } from '../shared/store/user.store';
 import { adminHomeStoreReducer } from '../components/admin/home/AdminHome.store';
+import { productPageStoreReducer } from '../components/product-page/product.store';
 
 export const rootReducer = {
   sharedStoreReducer,
   authStoreReducer,
   userStoreReducer,
   adminHomeStoreReducer,
+  productPageStoreReducer,
 };
 
 enableMapSet();
