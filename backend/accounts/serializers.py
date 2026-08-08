@@ -204,6 +204,9 @@ class MessageResponseSerializer(serializers.Serializer):
 
 class DashboardOverviewDataSerializer(serializers.Serializer):
     dashboard_type = serializers.CharField()
+    user_amount = serializers.IntegerField(required=False)
+    order_amount = serializers.IntegerField(required=False)
+    low_stock_product_amount = serializers.IntegerField(required=False)
     customer_amount = serializers.IntegerField(required=False)
     active_customer_trend_percent = serializers.FloatField(required=False)
     current_period_active_customers = serializers.IntegerField(required=False)

@@ -173,6 +173,36 @@ class ProductImageSerializer(serializers.ModelSerializer):
         return image.variant_id
 
 
+class AdminProductImageWriteSerializer(serializers.ModelSerializer):
+    variant_id = serializers.PrimaryKeyRelatedField(
+        queryset=ProductVariant.objects.all(),
+        source="variant",
+        allow_null=True,
+        required=False,
+    )
+
+    class Meta:
+        model = ProductImage
+        fields = (
+            "variant_id",
+            "public_id",
+            "secure_url",
+            "width",
+            "height",
+            "format",
+            "alt_text",
+            "display_order",
+            "is_primary",
+            "is_active",
+        )
+
+    def validate_variant_id(self, variant):
+        product = self.context["product"]
+        if variant is not None and variant.product_id != product.product_id:
+            raise serializers.ValidationError("Variant must belong to this product.")
+        return variant
+
+
 class ProductColorOptionSerializer(serializers.Serializer):
     color = serializers.CharField(allow_blank=True)
     variant_id = serializers.IntegerField()
