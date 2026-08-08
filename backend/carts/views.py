@@ -59,6 +59,8 @@ class CartItemView(APIView):
         serializer.is_valid(raise_exception=True)
         variant = ProductVariant.objects.select_related("product").filter(
             variant_id=serializer.validated_data["variant_id"],
+            is_active=True,
+            product__is_active=True,
         ).first()
         if variant is None:
             raise NotFound("Product variant was not found.")

@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase
@@ -9,7 +10,7 @@ from rest_framework.test import APIClient
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supplier, User
 from carts.models import Cart, CartProduct
 from catalogue.models import Category
-from products.models import Product, ProductVariant
+from products.models import Product, ProductImage, ProductVariant
 
 
 class ProductVariantApiTests(TestCase):
@@ -47,21 +48,37 @@ class ProductVariantApiTests(TestCase):
             color="Black",
             size="S",
             quantity=0,
-            images=["/media/products/black-1.jpg"],
+        )
+        ProductImage.objects.create(
+            product=self.product,
+            variant=self.black_small,
+            public_id="products/black",
+            secure_url="https://res.cloudinary.com/am/image/upload/black.jpg",
+            is_primary=True,
         )
         self.black_medium = ProductVariant.objects.create(
             product=self.product,
             color="Black",
             size="M",
             quantity=5,
-            images=["/media/products/black-1.jpg"],
+        )
+        ProductImage.objects.create(
+            product=self.product,
+            variant=self.black_medium,
+            public_id="products/black-medium",
+            secure_url="https://res.cloudinary.com/am/image/upload/black.jpg",
         )
         self.white_small = ProductVariant.objects.create(
             product=self.product,
             color="White",
             size="S",
             quantity=3,
-            images=["/media/products/white-1.jpg"],
+        )
+        ProductImage.objects.create(
+            product=self.product,
+            variant=self.white_small,
+            public_id="products/white",
+            secure_url="https://res.cloudinary.com/am/image/upload/white.jpg",
         )
         self.other_product = Product.objects.create(
             catalog_number="PT-200",
@@ -75,7 +92,6 @@ class ProductVariantApiTests(TestCase):
             color="Navy",
             size="M",
             quantity=4,
-            images=["/media/products/navy-1.jpg"],
         )
 
     def create_user(self, email, role_name):
@@ -99,7 +115,6 @@ class ProductVariantApiTests(TestCase):
                     color="Black",
                     size="S",
                     quantity=1,
-                    images=[],
                 )
 
     def test_public_product_list_returns_card_variant_data(self):
@@ -115,7 +130,7 @@ class ProductVariantApiTests(TestCase):
         self.assertEqual(product["product_id"], self.product.product_id)
         self.assertEqual(product["selected_color"], "Black")
         self.assertEqual(product["selected_variant_id"], self.black_medium.variant_id)
-        self.assertEqual(product["images"], ["/media/products/black-1.jpg"])
+        self.assertEqual(product["images"], ["https://res.cloudinary.com/am/image/upload/black.jpg"])
         self.assertEqual(
             product["colors"],
             [
@@ -123,13 +138,13 @@ class ProductVariantApiTests(TestCase):
                     "color": "Black",
                     "variant_id": self.black_medium.variant_id,
                     "in_stock": True,
-                    "images": ["/media/products/black-1.jpg"],
+                    "images": ["https://res.cloudinary.com/am/image/upload/black.jpg"],
                 },
                 {
                     "color": "White",
                     "variant_id": self.white_small.variant_id,
                     "in_stock": True,
-                    "images": ["/media/products/white-1.jpg"],
+                    "images": ["https://res.cloudinary.com/am/image/upload/white.jpg"],
                 },
             ],
         )
@@ -196,7 +211,6 @@ class ProductVariantApiTests(TestCase):
                 "color": "Green",
                 "size": "L",
                 "quantity": 6,
-                "images": ["/media/products/green-1.jpg"],
             },
             format="json",
         )
@@ -279,7 +293,7 @@ class ProductVariantApiTests(TestCase):
                 "admin-product-variant-create",
                 kwargs={"product_id": created_product_id},
             ),
-            {"color": "Red", "size": "S", "quantity": 2, "images": []},
+            {"color": "Red", "size": "S", "quantity": 2},
             format="json",
         )
         self.assertEqual(create_variant_response.status_code, 201)
@@ -333,7 +347,6 @@ class ProductVariantApiTests(TestCase):
             color="Blue",
             size="M",
             quantity=4,
-            images=[],
         )
         self.authorize(self.supplier_user)
 
@@ -350,7 +363,7 @@ class ProductVariantApiTests(TestCase):
                 "admin-product-variant-create",
                 kwargs={"product_id": other_product.product_id},
             ),
-            {"color": "Green", "size": "S", "quantity": 1, "images": []},
+            {"color": "Green", "size": "S", "quantity": 1},
             format="json",
         )
         patch_variant_response = self.client.patch(
@@ -370,9 +383,109 @@ class ProductVariantApiTests(TestCase):
         self.assertEqual(patch_variant_response.status_code, 403)
 
 
+class ProductInventoryModelTests(TestCase):
+    def setUp(self):
+        self.category = Category.objects.create(
+            short_id="model-shirts",
+            main_category_name="Shirts",
+        )
+        self.product = Product.objects.create(
+            catalog_number="MODEL-100",
+            name="Model Shirt",
+            price=Decimal("20.00"),
+            category=self.category,
+        )
+        self.variant = ProductVariant.objects.create(
+            product=self.product,
+            color="Black",
+            size="M",
+            quantity=5,
+        )
+
+    def test_negative_product_price_is_rejected(self):
+        self.product.price = Decimal("-0.01")
+        with self.assertRaises(DjangoValidationError):
+            self.product.full_clean()
+
+    def test_negative_variant_quantity_is_rejected(self):
+        self.variant.quantity = -1
+        with self.assertRaises(DjangoValidationError):
+            self.variant.full_clean()
+
+    def test_product_and_variant_can_be_deactivated(self):
+        self.product.is_active = False
+        self.product.save(update_fields=["is_active"])
+        self.variant.is_active = False
+        self.variant.save(update_fields=["is_active"])
+
+        self.product.refresh_from_db()
+        self.variant.refresh_from_db()
+        self.assertFalse(self.product.is_active)
+        self.assertFalse(self.variant.is_active)
+
+    def test_inventory_can_be_set_and_adjusted(self):
+        ProductVariant.set_stock(self.variant.variant_id, 8)
+        updated = ProductVariant.adjust_stock(self.variant.variant_id, -3)
+        self.assertEqual(updated.quantity, 5)
+        updated = ProductVariant.adjust_stock(self.variant.variant_id, 4)
+        self.assertEqual(updated.quantity, 9)
+
+    def test_inventory_cannot_be_reduced_below_zero(self):
+        with self.assertRaises(DjangoValidationError):
+            ProductVariant.adjust_stock(self.variant.variant_id, -6)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.quantity, 5)
+
+    def test_product_supports_multiple_images_and_one_primary(self):
+        primary = ProductImage.objects.create(
+            product=self.product,
+            variant=self.variant,
+            public_id="products/model-primary",
+            secure_url="https://res.cloudinary.com/am/image/upload/model-primary.jpg",
+            is_primary=True,
+        )
+        secondary = ProductImage.objects.create(
+            product=self.product,
+            public_id="products/model-secondary",
+            secure_url="https://res.cloudinary.com/am/image/upload/model-secondary.jpg",
+            display_order=1,
+        )
+
+        self.assertEqual(list(self.product.images.all()), [primary, secondary])
+        with self.assertRaises(DjangoValidationError):
+            ProductImage.objects.create(
+                product=self.product,
+                public_id="products/another-primary",
+                secure_url="https://res.cloudinary.com/am/image/upload/another-primary.jpg",
+                is_primary=True,
+            )
+
+    def test_image_variant_must_belong_to_same_product(self):
+        other_product = Product.objects.create(
+            catalog_number="MODEL-200",
+            name="Other Model Shirt",
+            price=Decimal("25.00"),
+            category=self.category,
+        )
+        with self.assertRaises(DjangoValidationError):
+            ProductImage.objects.create(
+                product=other_product,
+                variant=self.variant,
+                public_id="products/wrong-product",
+                secure_url="https://res.cloudinary.com/am/image/upload/wrong.jpg",
+            )
+
+    def test_inactive_products_and_variants_are_hidden_from_public_api(self):
+        self.product.is_active = False
+        self.product.save(update_fields=["is_active"])
+        response = APIClient().get(reverse("product-list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"], [])
+
+
 class ProductVariantMigrationTests(TransactionTestCase):
     migrate_from = [("catalogue", "0001_initial")]
-    migrate_to = [("products", "0001_initial")]
+    migrate_to = [("products", "0002_productimage_remove_productvariant_images_and_more")]
 
     def setUp(self):
         super().setUp()
@@ -407,9 +520,12 @@ class ProductVariantMigrationTests(TransactionTestCase):
         self.executor.migrate(self.migrate_to)
         new_apps = self.executor.loader.project_state(self.migrate_to).apps
         ProductVariant = new_apps.get_model("products", "ProductVariant")
+        ProductImage = new_apps.get_model("products", "ProductImage")
 
         variant = ProductVariant.objects.get(product_id=product.product_id)
         self.assertEqual(variant.color, "Black")
         self.assertEqual(variant.size, "M")
         self.assertEqual(variant.quantity, 7)
-        self.assertEqual(variant.images, ["/media/products/migration-black.jpg"])
+        image = ProductImage.objects.get(variant_id=variant.variant_id)
+        self.assertEqual(image.secure_url, "/media/products/migration-black.jpg")
+        self.assertTrue(image.is_primary)
