@@ -130,6 +130,7 @@ class ProductImage(models.Model):
         null=True,
     )
     public_id = models.CharField(max_length=255, blank=True, null=True, unique=True)
+    pending_delete_public_id = models.CharField(max_length=255, blank=True, null=True)
     secure_url = models.URLField(max_length=1000)
     width = models.PositiveIntegerField(blank=True, null=True)
     height = models.PositiveIntegerField(blank=True, null=True)
