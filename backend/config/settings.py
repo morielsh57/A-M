@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "accounts",
     "catalogue",
+    "products",
     "carts",
     "orders",
     "reviews",
