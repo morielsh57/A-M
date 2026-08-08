@@ -1,5 +1,9 @@
 from collections import OrderedDict
 
+from PIL import Image, UnidentifiedImageError
+from django.conf import settings
+from django.db import transaction
+
 from rest_framework import serializers
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
@@ -185,11 +189,6 @@ class AdminProductImageWriteSerializer(serializers.ModelSerializer):
         model = ProductImage
         fields = (
             "variant_id",
-            "public_id",
-            "secure_url",
-            "width",
-            "height",
-            "format",
             "alt_text",
             "display_order",
             "is_primary",
@@ -201,6 +200,90 @@ class AdminProductImageWriteSerializer(serializers.ModelSerializer):
         if variant is not None and variant.product_id != product.product_id:
             raise serializers.ValidationError("Variant must belong to this product.")
         return variant
+
+
+def validate_product_image_file(uploaded_file):
+    if uploaded_file.size > settings.PRODUCT_IMAGE_MAX_SIZE_BYTES:
+        raise serializers.ValidationError("Image exceeds the maximum file size.")
+    try:
+        uploaded_file.seek(0)
+        with Image.open(uploaded_file) as image:
+            image_format = (image.format or "").upper()
+            width, height = image.size
+            image.verify()
+    except (UnidentifiedImageError, OSError, SyntaxError) as exc:
+        raise serializers.ValidationError("File is not a valid image.") from exc
+    finally:
+        uploaded_file.seek(0)
+
+    allowed_formats = {"JPEG": {"image/jpeg", "image/jpg"}, "PNG": {"image/png"}, "WEBP": {"image/webp"}}
+    if image_format not in allowed_formats:
+        raise serializers.ValidationError("Only JPEG, PNG, and WebP images are supported.")
+    content_type = (getattr(uploaded_file, "content_type", "") or "").lower()
+    if content_type not in allowed_formats[image_format]:
+        raise serializers.ValidationError("The declared file type does not match the image.")
+    if max(width, height) > settings.PRODUCT_IMAGE_MAX_DIMENSION:
+        raise serializers.ValidationError("Image dimensions exceed the allowed maximum.")
+    return uploaded_file
+
+
+class MultipartListField(serializers.ListField):
+    """Accept repeated multipart fields and Swagger's comma-separated arrays."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, str):
+            data = data.split(",")
+        elif (
+            isinstance(data, (list, tuple))
+            and len(data) == 1
+            and isinstance(data[0], str)
+        ):
+            data = data[0].split(",")
+        return super().to_internal_value(data)
+
+
+class ProductImageUploadSerializer(serializers.Serializer):
+    files = serializers.ListField(
+        child=serializers.FileField(),
+        allow_empty=False,
+    )
+    alt_texts = MultipartListField(
+        child=serializers.CharField(max_length=255, allow_blank=True),
+        required=False,
+    )
+    display_orders = MultipartListField(
+        child=serializers.IntegerField(min_value=0),
+        required=False,
+    )
+    primary_image_index = serializers.IntegerField(min_value=0, required=False)
+
+    def validate_files(self, files):
+        if len(files) > settings.PRODUCT_IMAGE_MAX_FILES:
+            raise serializers.ValidationError("Too many images were submitted.")
+        return [validate_product_image_file(uploaded_file) for uploaded_file in files]
+
+    def validate(self, attrs):
+        file_count = len(attrs["files"])
+        for field_name in ("alt_texts", "display_orders"):
+            values = attrs.get(field_name)
+            if values is not None and len(values) != file_count:
+                raise serializers.ValidationError(
+                    {field_name: ["Provide exactly one value for each uploaded file."]}
+                )
+
+        primary_index = attrs.get("primary_image_index")
+        if primary_index is not None and primary_index >= file_count:
+            raise serializers.ValidationError(
+                {"primary_image_index": ["Index must identify an uploaded file."]}
+            )
+        return attrs
+
+
+class ProductImageReplaceSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+    def validate_file(self, uploaded_file):
+        return validate_product_image_file(uploaded_file)
 
 
 class ProductColorOptionSerializer(serializers.Serializer):
@@ -438,9 +521,57 @@ class AdminProductDetailSerializer(ProductDetailSerializer):
 
 
 class AdminProductVariantWriteSerializer(serializers.ModelSerializer):
+    image_ids = serializers.PrimaryKeyRelatedField(
+        queryset=ProductImage.objects.all(),
+        many=True,
+        required=False,
+        write_only=True,
+    )
+
     class Meta:
         model = ProductVariant
-        fields = ("color", "size", "quantity", "is_active")
+        fields = ("color", "size", "quantity", "is_active", "image_ids")
+
+    def validate_image_ids(self, images):
+        if len(images) > settings.PRODUCT_IMAGE_MAX_FILES:
+            raise serializers.ValidationError("Too many images were submitted.")
+
+        image_ids = [image.pk for image in images]
+        if len(image_ids) != len(set(image_ids)):
+            raise serializers.ValidationError("Image IDs must be unique.")
+
+        product = self.context["product"]
+        current_variant_id = self.instance.pk if self.instance else None
+        for image in images:
+            if image.product_id != product.pk:
+                raise serializers.ValidationError(
+                    "Every image must belong to the product being managed."
+                )
+            if image.variant_id not in (None, current_variant_id):
+                raise serializers.ValidationError(
+                    "An image is already assigned to another variant."
+                )
+        return images
+
+    @transaction.atomic
+    def create(self, validated_data):
+        images = validated_data.pop("image_ids", [])
+        variant = super().create(validated_data)
+        self.assign_images(variant, images)
+        return variant
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        images = validated_data.pop("image_ids", [])
+        variant = super().update(instance, validated_data)
+        self.assign_images(variant, images)
+        return variant
+
+    def assign_images(self, variant, images):
+        if images:
+            ProductImage.objects.filter(pk__in=[image.pk for image in images]).update(
+                variant=variant
+            )
 
     def validate(self, attrs):
         product = self.context.get("product")

@@ -1,4 +1,5 @@
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -66,7 +67,7 @@ class AdministratorManagementApiTests(TestCase):
             ("get", reverse("admin-order-list"), None),
             ("get", reverse("admin-pickup-list"), None),
             ("post", reverse("category-list"), {"short_id": "blocked", "main_category_name": "Blocked"}),
-            ("post", reverse("admin-product-image-list", kwargs={"product_id": self.product.pk}), {}),
+            ("get", reverse("admin-product-image-list", kwargs={"product_id": self.product.pk}), None),
         )
         for user in (self.customer, self.supplier_user):
             self.authorize(user)
@@ -175,29 +176,25 @@ class AdministratorManagementApiTests(TestCase):
 
     def test_admin_can_manage_product_image_metadata(self):
         self.authorize(self.admin)
-        create_response = self.client.post(
-            reverse("admin-product-image-list", kwargs={"product_id": self.product.pk}),
-            {
-                "variant_id": self.variant.pk,
-                "public_id": "admin/product-image",
-                "secure_url": "https://res.cloudinary.com/am/image/upload/admin.jpg",
-                "is_primary": True,
-            },
-            format="json",
+        image = ProductImage.objects.create(
+            product=self.product,
+            variant=self.variant,
+            public_id="admin/product-image",
+            secure_url="https://res.cloudinary.com/am/image/upload/admin.jpg",
+            is_primary=True,
         )
-        image_id = create_response.json()["data"]["image_id"]
         detail_url = reverse(
             "admin-product-image-detail",
-            kwargs={"product_id": self.product.pk, "image_id": image_id},
+            kwargs={"product_id": self.product.pk, "image_id": image.pk},
         )
 
-        self.assertEqual(create_response.status_code, 201)
         self.assertEqual(
             self.client.patch(detail_url, {"alt_text": "Updated"}, format="json").status_code,
             200,
         )
-        self.assertEqual(self.client.delete(detail_url).status_code, 204)
-        self.assertFalse(ProductImage.objects.filter(pk=image_id).exists())
+        with patch("products.views.destroy_product_image", return_value=True):
+            self.assertEqual(self.client.delete(detail_url).status_code, 204)
+        self.assertFalse(ProductImage.objects.filter(pk=image.pk).exists())
 
     def test_admin_can_create_categories_and_subcategories(self):
         self.authorize(self.admin)
