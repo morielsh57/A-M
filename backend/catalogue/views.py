@@ -38,7 +38,11 @@ class CategoryListView(APIView):
         tags=["Catalogue"],
     )
     def get(self, request):
-        categories = Category.objects.select_related("parent_category").order_by(
+        categories = Category.objects.select_related("parent_category").filter(
+            is_active=True,
+        ).exclude(
+            parent_category__is_active=False,
+        ).order_by(
             "main_category_name",
             "sub_category_name",
             "category_id",
@@ -57,7 +61,7 @@ class CategoryDetailView(APIView):
         tags=["Catalogue"],
     )
     def get(self, request, category_id):
-        category = self.get_category(category_id)
+        category = self.get_public_category(category_id)
         return Response(CategorySerializer(category).data)
 
     @extend_schema(
@@ -106,5 +110,13 @@ class CategoryDetailView(APIView):
             category_id=category_id,
         ).first()
         if category is None:
+            raise NotFound("Category was not found.")
+        return category
+
+    def get_public_category(self, category_id):
+        category = self.get_category(category_id)
+        if not category.is_active or (
+            category.parent_category_id and not category.parent_category.is_active
+        ):
             raise NotFound("Category was not found.")
         return category

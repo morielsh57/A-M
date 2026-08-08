@@ -80,3 +80,22 @@ class CategoryApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+    def test_public_list_excludes_inactive_categories_and_children(self):
+        self.parent_category.is_active = False
+        self.parent_category.save(update_fields=["is_active"])
+
+        response = self.client.get(reverse("category-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"], [])
+
+    def test_public_detail_returns_404_for_inactive_category(self):
+        self.category.is_active = False
+        self.category.save(update_fields=["is_active"])
+
+        response = self.client.get(
+            reverse("category-detail", kwargs={"category_id": self.category.category_id})
+        )
+
+        self.assertEqual(response.status_code, 404)

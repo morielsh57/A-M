@@ -10,7 +10,9 @@ from rest_framework.test import APIClient
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supplier, User
 from carts.models import Cart, CartProduct
 from catalogue.models import Category
+from orders.models import Order
 from products.models import Product, ProductImage, ProductVariant
+from reviews.models import Review
 
 
 class ProductVariantApiTests(TestCase):
@@ -167,6 +169,135 @@ class ProductVariantApiTests(TestCase):
             },
             {("Black", "S", 0), ("Black", "M", 5), ("White", "S", 3)},
         )
+        self.assertTrue(data["in_stock"])
+        self.assertEqual(data["total_quantity"], 8)
+        self.assertEqual(data["average_rating"], "0.00")
+        self.assertEqual(data["rating_count"], 0)
+
+    def test_public_product_detail_returns_404_for_inactive_product(self):
+        self.product.is_active = False
+        self.product.save(update_fields=["is_active"])
+
+        response = self.client.get(
+            reverse("product-detail", kwargs={"product_id": self.product.product_id})
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_public_catalogue_searches_product_keywords(self):
+        by_name = self.client.get(reverse("product-list"), {"search": "classic"})
+        by_keyword = self.client.get(reverse("product-list"), {"search": "cotton"})
+
+        self.assertEqual(
+            [item["product_id"] for item in by_name.json()["data"]],
+            [self.product.product_id],
+        )
+        self.assertEqual(
+            [item["product_id"] for item in by_keyword.json()["data"]],
+            [self.product.product_id],
+        )
+
+    def test_public_catalogue_combines_category_variant_price_and_stock_filters(self):
+        response = self.client.get(
+            reverse("product-list"),
+            {
+                "category": self.category.category_id,
+                "color": "black",
+                "size": "M",
+                "min_price": "40.00",
+                "max_price": "60.00",
+                "in_stock": "true",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [item["product_id"] for item in response.json()["data"]],
+            [self.product.product_id],
+        )
+
+    def test_variant_filters_must_match_the_same_variant(self):
+        response = self.client.get(
+            reverse("product-list"),
+            {"color": "Black", "size": "S", "in_stock": "true"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"], [])
+
+    def test_public_catalogue_filters_out_of_stock_variants(self):
+        response = self.client.get(
+            reverse("product-list"),
+            {"color": "Black", "size": "S", "in_stock": "false"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [item["product_id"] for item in response.json()["data"]],
+            [self.product.product_id],
+        )
+
+    def test_public_catalogue_sorts_by_price_and_name(self):
+        price_response = self.client.get(reverse("product-list"), {"ordering": "-price"})
+        name_response = self.client.get(reverse("product-list"), {"ordering": "name"})
+
+        self.assertEqual(
+            [item["product_id"] for item in price_response.json()["data"]],
+            [self.other_product.product_id, self.product.product_id],
+        )
+        self.assertEqual(
+            [item["product_id"] for item in name_response.json()["data"]],
+            [self.product.product_id, self.other_product.product_id],
+        )
+
+    def test_public_catalogue_includes_and_sorts_ratings(self):
+        cart = Cart.objects.create(customer=self.customer, total_price=Decimal("49.99"))
+        order = Order.objects.create(
+            cart=cart,
+            payment_id=1001,
+            customer=self.customer,
+            total_price=Decimal("49.99"),
+            order_status=Order.Status.COMPLETED,
+        )
+        Review.objects.create(
+            order=order,
+            product=self.product,
+            customer=self.customer,
+            review_text="Excellent",
+            stars=5,
+        )
+
+        response = self.client.get(reverse("product-list"), {"ordering": "-rating"})
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()["data"]
+        self.assertEqual(data[0]["product_id"], self.product.product_id)
+        self.assertEqual(data[0]["average_rating"], "5.00")
+        self.assertEqual(data[0]["rating_count"], 1)
+
+    def test_public_catalogue_validates_filter_values(self):
+        invalid_requests = (
+            {"min_price": "invalid"},
+            {"min_price": "50", "max_price": "20"},
+            {"in_stock": "maybe"},
+            {"ordering": "unknown"},
+            {"category": 999999},
+        )
+
+        for query in invalid_requests:
+            with self.subTest(query=query):
+                response = self.client.get(reverse("product-list"), query)
+                self.assertEqual(response.status_code, 400)
+
+    def test_public_catalogue_is_paginated(self):
+        response = self.client.get(
+            reverse("product-list"),
+            {"page": 2, "page_size": 1, "ordering": "name"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["data"]), 1)
+        self.assertEqual(response.json()["meta"]["pagination"]["total_items"], 2)
 
     def test_admin_product_list_returns_grouped_variant_summary(self):
         self.authorize(self.admin)
