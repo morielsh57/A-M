@@ -4,6 +4,7 @@ import { useToasts } from 'react-toast-notifications';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus, type IAPIError } from '../../../shared/api/models';
+import AdminTablePageLayout from '../../../shared/components/admin-table-page-layout/AdminTablePageLayout';
 import AppTable from '../../../shared/components/app-table/AppTable';
 import { getMainCategories } from '../../../shared/store/category/category.store';
 import type { CategoryId } from '../../product-page/product.types';
@@ -194,7 +195,11 @@ const AdminProductsTablePage: React.FC = () => {
 
   if (!categoryId) {
     return (
-      <section className="admin-products-page">
+      <AdminTablePageLayout
+        eyebrow="Inventory management"
+        title="Products"
+        subtitle="Category was not found."
+      >
         <AppTable<IAdminProductListItem>
           title="Products"
           subtitle="Category was not found."
@@ -203,22 +208,16 @@ const AdminProductsTablePage: React.FC = () => {
           rowKey="product_id"
           emptyText="Category was not found."
         />
-      </section>
+      </AdminTablePageLayout>
     );
   }
 
   return (
-    <section className="admin-products-page">
-      <div className="admin-products-page__header">
-        <div>
-          <p className="admin-products-page__eyebrow">Inventory management</p>
-          <h1 className="admin-products-page__title">{categoryName}</h1>
-          <p className="admin-products-page__subtitle">
-            Review products, sort columns, search the loaded page, and remove products when allowed.
-          </p>
-        </div>
-      </div>
-
+    <AdminTablePageLayout
+      eyebrow="Inventory management"
+      title={categoryName}
+      subtitle="Review products, sort columns, search the loaded page, and remove products when allowed."
+    >
       <AppTable<IAdminProductListItem>
         columns={columns}
         data={filteredProducts}
@@ -239,7 +238,7 @@ const AdminProductsTablePage: React.FC = () => {
         title={`${categoryName} products`}
         onSearchChange={(value) => updateUrlParams({ search: value })}
       />
-    </section>
+    </AdminTablePageLayout>
   );
 };
 

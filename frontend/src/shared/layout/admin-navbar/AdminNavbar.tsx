@@ -60,6 +60,13 @@ const adminNavbarSections: AdminNavbarSection[] = [
     items: [],
   },
   {
+    id: 'categories',
+    label: 'Categories',
+    icon: <TagsOutlined />,
+    path: createAdminPath(APP_ROUTING_PATHS.ADMIN.CATEGORIES),
+    roles: [EUserRole.ADMIN],
+  },
+  {
     id: 'users',
     label: 'Users',
     icon: <TeamOutlined />,
@@ -69,13 +76,6 @@ const adminNavbarSections: AdminNavbarSection[] = [
       { label: 'Admins', path: createAdminPath(APP_ROUTING_PATHS.ADMIN.ADMINS) },
       { label: 'Suppliers', path: createAdminPath(APP_ROUTING_PATHS.ADMIN.SUPPLIERS) },
     ],
-  },
-  {
-    id: 'categories',
-    label: 'Categories',
-    icon: <TagsOutlined />,
-    path: createAdminPath(APP_ROUTING_PATHS.ADMIN.CATEGORIES),
-    roles: [EUserRole.ADMIN],
   },
   {
     id: 'orders',

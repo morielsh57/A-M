@@ -29,7 +29,7 @@ const ProductsColumnRender = ({
     dataIndex: 'name',
     fixed: 'left',
     width: 230,
-    className: 'admin-products-page__product-name',
+    className: 'admin-table-page-name',
   }),
   createRenderColumn<IAdminProductListItem>({
     title: 'Images',
