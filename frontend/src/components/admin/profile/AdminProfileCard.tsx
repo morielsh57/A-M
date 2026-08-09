@@ -1,6 +1,6 @@
 import React from 'react';
 import { MailOutlined, PhoneOutlined, HomeOutlined, UserOutlined } from '@ant-design/icons';
-import type { IAdminOrSupplierUser } from '../../../shared/store/user.types';
+import type { IAdminOrSupplierUser } from '../../../shared/store/user/user.types';
 
 interface AdminProfileCardProps {
   user?: IAdminOrSupplierUser;
