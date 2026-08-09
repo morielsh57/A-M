@@ -29,6 +29,31 @@ export interface IAdminProductDetailRequestParams {
   product_id: ProductId;
 }
 
+export interface IAdminProductImage {
+  image_id: ProductId;
+  secure_url: string;
+  alt_text?: string;
+  is_active?: boolean;
+  is_primary?: boolean;
+}
+
+export interface IAdminProductDetail extends IProduct {
+  images?: IAdminProductImage[];
+}
+
+export interface IAdminProductImagePreviewRequestParams {
+  product_id: ProductId;
+}
+
+export interface IAdminProductImagePreview {
+  product_id: ProductId;
+  images: string[];
+}
+
+export interface IDeleteAdminProductRequestParams {
+  product_id: ProductId;
+}
+
 export interface IAdminProductWriteRequest {
   catalog_number: string;
   name: string;

@@ -1,0 +1,95 @@
+@import "../../../shared/styles/colors.scss";
+
+$adminProductsBgColor: $natural2;
+$adminProductsPanelBgColor: $natural1;
+$adminProductsTitleColor: $natural9;
+$adminProductsMutedTextColor: $natural6;
+$adminProductsAccentColor: $purple6;
+$adminProductsBorderColor: $natural4;
+
+.admin-products-page {
+  min-height: 100%;
+  padding: 32px;
+  background:
+    linear-gradient(180deg, $adminProductsBgColor 0%, $natural1 58%),
+    $adminProductsBgColor;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    max-width: 1180px;
+    margin: 0 auto 24px;
+  }
+
+  &__eyebrow {
+    margin: 0 0 6px;
+    color: $adminProductsAccentColor;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    color: $adminProductsTitleColor;
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  &__subtitle {
+    margin: 8px 0 0;
+    color: $adminProductsMutedTextColor;
+    font-size: 0.98rem;
+  }
+
+  .app-table {
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  &__images {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__image {
+    width: 42px;
+    height: 52px;
+    border: 1px solid $adminProductsBorderColor;
+    border-radius: 8px;
+    background: $adminProductsPanelBgColor;
+    object-fit: cover;
+  }
+
+  &__image-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 86px;
+    min-height: 52px;
+    padding: 6px;
+    border: 1px dashed $adminProductsBorderColor;
+    border-radius: 8px;
+    background: $adminProductsPanelBgColor;
+    color: $adminProductsMutedTextColor;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  &__product-name {
+    color: $adminProductsTitleColor;
+    font-weight: 800;
+  }
+
+  @media (max-width: 768px) {
+    padding: 22px 16px;
+
+    &__header {
+      display: block;
+    }
+  }
+}

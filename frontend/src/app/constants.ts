@@ -5,3 +5,5 @@ export const AUTH_LOCAL_STORAGE_KEYS = {
   USER: 'user',
   ADMIN_OR_SUPPLIER_USER: 'adminOrSupplierUser',
 } as const;
+
+export const ADMIN_TABLE_PAGE_SIZE = 10;

@@ -12,6 +12,7 @@ const ADMIN_AUTH_SEGMENT = 'auth';
 const ADMIN_LOGIN_SEGMENT = 'login';
 const ADMIN_HOME_SEGMENT = 'home';
 const ADMIN_PROFILE_SEGMENT = 'profile';
+const ADMIN_PRODUCTS_SEGMENT = 'products';
 const ADMIN_WOMEN_PRODUCTS_SEGMENT = 'products/women';
 const ADMIN_MEN_PRODUCTS_SEGMENT = 'products/men';
 const ADMIN_GIRLS_PRODUCTS_SEGMENT = 'products/girls';
@@ -38,6 +39,7 @@ export const APP_ROUTING_PATHS = {
     LOGIN: ADMIN_LOGIN_SEGMENT,
     HOME: ADMIN_HOME_SEGMENT,
     PROFILE: ADMIN_PROFILE_SEGMENT,
+    PRODUCTS: ADMIN_PRODUCTS_SEGMENT,
     WOMEN_PRODUCTS: ADMIN_WOMEN_PRODUCTS_SEGMENT,
     MEN_PRODUCTS: ADMIN_MEN_PRODUCTS_SEGMENT,
     GIRLS_PRODUCTS: ADMIN_GIRLS_PRODUCTS_SEGMENT,
@@ -63,6 +65,7 @@ export const APP_ROUTING_PATHS = {
   ) => `${APP_PATH}/${CATEGORY_SEGMENT}/${categoryType}/${categoryId}?page=${page}`,
   ADMIN_LOGIN_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_AUTH_SEGMENT}/${ADMIN_LOGIN_SEGMENT}`,
   ADMIN_HOME_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_HOME_SEGMENT}`,
+  ADMIN_PRODUCTS_PAGE: (categoryId: string | number) => `${ADMIN_ROOT_PATH}/${ADMIN_PRODUCTS_SEGMENT}/${categoryId}`,
   ADMIN_PAGE: (segment: string) => `${ADMIN_ROOT_PATH}/${segment}`,
   ADMIN_PAGE_WITH_PAGE: (segment: string, page: string | number) => `${ADMIN_ROOT_PATH}/${segment}/${page}`,
 } as const;
@@ -78,6 +81,8 @@ export const API_ROUTES = {
   },
   ADMIN: {
     DASHBOARD_OVERVIEW: '/admin/dashboard/overview',
+    PRODUCTS: '/admin/products/',
+    PRODUCT_DETAIL: (productId: string | number) => `/admin/products/${productId}`,
   },
   USERS: '/users',
   USERS_ME: '/users/me',

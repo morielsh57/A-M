@@ -1,0 +1,82 @@
+@import '../../styles/colors.scss';
+
+$appTableMobileBgColor: $natural1;
+$appTableMobilePageBgColor: $natural2;
+$appTableMobileBorderColor: $natural4;
+$appTableMobileTitleColor: $natural9;
+$appTableMobileMutedTextColor: $natural6;
+
+.app-table-mobile-cards {
+  display: none;
+
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 34px 18px;
+  }
+
+  &__card {
+    border: 1px solid $appTableMobileBorderColor;
+    border-radius: 12px;
+    background:
+      linear-gradient(145deg, $appTableMobileBgColor 0%, $appTableMobilePageBgColor 100%),
+      $appTableMobileBgColor;
+    box-shadow: 0 10px 24px rgba($natural9, 0.06);
+  }
+
+  &__card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    border-bottom: 1px solid $appTableMobileBorderColor;
+  }
+
+  &__card-title {
+    min-width: 0;
+    margin: 0;
+    color: $appTableMobileTitleColor;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  &__card-actions {
+    flex: 0 0 auto;
+  }
+
+  &__card-body {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  &__card-row {
+    display: grid;
+    grid-template-columns: minmax(82px, 34%) minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+  }
+
+  &__card-label {
+    color: $appTableMobileMutedTextColor;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__card-value {
+    min-width: 0;
+    color: $appTableMobileTitleColor;
+    font-size: 0.92rem;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  @media (max-width: 768px) {
+    display: grid;
+    gap: 14px;
+    padding: 14px;
+  }
+}

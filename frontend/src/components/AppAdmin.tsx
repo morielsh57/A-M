@@ -5,6 +5,7 @@ import { ProtectedAdminRoute } from '../app/guards/admin/ProtectedAdminRoute';
 import AdminMain from './admin/main/AdminMain';
 import AdminHome from './admin/home/AdminHome';
 import AdminProfile from './admin/profile/AdminProfile';
+import AdminProductsTablePage from './admin/products/AdminProductsTablePage';
 
 function AppAdmin() {
   return (
@@ -20,6 +21,7 @@ function AppAdmin() {
       >
         <Route path={APP_ROUTING_PATHS.ADMIN.HOME} element={<AdminHome />} />
         <Route path={APP_ROUTING_PATHS.ADMIN.PROFILE} element={<AdminProfile />} />
+        <Route path={`${APP_ROUTING_PATHS.ADMIN.PRODUCTS}/:categoryId`} element={<AdminProductsTablePage />} />
       </Route>
       <Route path="*" element={<Navigate to={APP_ROUTING_PATHS.ADMIN_HOME_PAGE} replace />} />
     </Routes>

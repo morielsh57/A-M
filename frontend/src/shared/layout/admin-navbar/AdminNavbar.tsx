@@ -12,7 +12,9 @@ import {
 } from '@ant-design/icons';
 import { NavLink, useLocation } from 'react-router-dom';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
-import { useAppSelector } from '../../../app/store';
+import { useAppDispatch, useAppSelector } from '../../../app/store';
+import { EAPIStatus } from '../../api/models';
+import { getMainCategories } from '../../store/category/category.store';
 import { EUserRole } from '../../store/user/user.types';
 import './AdminNavbar.scss';
 
@@ -55,14 +57,7 @@ const adminNavbarSections: AdminNavbarSection[] = [
     id: 'products',
     label: 'Products',
     icon: <AppstoreOutlined />,
-    items: [
-      { label: 'Women', path: createAdminPath(APP_ROUTING_PATHS.ADMIN.WOMEN_PRODUCTS) },
-      { label: 'Men', path: createAdminPath(APP_ROUTING_PATHS.ADMIN.MEN_PRODUCTS) },
-      { label: 'Girls', path: createAdminPath(APP_ROUTING_PATHS.ADMIN.GIRLS_PRODUCTS) },
-      { label: 'Boys', path: createAdminPath(APP_ROUTING_PATHS.ADMIN.BOYS_PRODUCTS) },
-      { label: 'Accessories', path: createAdminPath(APP_ROUTING_PATHS.ADMIN.ACCESSORIES) },
-      { label: 'Edit Price', path: createAdminPath(APP_ROUTING_PATHS.ADMIN.EDIT_PRICE) },
-    ],
+    items: [],
   },
   {
     id: 'users',
@@ -105,12 +100,33 @@ const getVisibleSections = (role: EUserRole | undefined) => {
 
 const AdminNavbar: React.FC<AdminNavbarProps> = ({ isOpen, onToggle }) => {
   const location = useLocation();
+  const dispatch = useAppDispatch();
   const { adminOrSupplierUser } = useAppSelector((store) => store.userStoreReducer);
-  const visibleSections = useMemo(
-    () => getVisibleSections(EUserRole.ADMIN),
-    [adminOrSupplierUser?.role],
-  );
+  const { getMainCategoriesReq } = useAppSelector((store) => store.categoryStoreReducer);
+  const mainCategories = getMainCategoriesReq.data || [];
+  const productCategoryItems = useMemo(() => (
+    mainCategories.map((category) => ({
+      label: category.main_category_name,
+      path: APP_ROUTING_PATHS.ADMIN_PRODUCTS_PAGE(category.category_id),
+    }))
+  ), [mainCategories]);
+  const visibleSections = useMemo(() => (
+    getVisibleSections(adminOrSupplierUser?.role).map((section) => (
+      section.id === 'products'
+        ? { ...section, items: productCategoryItems }
+        : section
+    ))
+  ), [adminOrSupplierUser?.role, productCategoryItems]);
   const [openSectionIds, setOpenSectionIds] = useState<Set<string>>(() => new Set(['products']));
+
+  useEffect(() => {
+    if (
+      mainCategories.length === 0
+      && getMainCategoriesReq.status === EAPIStatus.IDLE
+    ) {
+      dispatch(getMainCategories());
+    }
+  }, [dispatch, getMainCategoriesReq.status, mainCategories.length]);
 
   useEffect(() => {
     const activeSection = visibleSections.find((section) => {

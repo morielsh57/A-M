@@ -1,0 +1,194 @@
+@import '../../styles/colors.scss';
+
+$appTableBgColor: $natural1;
+$appTablePageBgColor: $natural2;
+$appTableBorderColor: $natural4;
+$appTableTitleColor: $natural9;
+$appTableMutedTextColor: $natural6;
+$appTableAccentColor: $purple6;
+$appTableAccentSoftColor: $purple1;
+$appTableShadowColor: rgba($natural9, 0.08);
+
+.app-table {
+  overflow: hidden;
+  border: 1px solid $appTableBorderColor;
+  border-radius: 10px;
+  background: $appTableBgColor;
+  box-shadow: 0 16px 36px $appTableShadowColor;
+
+  &__toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 22px;
+    border-bottom: 1px solid $appTableBorderColor;
+    background:
+      linear-gradient(180deg, $appTableBgColor 0%, $appTablePageBgColor 100%),
+      $appTableBgColor;
+  }
+
+  &__heading {
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    color: $appTableTitleColor;
+    font-size: 1.18rem;
+    font-weight: 800;
+  }
+
+  &__subtitle {
+    margin: 7px 0 0;
+    color: $appTableMutedTextColor;
+    font-size: 0.92rem;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-width: min(360px, 100%);
+  }
+
+  &__search {
+    max-width: 320px;
+
+    .ant-input,
+    .ant-input-search-button {
+      border-color: $appTableBorderColor;
+    }
+
+    .ant-input:focus,
+    .ant-input-focused {
+      border-color: $appTableAccentColor;
+      box-shadow: 0 0 0 3px rgba($appTableAccentColor, 0.12);
+    }
+
+    .ant-input-search-button {
+      color: $appTableAccentColor;
+
+      &:hover {
+        border-color: $appTableAccentColor;
+        color: $appTableAccentColor;
+      }
+    }
+  }
+
+  &__table {
+    .ant-table {
+      color: $appTableTitleColor;
+      background: $appTableBgColor;
+    }
+
+    .ant-table-thead>tr>th {
+      background: $appTablePageBgColor;
+      color: $appTableTitleColor;
+      font-weight: 800;
+    }
+
+    .ant-table-tbody>tr>td {
+      border-bottom-color: $appTableBorderColor;
+    }
+
+    .ant-table-tbody>tr:hover>td {
+      background: rgba($appTableAccentSoftColor, 0.62);
+    }
+
+    .ant-table-column-sorter-up.active,
+    .ant-table-column-sorter-down.active {
+      color: $appTableAccentColor;
+    }
+
+    .ant-table-cell-fix-left,
+    .ant-table-cell-fix-right {
+      background: $appTableBgColor;
+    }
+
+    .ant-table-tbody>tr:hover>.ant-table-cell-fix-left,
+    .ant-table-tbody>tr:hover>.ant-table-cell-fix-right {
+      background: rgba($appTableAccentSoftColor, 0.92);
+    }
+
+    .ant-table-sticky-scroll {
+      width: calc(100% - 88px) !important;
+      margin-inline: 44px;
+      border-radius: 999px;
+    }
+  }
+
+  &__pagination {
+    display: flex;
+    justify-content: center;
+    margin: 18px 20px;
+
+    .ant-pagination-item-active {
+      border-color: $appTableAccentColor;
+
+      a {
+        color: $appTableAccentColor;
+      }
+    }
+
+    .ant-pagination-item {
+      transition: 0.3s ease;
+    }
+
+    .ant-pagination .ant-pagination-item-active {
+      &:hover,
+      &:active {
+        border-color: $purple4;
+
+        a {
+          color: $purple4;
+        }
+      }
+    }
+
+    .ant-pagination-prev:hover .ant-pagination-item-link,
+    .ant-pagination-next:hover .ant-pagination-item-link {
+      color: $appTableAccentColor;
+    }
+  }
+
+  @media (max-width: 768px) {
+    &__toolbar {
+      display: block;
+      padding: 18px;
+    }
+
+    &__controls {
+      justify-content: flex-start;
+      min-width: 0;
+      margin-top: 14px;
+    }
+
+    &__search {
+      max-width: none;
+    }
+
+    &__table {
+      display: none;
+    }
+
+    &__pagination {
+      margin: 14px 12px 18px;
+    }
+  }
+}
+
+.app-table-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &__button {
+    min-width: 34px;
+    min-height: 32px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+}
