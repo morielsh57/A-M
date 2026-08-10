@@ -83,6 +83,12 @@ export const API_ROUTES = {
     DASHBOARD_OVERVIEW: '/admin/dashboard/overview',
     PRODUCTS: '/admin/products/',
     PRODUCT_DETAIL: (productId: string | number) => `/admin/products/${productId}`,
+    PRODUCT_VARIANTS: (productId: string | number) => `/admin/products/${productId}/variants`,
+    PRODUCT_VARIANT_DETAIL: (
+      productId: string | number,
+      variantId: string | number,
+    ) => `/admin/products/${productId}/variants/${variantId}`,
+    PRODUCT_IMAGES_UPLOAD: (productId: string | number) => `/admin/products/${productId}/images/upload`,
   },
   USERS: '/users',
   USERS_ME: '/users/me',

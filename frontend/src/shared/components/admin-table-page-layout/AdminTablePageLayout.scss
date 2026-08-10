@@ -1,3 +1,4 @@
+@import "../../styles/layout.scss";
 @import "../../styles/colors.scss";
 
 $adminTablePageBgColor: $natural2;
@@ -17,7 +18,7 @@ $adminTablePageAccentColor: $purple6;
     justify-content: space-between;
     align-items: flex-end;
     gap: 24px;
-    max-width: 1180px;
+    max-width: $adminContentMaxWidth;
     margin: 0 auto 24px;
   }
 
@@ -47,7 +48,7 @@ $adminTablePageAccentColor: $purple6;
   }
 
   .app-table {
-    max-width: 1180px;
+    max-width: $adminContentMaxWidth;
     margin: 0 auto;
   }
 

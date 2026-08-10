@@ -8,6 +8,7 @@ export interface IProductVariant {
   color: string | null;
   size: string | null;
   quantity: number;
+  is_active?: boolean;
   images: string[];
 }
 
@@ -41,6 +42,7 @@ export interface IProduct {
   fabric?: string | null;
   category_id: CategoryId;
   supplier_id?: SupplierId | null;
+  is_active?: boolean;
   variants: IProductVariant[];
 }
 

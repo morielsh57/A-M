@@ -43,9 +43,11 @@ const categoryColumns: AppTableColumn<IAdminCategoryTableItem>[] = [
 const AdminCategoriesPage: React.FC = () => {
   return (
     <AdminTablePageLayout
+      createButtonLabel="Create category"
       eyebrow="Catalog structure"
       title="Categories"
       subtitle="Review categories, sort columns, search the loaded page, and remove categories when allowed."
+      onCreateClick={() => undefined}
     >
       <AppTable<IAdminCategoryTableItem>
         columns={categoryColumns}

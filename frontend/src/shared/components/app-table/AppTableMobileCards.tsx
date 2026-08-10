@@ -85,10 +85,12 @@ const AppTableMobileCards = <T extends object>({
   rowKey,
 }: AppTableMobileCardsProps<T>) => {
   const visibleColumns = getVisibleColumns(columns);
-  const titleColumn = visibleColumns[0];
   const actionsColumn = visibleColumns.find((column) => column.key === 'actions');
+  const titleColumns = visibleColumns
+    .filter((column) => column !== actionsColumn)
+    .slice(0, 2);
   const bodyColumns = visibleColumns.filter((column) => (
-    column !== titleColumn && column !== actionsColumn
+    !titleColumns.includes(column) && column !== actionsColumn
   ));
   const isLoading = Boolean(loading) && (
     typeof loading !== 'object' || loading.spinning !== false
@@ -122,7 +124,19 @@ const AppTableMobileCards = <T extends object>({
         <article className="app-table-mobile-cards__card" key={getRecordKey(record, index)}>
           <div className="app-table-mobile-cards__card-header">
             <h3 className="app-table-mobile-cards__card-title">
-              {titleColumn ? renderColumnValue(titleColumn, record, index) : `Item ${index + 1}`}
+              {titleColumns.length > 0 ? titleColumns.map((column) => (
+                <span
+                  className={[
+                    'app-table-mobile-cards__card-title-item',
+                    titleColumns.indexOf(column) === 0
+                      ? 'app-table-mobile-cards__card-title-item--accent'
+                      : '',
+                  ].filter(Boolean).join(' ')}
+                  key={String(column.key || column.dataIndex)}
+                >
+                  {renderColumnValue(column, record, index)}
+                </span>
+              )) : `Item ${index + 1}`}
             </h3>
 
             {actionsColumn && (
