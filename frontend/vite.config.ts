@@ -42,6 +42,7 @@ export default defineConfig(({ mode, command }) => {
       sourcemap: false,
     },
     server: {
+      host: true,
       port: 3001,
       strictPort: true,
     },

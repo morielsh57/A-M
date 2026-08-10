@@ -177,6 +177,7 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ isOpen, onToggle }) => {
                     key={section.id}
                     to={section.path}
                     className={({ isActive }) => `admin-navbar__section-link ${isActive ? 'admin-navbar__section-link--active' : ''}`}
+                    onClick={onToggle}
                   >
                     <span className="admin-navbar__section-icon">{section.icon}</span>
                     <span>{section.label}</span>
@@ -204,6 +205,7 @@ const AdminNavbar: React.FC<AdminNavbarProps> = ({ isOpen, onToggle }) => {
                           key={item.path}
                           to={item.path}
                           className={({ isActive }) => `admin-navbar__item ${isActive ? 'admin-navbar__item--active' : ''}`}
+                          onClick={onToggle}
                         >
                           {item.label}
                         </NavLink>
