@@ -24,6 +24,15 @@ const ProductsColumnRender = ({
   onDeleteProduct,
   onEditProduct,
 }: ProductsColumnRenderProps): AppTableColumn<IAdminProductListItem>[] => [
+  createRenderColumn<IAdminProductListItem>({
+    title: 'ID',
+    key: 'product_id',
+    fixed: 'left',
+    width: 74,
+    render: (_, product) => (
+      <span className="admin-products-page__product-id">#{product.product_id}</span>
+    ),
+  }),
   createTextColumn<IAdminProductListItem, 'name'>({
     title: 'Name',
     dataIndex: 'name',

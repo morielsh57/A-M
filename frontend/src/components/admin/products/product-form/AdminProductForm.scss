@@ -1,0 +1,345 @@
+@import "../../../../shared/styles/colors.scss";
+
+$adminProductFormBorderColor: $natural4;
+$adminProductFormTextColor: $natural9;
+$adminProductFormMutedColor: $natural6;
+$adminProductFormAccentColor: $purple6;
+$adminProductFormDangerColor: $red7;
+
+.admin-product-form {
+  &__loading {
+    padding: 18px;
+    border: 1px solid $adminProductFormBorderColor;
+    border-radius: 12px;
+    background: $natural1;
+    color: $adminProductFormMutedColor;
+    font-weight: 700;
+  }
+
+  &__section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  &__add-variant-button {
+    justify-self: end;
+    min-width: 130px;
+    min-height: 34px;
+    padding: 6px 12px;
+    font-size: 0.86rem;
+  }
+
+  &__variant-list {
+    display: grid;
+    gap: 14px;
+  }
+
+  &__variant-row {
+    overflow: hidden;
+    border: 1px solid $adminProductFormBorderColor;
+    border-radius: 12px;
+    background: rgba($natural2, 0.72);
+    transition:
+      border-color 0.24s ease,
+      box-shadow 0.24s ease;
+
+    &--new {
+      border: 2px solid $adminProductFormAccentColor;
+      box-shadow: 0 0 0 4px rgba($adminProductFormAccentColor, 0.1);
+    }
+  }
+
+  &__variant-summary {
+    display: flex;
+    align-items: center;
+    min-height: 60px;
+    padding: 8px 12px;
+    gap: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background: rgba($purple1, 0.72);
+    }
+  }
+
+  &__variant-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: $adminProductFormAccentColor;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      transform 0.24s ease;
+
+    &:hover {
+      background: rgba($adminProductFormAccentColor, 0.1);
+    }
+
+    &--expanded {
+      transform: rotate(180deg);
+    }
+  }
+
+  &__variant-summary-text {
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__variant-title {
+    margin: 0;
+    color: $adminProductFormTextColor;
+    font-size: 0.95rem;
+    font-weight: 800;
+  }
+
+  &__variant-id {
+    margin-left: 6px;
+    color: $adminProductFormAccentColor;
+  }
+
+  &__variant-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 3px 0 0;
+    color: $adminProductFormMutedColor;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  &__variant-remove {
+    min-width: 34px;
+    min-height: 32px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+
+  &__variant-content {
+    display: grid;
+    gap: 14px;
+    max-height: 0;
+    padding: 0 14px;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+      max-height 0.28s ease,
+      opacity 0.2s ease,
+      padding 0.28s ease,
+      transform 0.28s ease;
+  }
+
+  &__variant-row--expanded &__variant-content {
+    max-height: 760px;
+    padding: 0 14px 14px;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &__row-error {
+    margin: 0;
+    color: $adminProductFormDangerColor;
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  &__image-uploader {
+    display: grid;
+    gap: 10px;
+  }
+
+  &__image-input-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-height: 34px;
+    padding: 7px 12px;
+    border: 1px dashed $adminProductFormAccentColor;
+    border-radius: 10px;
+    background: rgba($adminProductFormAccentColor, 0.08);
+    color: $adminProductFormAccentColor;
+    font-size: 0.86rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      opacity: 0.7;
+    }
+
+    input {
+      display: none;
+    }
+  }
+
+  &__image-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__image-preview-frame {
+    position: relative;
+    display: grid;
+    gap: 5px;
+    width: 54px;
+    margin: 0;
+  }
+
+  &__image-preview-button {
+    display: inline-flex;
+    width: fit-content;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    cursor: zoom-in;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.06);
+    }
+  }
+
+  &__image-preview {
+    width: 46px;
+    height: 58px;
+    border: 1px solid $adminProductFormBorderColor;
+    border-radius: 8px;
+    background: $natural1;
+    object-fit: cover;
+  }
+
+  &__image-preview-name {
+    overflow: hidden;
+    color: $adminProductFormMutedColor;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__image-remove-button {
+    position: absolute;
+    top: -6px;
+    right: 1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 1px solid rgba($adminProductFormDangerColor, 0.38);
+    border-radius: 5px;
+    background: rgba($natural1, 0.96);
+    color: $adminProductFormDangerColor;
+    cursor: pointer;
+    font-size: 0.62rem;
+    line-height: 1;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      border-color: $adminProductFormDangerColor;
+      background: $adminProductFormDangerColor;
+      color: $natural1;
+      transform: scale(1.08);
+    }
+  }
+
+  &__image-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    background: rgba($natural9, 0.42);
+    backdrop-filter: blur(4px);
+  }
+
+  &__image-modal-card {
+    position: relative;
+    display: flex;
+    max-width: min(560px, 86vw);
+    max-height: min(720px, 82vh);
+    padding: 16px;
+    border: 1px solid rgba($adminProductFormAccentColor, 0.24);
+    border-radius: 18px;
+    background: $natural1;
+    box-shadow: 0 26px 64px rgba($natural9, 0.24);
+  }
+
+  &__image-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid $adminProductFormBorderColor;
+    border-radius: 999px;
+    background: rgba($natural1, 0.92);
+    color: $adminProductFormAccentColor;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease;
+
+    &:hover {
+      border-color: $adminProductFormAccentColor;
+      background: $adminProductFormAccentColor;
+      color: $natural1;
+    }
+  }
+
+  &__image-modal-preview {
+    display: block;
+    max-width: 100%;
+    max-height: calc(82vh - 32px);
+    border-radius: 12px;
+    object-fit: contain;
+  }
+
+  &__file-chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 180px;
+    min-height: 30px;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: $natural1;
+    color: $adminProductFormMutedColor;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 640px) {
+    &__section-header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    &__add-variant-button {
+      justify-self: stretch;
+      width: 100%;
+    }
+  }
+}

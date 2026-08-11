@@ -127,6 +127,10 @@ $adminFormErrorColor: $red7;
 
   @media (max-width: 768px) {
     padding-bottom: 140px;
+
+    &__actions {
+      box-shadow: none;
+    }
   }
 
   @media (max-width: 640px) {

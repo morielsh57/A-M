@@ -3,8 +3,14 @@
 $adminProductsPanelBgColor: $natural1;
 $adminProductsMutedTextColor: $natural6;
 $adminProductsBorderColor: $natural4;
+$adminProductsIdColor: $purple6;
 
 .admin-products-page {
+  &__product-id {
+    color: $adminProductsIdColor;
+    font-weight: 800;
+  }
+
   &__images {
     display: flex;
     align-items: center;
@@ -34,5 +40,11 @@ $adminProductsBorderColor: $natural4;
     font-size: 0.78rem;
     font-weight: 700;
     text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    &__images {
+      justify-content: flex-end;
+    }
   }
 }

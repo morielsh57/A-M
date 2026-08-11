@@ -31,8 +31,11 @@ export interface IAdminProductDetailRequestParams {
 
 export interface IAdminProductImage {
   image_id: ProductId;
+  variant_id?: ProductVariantId | null;
+  public_id?: string | null;
   secure_url: string;
   alt_text?: string;
+  display_order?: number;
   is_active?: boolean;
   is_primary?: boolean;
 }
@@ -64,16 +67,32 @@ export interface IAdminProductWriteRequest {
   fabric?: string | null;
   category_id: CategoryId;
   supplier_id?: SupplierId | null;
+  is_active?: boolean;
 }
 
 export interface IAdminProductVariantWriteRequest {
   color?: string | null;
   size?: string | null;
   quantity: number;
-  images: string[];
+  is_active?: boolean;
+  image_ids?: Array<string | number>;
 }
 
 export interface IAdminProductVariantWriteRequestParams {
   product_id: ProductId;
   variant_id?: ProductVariantId;
+  payload: IAdminProductVariantWriteRequest;
+}
+
+export interface IUpdateAdminProductRequestParams {
+  product_id: ProductId;
+  payload: Partial<IAdminProductWriteRequest>;
+}
+
+export interface IAdminProductImageUploadRequestParams {
+  product_id: ProductId;
+  files: File[];
+  alt_texts?: string[];
+  display_orders?: number[];
+  primary_image_index?: number;
 }

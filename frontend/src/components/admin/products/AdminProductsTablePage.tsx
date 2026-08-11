@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
+import { Modal } from 'antd';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useToasts } from 'react-toast-notifications';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus, type IAPIError } from '../../../shared/api/models';
 import AdminTablePageLayout from '../../../shared/components/admin-table-page-layout/AdminTablePageLayout';
+import AdminFormDrawer from '../../../shared/components/admin-form-drawer/AdminFormDrawer';
 import AppTable from '../../../shared/components/app-table/AppTable';
 import { getMainCategories } from '../../../shared/store/category/category.store';
 import type { CategoryId } from '../../product-page/product.types';
@@ -17,6 +19,8 @@ import {
 import type { IAdminProductListItem, IAdminProductsListRequestParams } from './adminProducts.types';
 import ProductsColumnRender from './ProductsColumnRender';
 import { ADMIN_TABLE_PAGE_SIZE } from '../../../app/constants';
+import AdminProductForm from './product-form/AdminProductForm';
+import type { AdminProductFormMode } from './product-form/adminProductForm.types';
 import './AdminProductsTablePage.scss';
 
 const getPageFromSearchParams = (pageParam: string | null) => {
@@ -52,6 +56,11 @@ const getErrorMessage = (error: unknown) => {
 const AdminProductsTablePage: React.FC = () => {
   const { categoryId } = useParams();
   const [searchParams] = useSearchParams();
+  const [drawerMode, setDrawerMode] = React.useState<AdminProductFormMode>('create');
+  const [drawerProductId, setDrawerProductId] = React.useState<string | number>();
+  const [drawerProductName, setDrawerProductName] = React.useState<string>();
+  const [isProductDrawerOpen, setIsProductDrawerOpen] = React.useState(false);
+  const [isProductFormDirty, setIsProductFormDirty] = React.useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { addToast } = useToasts();
@@ -64,9 +73,10 @@ const AdminProductsTablePage: React.FC = () => {
   const mainCategories = getMainCategoriesReq.data || [];
   const currentPage = getPageFromSearchParams(searchParams.get('page'));
   const searchValue = searchParams.get('search') || '';
-  const categoryName = mainCategories.find(
+  const currentMainCategory = mainCategories.find(
     (category) => String(category.category_id) === String(categoryId),
-  )?.main_category_name || 'Products';
+  );
+  const categoryName = currentMainCategory?.main_category_name || 'Products';
 
   const productsRequestParams = useMemo<IAdminProductsListRequestParams | undefined>(() => {
     if (!categoryId) {
@@ -162,7 +172,42 @@ const AdminProductsTablePage: React.FC = () => {
     }
   }, [dispatch, productsRequestParams]);
 
-  const handleEditProduct = useCallback(() => undefined, []);
+  const openCreateProductDrawer = useCallback(() => {
+    setDrawerMode('create');
+    setDrawerProductId(undefined);
+    setDrawerProductName(undefined);
+    setIsProductFormDirty(false);
+    setIsProductDrawerOpen(true);
+  }, []);
+
+  const forceCloseProductDrawer = useCallback(() => {
+    setIsProductFormDirty(false);
+    setIsProductDrawerOpen(false);
+  }, []);
+
+  const closeProductDrawer = useCallback(() => {
+    if (!isProductFormDirty) {
+      forceCloseProductDrawer();
+      return;
+    }
+
+    Modal.confirm({
+      title: 'Discard unsaved changes?',
+      content: 'You changed this form. If you close it now, the changes will not be saved.',
+      okText: 'Discard changes',
+      cancelText: 'Keep editing',
+      okButtonProps: { danger: true },
+      onOk: forceCloseProductDrawer,
+    });
+  }, [forceCloseProductDrawer, isProductFormDirty]);
+
+  const handleEditProduct = useCallback((product: IAdminProductListItem) => {
+    setDrawerMode('edit');
+    setDrawerProductId(product.product_id);
+    setDrawerProductName(product.name);
+    setIsProductFormDirty(false);
+    setIsProductDrawerOpen(true);
+  }, []);
 
   const handleDeleteProduct = useCallback(async (product: IAdminProductListItem) => {
     try {
@@ -214,9 +259,12 @@ const AdminProductsTablePage: React.FC = () => {
 
   return (
     <AdminTablePageLayout
+      createButtonLabel="Create product"
       eyebrow="Inventory management"
+      isCreateDisabled={!currentMainCategory}
       title={categoryName}
       subtitle="Review products, sort columns, search the loaded page, and remove products when allowed."
+      onCreateClick={openCreateProductDrawer}
     >
       <AppTable<IAdminProductListItem>
         columns={columns}
@@ -231,13 +279,38 @@ const AdminProductsTablePage: React.FC = () => {
           onChange: (page) => updateUrlParams({ page }),
         }}
         rowKey="product_id"
-        scroll={{ x: 1510 }}
+        scroll={{ x: 1590 }}
         searchPlaceholder="Search products on this page..."
         searchValue={searchValue}
         subtitle="Search and sorting apply to the currently loaded page."
         title={`${categoryName} products`}
         onSearchChange={(value) => updateUrlParams({ search: value })}
       />
+
+      <AdminFormDrawer
+        isOpen={isProductDrawerOpen}
+        subtitle="Manage base product details, upload images, and create or edit variants."
+        title={drawerMode === 'edit' ? (
+          <>
+            Edit <span className="admin-form-drawer__title-accent">{drawerProductName || 'product'}</span>
+          </>
+        ) : 'Create product'}
+        onClose={closeProductDrawer}
+      >
+        <AdminProductForm
+          defaultMainCategoryId={currentMainCategory?.category_id}
+          disableMainCategorySelect
+          initialProductId={drawerProductId}
+          mainCategories={mainCategories}
+          products={products}
+          onCancel={closeProductDrawer}
+          onDirtyChange={setIsProductFormDirty}
+          onSaved={() => {
+            refetchCurrentPage();
+            forceCloseProductDrawer();
+          }}
+        />
+      </AdminFormDrawer>
     </AdminTablePageLayout>
   );
 };
