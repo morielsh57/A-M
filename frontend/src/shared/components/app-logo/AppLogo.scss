@@ -2,19 +2,20 @@
 
 .app-logo {
   &.main-logo {
-    width: 35%;
-    max-width: 150px;
-    -webkit-mask-image: radial-gradient(circle, $natural9 60%, transparent 100%);
-    mask-image: radial-gradient(circle, $natural9 60%, transparent 100%);
+    width: 20%;
+    max-width: 96px;
+    min-width: 70px;
   }
 
   &.auth-logo {
-    width: 60%;
+    width: 42%;
+    margin-top: 10px;
+    margin-bottom: 30px;
   }
 }
 
 @media screen and (max-width: 768px) {
   .app-logo.main-logo {
-    width: 100%;
+    width: 70%;
   }
 }

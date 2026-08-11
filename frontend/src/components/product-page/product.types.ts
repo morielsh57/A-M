@@ -48,15 +48,25 @@ export interface IProductsListRequestParams {
   page?: number;
   page_size?: number;
   category?: CategoryId;
+  main_category?: CategoryId;
+  sub_category?: CategoryId;
+  search?: string;
+  size?: string;
+  color?: string;
+  min_price?: string | number;
+  max_price?: string | number;
+  in_stock?: boolean;
+  ordering?: 'name' | '-name' | 'price' | '-price' | 'rating' | '-rating' | 'date_created' | '-date_created';
 }
 
-export type IProductsListResponse = IProductCardProduct[];
+export interface IHomeCategoryProductsRequest {
+  main_category: CategoryId;
+  page_size?: number;
+}
 
 export interface IProductDetailRequestParams {
   product_id: ProductId;
 }
-
-export type IProductDetailResponse = IProduct;
 
 export interface IProductCardProps {
   product?: IProductCardProduct;

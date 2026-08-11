@@ -227,6 +227,72 @@
       }
     }
   }
+
+  &--skeleton {
+    --skeleton-base: #f1e8ee;
+    --skeleton-shine: #fff9fc;
+
+    pointer-events: none;
+
+    &:hover,
+    &:focus-within,
+    &:active {
+      box-shadow: 0 0 12px rgba($purple9, 0.08);
+      transform: none;
+    }
+
+    .product-card {
+      &__skeleton-block,
+      &__skeleton-line,
+      &__skeleton-circle {
+        background:
+          linear-gradient(
+            110deg,
+            var(--skeleton-base) 8%,
+            var(--skeleton-shine) 18%,
+            var(--skeleton-base) 33%
+          );
+        background-size: 220% 100%;
+        animation: productCardSkeletonShimmer 1.15s ease-in-out infinite;
+      }
+
+      &__skeleton-block {
+        background:
+          linear-gradient(
+            110deg,
+            #eadfe6 8%,
+            var(--skeleton-shine) 18%,
+            #eadfe6 33%
+          );
+        background-size: 220% 100%;
+      }
+
+      &__skeleton-line {
+        display: block;
+        border-radius: 999px;
+      }
+
+      &__skeleton-line--name {
+        width: 78%;
+        height: 1.2em;
+      }
+
+      &__skeleton-line--price {
+        width: 72px;
+        height: 1.2em;
+      }
+
+      &__skeleton-line--fabric {
+        width: 86px;
+        height: 1em;
+      }
+
+      &__skeleton-circle {
+        border-color: transparent;
+        box-shadow: none;
+      }
+    }
+  }
 }
 
 @media (max-width: 1199px) {
@@ -263,6 +329,18 @@
     &__color-swatch {
       width: 15px;
       height: 15px;
+    }
+
+    &--skeleton {
+      .product-card {
+        &__skeleton-line--price {
+          width: 58px;
+        }
+
+        &__skeleton-line--fabric {
+          width: 68px;
+        }
+      }
     }
   }
 }
@@ -338,6 +416,24 @@
         }
       }
     }
+
+    &--skeleton {
+      &:hover,
+      &:focus-within,
+      &:active {
+        box-shadow: 0 10px 28px rgba($purple9, 0.08);
+      }
+
+      .product-card {
+        &__skeleton-line--price {
+          width: 48px;
+        }
+
+        &__skeleton-line--fabric {
+          width: 56px;
+        }
+      }
+    }
   }
 }
 
@@ -409,5 +505,19 @@
         }
       }
     }
+
+    &--skeleton {
+      &:hover,
+      &:focus-within,
+      &:active {
+        box-shadow: 0 8px 22px rgba($purple9, 0.07);
+      }
+    }
+  }
+}
+
+@keyframes productCardSkeletonShimmer {
+  to {
+    background-position: -220% 0;
   }
 }

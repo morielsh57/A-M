@@ -9,11 +9,13 @@ import { authStoreReducer } from './auth/auth.store';
 import { adminHomeStoreReducer } from '../components/admin/home/AdminHome.store';
 import { productPageStoreReducer } from '../components/product-page/product.store';
 import { userStoreReducer } from '../shared/store/user/user.store';
+import { categoryStoreReducer } from '../shared/store/category/category.store';
 
 export const rootReducer = {
   sharedStoreReducer,
   authStoreReducer,
   userStoreReducer,
+  categoryStoreReducer,
   adminHomeStoreReducer,
   productPageStoreReducer,
 };

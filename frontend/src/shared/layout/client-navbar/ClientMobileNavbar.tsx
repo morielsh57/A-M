@@ -2,54 +2,46 @@ import React from 'react';
 import type { MenuProps } from 'antd';
 import { Link } from 'react-router-dom';
 import { Dropdown } from 'antd';
+import { APP_ROUTING_PATHS } from '../../../app/routing';
+import { useAppSelector } from '../../../app/store';
+import type { ICategory, IMainCategory } from '../../store/category/category.types';
 
-const MOBILE_MENU_ITEMS: MenuProps['items'] = [
-  {
-    key: 'women',
-    label: 'Women',
-    className: 'py-2',
-    children: [
-      { key: 'women-tops', className: 'menuItemNav', label: <Link to="#">Tops</Link> },
-      { key: 'women-pants', className: 'menuItemNav', label: <Link to="#">Pants</Link> },
-      { key: 'women-drasses', className: 'menuItemNav', label: <Link to="#">Drasses</Link> },
-    ],
-  },
-  {
-    key: 'men',
-    label: 'Men',
-    className: 'py-2',
-    children: [
-      { key: 'men-shirts', className: 'menuItemNav', label: <Link to="#">Shirts</Link> },
-      { key: 'men-pants', className: 'menuItemNav', label: <Link to="#">Pants</Link> },
-    ],
-  },
-  {
-    key: 'boys',
-    label: 'Boys',
-    className: 'py-2',
-    children: [
-      { key: 'boys-shirts', className: 'menuItemNav', label: <Link to="#">Shirts</Link> },
-      { key: 'boys-pants', className: 'menuItemNav', label: <Link to="#">Pants</Link> },
-    ],
-  },
-  {
-    key: 'girls',
-    label: 'Girls',
-    className: 'py-2',
-    children: [
-      { key: 'girls-tops', className: 'menuItemNav', label: <Link to="#">Tops</Link> },
-      { key: 'girls-pants', className: 'menuItemNav', label: <Link to="#">Pants</Link> },
-      { key: 'girls-drasses', className: 'menuItemNav', label: <Link to="#">Drasses</Link> },
-    ],
-  },
-  { key: 'accessories', className: 'menuItemNav ps-2 py-2', label: <Link to="#">Accessories</Link> },
-];
+const getMainCategoryLabel = (category: IMainCategory) => category.main_category_name;
+
+const getSubCategoryLabel = (category: ICategory) => (
+  category.sub_category_name || category.main_category_name
+);
+
+const createMobileMenuItems = (categories: IMainCategory[]): MenuProps['items'] => (
+  categories.map((category) => {
+    const categoryLink = APP_ROUTING_PATHS.APP_CATEGORY_PAGE('main', category.category_id);
+    const children = category.subcategories.map((subCategory) => ({
+      key: `sub-${subCategory.category_id}`,
+      className: 'menuItemNav',
+      label: (
+        <Link to={APP_ROUTING_PATHS.APP_CATEGORY_PAGE('sub', subCategory.category_id)}>
+          {getSubCategoryLabel(subCategory)}
+        </Link>
+      ),
+    }));
+
+    return {
+      key: `main-${category.category_id}`,
+      label: <Link to={categoryLink}>{getMainCategoryLabel(category)}</Link>,
+      className: 'py-2',
+      children: children.length ? children : undefined,
+    };
+  })
+);
 
 const ClientMobileNavbar: React.FC = () => {
+  const { getMainCategoriesReq } = useAppSelector((store) => store.categoryStoreReducer);
+  const mainCategories = getMainCategoriesReq.data || [];
+
   return (
     <Dropdown
       menu={{
-        items: MOBILE_MENU_ITEMS,
+        items: createMobileMenuItems(mainCategories),
         className: 'py-0 w-sm-25 w-50',
         triggerSubMenuAction: 'click',
       }}

@@ -1,0 +1,17 @@
+@import "../../styles/colors.scss";
+
+.app-pagination {
+  display: flex;
+  justify-content: center;
+  margin: 18px 0 44px;
+
+  .MuiPaginationItem-root {
+    color: $purple7;
+    font-weight: 600;
+  }
+
+  .Mui-selected {
+    background-color: $purple7 !important;
+    color: $natural1;
+  }
+}
