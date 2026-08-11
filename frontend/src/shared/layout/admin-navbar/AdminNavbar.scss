@@ -122,6 +122,10 @@ $adminNavbarToggleHoverBgColor: $purple7;
     background: $adminNavbarActiveBgColor;
     color: $adminNavbarActiveTextColor;
   }
+  
+  &__section-button--open {
+    background: rgba($adminNavbarActiveBgColor,0.4);
+   }
 
   &__section-icon {
     display: inline-flex;

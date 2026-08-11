@@ -1,0 +1,144 @@
+@import "../../styles/colors.scss";
+
+$adminFormDrawerPanelBgColor: $natural1;
+$adminFormDrawerTextColor: $natural9;
+$adminFormDrawerMutedColor: $natural6;
+$adminFormDrawerAccentColor: $purple6;
+$adminFormDrawerBorderColor: $natural4;
+
+.admin-form-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba($natural9, 0.34);
+  backdrop-filter: blur(3px);
+  animation: admin-form-drawer-fade-in 0.22s ease both;
+
+  &--closing {
+    animation: admin-form-drawer-fade-out 0.28s ease both;
+
+    .admin-form-drawer__panel {
+      animation: admin-form-drawer-slide-out 0.28s ease forwards;
+    }
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    width: min(720px, 92vw);
+    height: 100%;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, $adminFormDrawerPanelBgColor 0%, $natural2 100%),
+      $adminFormDrawerPanelBgColor;
+    box-shadow: -18px 0 44px rgba($natural9, 0.18);
+    transform: translateX(100%);
+    animation: admin-form-drawer-slide-in 0.28s ease forwards;
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 24px 28px;
+    border-bottom: 1px solid $adminFormDrawerBorderColor;
+    background: $adminFormDrawerPanelBgColor;
+  }
+
+  &__title {
+    margin: 0;
+    color: $adminFormDrawerTextColor;
+    font-size: 1.45rem;
+    font-weight: 800;
+  }
+
+  &__title-accent {
+    color: $purple6;
+  }
+
+  &__subtitle {
+    margin: 8px 0 0;
+    color: $adminFormDrawerMutedColor;
+    font-size: 0.95rem;
+  }
+
+  &__close-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid $adminFormDrawerBorderColor;
+    border-radius: 10px;
+    background: $natural1;
+    color: $adminFormDrawerAccentColor;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover {
+      border-color: $adminFormDrawerAccentColor;
+      background: $adminFormDrawerAccentColor;
+      color: $natural1;
+    }
+  }
+
+  &__content {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+
+  @media (max-width: 760px) {
+    &__panel {
+      width: 100vw;
+    }
+
+    &__header,
+    &__content {
+      padding-inline: 18px;
+    }
+  }
+}
+
+@keyframes admin-form-drawer-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes admin-form-drawer-fade-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes admin-form-drawer-slide-in {
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes admin-form-drawer-slide-out {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}

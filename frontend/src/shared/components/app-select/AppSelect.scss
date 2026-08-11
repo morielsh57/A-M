@@ -1,0 +1,117 @@
+@import '../../styles/colors.scss';
+
+.app-select {
+  width: 100%;
+
+  &.ant-select {
+
+    .ant-select-selector {
+      border: 1px solid $purple3;
+      border-radius: 12px;
+      background: linear-gradient(100deg, $natural1 7%, rgba($purple2, 0.42) 99%);
+      min-height: 42px;
+      padding: 4px 12px;
+      box-shadow: none;
+      transition: all 0.3s ease;
+    }
+
+    .ant-select-selection-item,
+    .ant-select-selection-placeholder {
+      color: $purple8;
+      font-weight: 600;
+    }
+    .ant-select-selection-search {
+      bottom: unset;
+      top: auto;
+
+      &-input {
+        color: $purple8;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+    }
+
+    &:hover,
+    &:focus-within,
+    &.ant-select-open,
+    &.ant-select-focused {
+      .ant-select-selector {
+        border-color: $purple6 !important;
+        box-shadow: 0 0 0 3px rgba($purple3, 0.42) !important;
+        transition: all 0.3s ease;
+      }
+      --ant-select-border-color: #{$purple6} !important;
+      --ant-select-active-outline-color: #{rgba($purple6, 0.17)} !important;
+    }
+
+    &.ant-select-focused,
+    &.ant-select-open {
+      .ant-select-selector {
+        border-color: $purple5 !important;
+        box-shadow: 0 0 0 3px rgba($purple3, 0.42) !important;
+      }
+
+      .ant-select-selection-item {
+        color: $natural9;
+      }
+    }
+  }
+}
+
+.app-select-dropdown.ant-select-dropdown {
+  border: 1px solid $purple3;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba($natural9, 0.18);
+  overflow: hidden;
+
+  .ant-select-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid $purple2;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .ant-select-item-option-active {
+    background-color: $purple1 !important;
+  }
+
+  .ant-select-item-option-selected {
+    background-color: $purple2 !important;
+
+    .ant-select-item-option-state {
+      color: $purple7 !important;
+    }
+  }
+
+  .app-select-option {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .app-select-option-title {
+    color: $purple8;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .app-select-option-subtitle {
+    color: $natural6;
+    font-size: 0.78rem;
+  }
+}
+
+@media only screen and (max-width: 700px) {
+  .app-select {
+    &.ant-select {
+      .ant-select-selector {
+        min-height: 38px;
+        padding: 3px 10px;
+      }
+    }
+  }
+}
