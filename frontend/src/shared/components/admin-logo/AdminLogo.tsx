@@ -2,7 +2,7 @@ import { APP_ROUTING_PATHS } from '../../../app/routing'
 import { Link } from 'react-router-dom'
 import adminLogo from '../../../assets/images/admin-logo.png';
 import { useAppSelector } from '../../../app/store';
-import { EUserRole } from '../../store/user.types';
+import { EUserRole } from '../../store/user/user.types';
 import './AdminLogo.scss';
 
 const AdminLogo = ({

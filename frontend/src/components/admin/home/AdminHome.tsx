@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { EAPIStatus } from '../../../shared/api/models';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
-import { EUserRole } from '../../../shared/store/user.types';
+import { EUserRole } from '../../../shared/store/user/user.types';
 import AdminDashboard from './AdminDashboard';
 import { getAdminDashboardOverview } from './AdminHome.store';
 import type { IAdminDashboardOverview } from './AdminHome.types';

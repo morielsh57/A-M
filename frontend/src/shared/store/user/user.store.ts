@@ -1,16 +1,12 @@
 import type { ActionReducerMapBuilder } from '@reduxjs/toolkit';
 import { createAction, createReducer } from '@reduxjs/toolkit';
-import { AUTH_LOCAL_STORAGE_KEYS } from '../../app/constants';
-import { apiService, createApiThunk } from '../api/axios';
-import { APIRequestState, type IAPIRequestState } from '../api/models';
-import { createAPIReducerCases, type ApiDataStateType } from './utils';
-import {
-  IAdminOrSupplierUser,
-  IUpdateUserProfileRequest,
-  IUser,
-} from './user.types';
-import { getItemFromLocalStorage, removeItemFromLocalStorage, setItemInLocalStorage } from '../utils/localStorage.utils';
-import { API_ROUTES } from '../../app/routing';
+import { getItemFromLocalStorage, removeItemFromLocalStorage, setItemInLocalStorage } from '../../utils/localStorage.utils';
+import { ApiDataStateType, createAPIReducerCases } from '../utils';
+import { IAdminOrSupplierUser, IUpdateUserProfileRequest, IUser } from './user.types';
+import { APIRequestState, IAPIRequestState } from '../../api/models';
+import { AUTH_LOCAL_STORAGE_KEYS } from '../../../app/constants';
+import { apiService, createApiThunk } from '../../api/axios';
+import { API_ROUTES } from '../../../app/routing';
 
 export interface UserStoreState extends ApiDataStateType {
   getCurrentUserRequest: IAPIRequestState<IUser>;

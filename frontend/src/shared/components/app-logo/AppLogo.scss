@@ -3,6 +3,7 @@
 .app-logo {
   &.main-logo {
     width: 35%;
+    max-width: 150px;
     -webkit-mask-image: radial-gradient(circle, $natural9 60%, transparent 100%);
     mask-image: radial-gradient(circle, $natural9 60%, transparent 100%);
   }

@@ -4,8 +4,8 @@ import { useForm } from 'react-hook-form';
 import { useToasts } from 'react-toast-notifications';
 import { EAPIStatus } from '../../../shared/api/models';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
-import { updateCurrentUserProfile } from '../../../shared/store/user.store';
-import type { IAdminOrSupplierUser } from '../../../shared/store/user.types';
+import { updateCurrentUserProfile } from '../../../shared/store/user/user.store';
+import type { IAdminOrSupplierUser } from '../../../shared/store/user/user.types';
 import AppButton from '../../../shared/components/app-button/AppButton';
 
 interface AdminProfileDetailsFormProps {

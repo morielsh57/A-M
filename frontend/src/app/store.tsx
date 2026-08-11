@@ -6,9 +6,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { injectStoreAxiosInterceptors } from '../shared/api/interceptors';
 import { sharedStoreReducer } from '../shared/store/shared.store';
 import { authStoreReducer } from './auth/auth.store';
-import { userStoreReducer } from '../shared/store/user.store';
 import { adminHomeStoreReducer } from '../components/admin/home/AdminHome.store';
 import { productPageStoreReducer } from '../components/product-page/product.store';
+import { userStoreReducer } from '../shared/store/user/user.store';
 
 export const rootReducer = {
   sharedStoreReducer,

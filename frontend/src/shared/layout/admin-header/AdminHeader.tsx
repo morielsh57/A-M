@@ -5,7 +5,7 @@ import { Badge, Dropdown } from 'antd';
 import { Link } from 'react-router-dom';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppSelector } from '../../../app/store';
-import { EUserRole, IUserNotification } from '../../store/user.types';
+import { EUserRole, IUserNotification } from '../../store/user/user.types';
 import AdminUserMenu from './AdminUserMenu';
 import AdminLogo from '../../components/admin-logo/AdminLogo';
 import './AdminHeader.scss';
