@@ -1,0 +1,38 @@
+@import "../../../shared/styles/colors.scss";
+
+$adminProductsPanelBgColor: $natural1;
+$adminProductsMutedTextColor: $natural6;
+$adminProductsBorderColor: $natural4;
+
+.admin-products-page {
+  &__images {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__image {
+    width: 42px;
+    height: 52px;
+    border: 1px solid $adminProductsBorderColor;
+    border-radius: 8px;
+    background: $adminProductsPanelBgColor;
+    object-fit: cover;
+  }
+
+  &__image-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 86px;
+    min-height: 52px;
+    padding: 6px;
+    border: 1px dashed $adminProductsBorderColor;
+    border-radius: 8px;
+    background: $adminProductsPanelBgColor;
+    color: $adminProductsMutedTextColor;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+  }
+}

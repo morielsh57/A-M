@@ -1,7 +1,7 @@
 import React from 'react';
 import './AppButton.scss';
 
-export type AppButtonVariant = 'primary';
+export type AppButtonVariant = 'primary' | 'secondary' | 'danger';
 
 export interface AppButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: AppButtonVariant;

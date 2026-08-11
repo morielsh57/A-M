@@ -17,6 +17,7 @@
   cursor: pointer;
   transition:
     background-color 0.2s ease,
+    border-color 0.2s ease,
     color 0.2s ease,
     opacity 0.2s ease;
 
@@ -26,6 +27,32 @@
 
     &:hover:not(:disabled) {
       background: $purple7;
+    }
+  }
+
+  &--secondary {
+    border: 1px solid $purple6;
+    background: transparent;
+    color: $purple6;
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      background: $purple6;
+      color: $natural1;
+      outline: none;
+    }
+  }
+
+  &--danger {
+    border: 1px solid $red7;
+    background: $natural1;
+    color: $red7;
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      background: $red7;
+      color: $natural1;
+      outline: none;
     }
   }
 
