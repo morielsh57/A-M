@@ -8,9 +8,9 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supplier, User
-from carts.models import Cart, CartProduct
+from carts.models import Cart
 from catalogue.models import Category
-from orders.models import Order
+from orders.models import Order, OrderItem
 from products.models import Product, ProductVariant
 
 
@@ -58,7 +58,7 @@ class DashboardOverviewApiTests(TestCase):
         cart = Cart.objects.create(customer=self.customer, total_price=amount)
         order = Order.objects.create(
             cart=cart,
-            payment_id=12345,
+            payment_id=f"dashboard-payment-{Order.objects.count() + 1}",
             customer=self.customer,
             total_price=amount,
             order_status=Order.Status.COMPLETED,
@@ -114,9 +114,14 @@ class DashboardOverviewApiTests(TestCase):
         product = self.create_supplier_product("supplier-product")
         self.create_supplier_product("low-stock-product", quantity=3)
         order = self.create_completed_order(Decimal("500.00"), now - timedelta(days=3))
-        CartProduct.objects.create(
-            cart=order.cart,
-            variant=product.variants.first(),
+        variant = product.variants.first()
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            variant=variant,
+            product_name=product.name,
+            color=variant.color,
+            size=variant.size,
             quantity=2,
             unit_price=Decimal("100.00"),
             total_price=Decimal("200.00"),
