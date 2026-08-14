@@ -267,17 +267,6 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
             />
           </AdminFormField>
 
-          {values.categoryType === 'sub' && (
-            <AdminFormField error={errors.parentCategoryId} label="Parent category">
-              <AdminFormSelect
-                options={parentOptions}
-                placeholder="Select main category"
-                searchSelect
-                value={values.parentCategoryId}
-                onChange={(value) => selectParent(value as CategoryId)}
-              />
-            </AdminFormField>
-          )}
 
           {values.categoryType === 'main' && (
             <AdminFormField error={errors.mainCategoryName} label="Main category name">
@@ -290,11 +279,24 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
           )}
 
           {values.categoryType === 'sub' && (
-            <AdminFormField error={errors.subCategoryName} label="Subcategory name">
+            <AdminFormField error={errors.subCategoryName} label="Name">
               <AdminFormInput
                 placeholder="e.g. Dresses"
                 value={values.subCategoryName}
                 onChange={(event) => updateValue('subCategoryName', event.target.value)}
+              />
+            </AdminFormField>
+          )}
+
+          
+          {values.categoryType === 'sub' && (
+            <AdminFormField error={errors.parentCategoryId} label="Parent category">
+              <AdminFormSelect
+                options={parentOptions}
+                placeholder="Select main category"
+                searchSelect
+                value={values.parentCategoryId}
+                onChange={(value) => selectParent(value as CategoryId)}
               />
             </AdminFormField>
           )}
