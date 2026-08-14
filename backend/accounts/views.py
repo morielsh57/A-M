@@ -51,6 +51,7 @@ from accounts.throttles import (
     VerificationResendIPThrottle,
 )
 from config.api.serializers import ErrorResponseSerializer
+from carts.services import merge_guest_cart
 
 
 class RegisterView(APIView):
@@ -264,6 +265,10 @@ class LoginView(APIView):
                 "You do not have access to the Admin or Supplier panel. "
                 "If you believe this is a mistake, contact the support team."
             )
+
+        guest_cart_id = serializer.validated_data.get("guest_cart_id")
+        if guest_cart_id is not None:
+            merge_guest_cart(user, guest_cart_id)
 
         refresh = RefreshToken.for_user(user)
         refresh["role"] = user.role.role_name
