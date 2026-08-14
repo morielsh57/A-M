@@ -7,7 +7,6 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -20,6 +19,7 @@ from accounts.exceptions import (
     InvalidPasswordResetToken,
     InvalidVerificationToken,
 )
+from accounts.email_service import send_transactional_email
 from accounts.models import (
     CUSTOMER_ROLE,
     EmailVerificationToken,
@@ -57,16 +57,14 @@ def send_verification_email(user, raw_token):
     subject = "Verify your A&M Fashion account"
     text_body = render_to_string("accounts/email/verify_email.txt", context)
     html_body = render_to_string("accounts/email/verify_email.html", context)
-    message = EmailMultiAlternatives(
-        subject=subject,
-        body=text_body,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[user.email],
-    )
-    message.attach_alternative(html_body, "text/html")
-
     try:
-        message.send(fail_silently=False)
+        send_transactional_email(
+            subject=subject,
+            text_body=text_body,
+            html_body=html_body,
+            recipient_email=user.email,
+            recipient_name=user.name,
+        )
     except Exception as exc:
         logger.exception("Failed to send verification email", extra={"user_id": user.pk})
         raise EmailDeliveryFailed() from exc
@@ -151,17 +149,13 @@ def send_password_reset_email(user, raw_token):
         "reset_url": reset_url,
         "valid_for": "one hour",
     }
-    message = EmailMultiAlternatives(
+    send_transactional_email(
         subject="Reset your A&M Fashion password",
-        body=render_to_string("accounts/email/reset_password.txt", context),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[user.email],
+        text_body=render_to_string("accounts/email/reset_password.txt", context),
+        html_body=render_to_string("accounts/email/reset_password.html", context),
+        recipient_email=user.email,
+        recipient_name=user.name,
     )
-    message.attach_alternative(
-        render_to_string("accounts/email/reset_password.html", context),
-        "text/html",
-    )
-    message.send(fail_silently=False)
 
 
 @transaction.atomic
