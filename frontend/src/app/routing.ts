@@ -3,6 +3,7 @@ const AUTH_PATH = '/auth';
 const APP_PATH = '/app';
 const PRODUCT_SEGMENT = 'product';
 const CATEGORY_SEGMENT = 'category';
+const SEARCH_SEGMENT = 'search';
 const ADMIN_ROOT_PATH = '/admin';
 
 const LOGIN_SEGMENT = 'login';
@@ -31,6 +32,7 @@ export const APP_ROUTING_PATHS = {
   APP: APP_PATH,
   PRODUCT: PRODUCT_SEGMENT,
   CATEGORY: CATEGORY_SEGMENT,
+  SEARCH: SEARCH_SEGMENT,
   LOGIN: LOGIN_SEGMENT,
   SIGNUP: SIGNUP_SEGMENT,
   ADMIN: {
@@ -63,6 +65,10 @@ export const APP_ROUTING_PATHS = {
     categoryId: string | number,
     page: string | number = 1,
   ) => `${APP_PATH}/${CATEGORY_SEGMENT}/${categoryType}/${categoryId}?page=${page}`,
+  APP_SEARCH_PAGE: (
+    searchQuery = '',
+    page: string | number = 1,
+  ) => `${APP_PATH}/${SEARCH_SEGMENT}?q=${encodeURIComponent(searchQuery)}&page=${page}`,
   ADMIN_LOGIN_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_AUTH_SEGMENT}/${ADMIN_LOGIN_SEGMENT}`,
   ADMIN_HOME_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_HOME_SEGMENT}`,
   ADMIN_PRODUCTS_PAGE: (categoryId: string | number) => `${ADMIN_ROOT_PATH}/${ADMIN_PRODUCTS_SEGMENT}/${categoryId}`,
@@ -97,5 +103,6 @@ export const API_ROUTES = {
   CATEGORIES_COUNT: '/categories/count',
   CATEGORY_DETAIL: (categoryId: string | number) => `/categories/${categoryId}`,
   PRODUCTS: '/products/',
+  PRODUCT_AUTOCOMPLETE: '/products/autocomplete',
   PRODUCT_DETAIL: (productId: string | number) => `/products/${productId}`,
 } as const;

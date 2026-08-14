@@ -92,13 +92,19 @@ def filter_products_by_category(queryset, request):
 def filter_public_products(queryset, filters):
     search = filters.get("search")
     if search:
-        queryset = queryset.filter(
+        color_matches = ProductVariant.objects.filter(
+            product_id=OuterRef("pk"),
+            color__icontains=search,
+            is_active=True,
+        )
+        queryset = queryset.annotate(search_color_matches=Exists(color_matches)).filter(
             Q(name__icontains=search)
             | Q(catalog_number__icontains=search)
             | Q(description__icontains=search)
             | Q(information__icontains=search)
             | Q(tags__icontains=search)
             | Q(fabric__icontains=search)
+            | Q(search_color_matches=True)
         )
 
     category_id = filters.get("category")

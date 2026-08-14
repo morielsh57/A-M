@@ -31,6 +31,12 @@ export interface IProductCardProduct {
   colors: IProductColorOption[];
 }
 
+export interface IProductAutocompleteItem {
+  product_id: ProductId;
+  name: string;
+  catalog_number: string;
+}
+
 export interface IProduct {
   product_id: ProductId;
   catalog_number: string;
@@ -59,6 +65,11 @@ export interface IProductsListRequestParams {
   max_price?: string | number;
   in_stock?: boolean;
   ordering?: 'name' | '-name' | 'price' | '-price' | 'rating' | '-rating' | 'date_created' | '-date_created';
+}
+
+export interface IProductAutocompleteRequestParams {
+  search: string;
+  limit?: number;
 }
 
 export interface IHomeCategoryProductsRequest {

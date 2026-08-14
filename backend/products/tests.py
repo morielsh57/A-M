@@ -187,6 +187,7 @@ class ProductVariantApiTests(TestCase):
     def test_public_catalogue_searches_product_keywords(self):
         by_name = self.client.get(reverse("product-list"), {"search": "classic"})
         by_keyword = self.client.get(reverse("product-list"), {"search": "cotton"})
+        by_variant_color = self.client.get(reverse("product-list"), {"search": "white"})
 
         self.assertEqual(
             [item["product_id"] for item in by_name.json()["data"]],
@@ -194,6 +195,10 @@ class ProductVariantApiTests(TestCase):
         )
         self.assertEqual(
             [item["product_id"] for item in by_keyword.json()["data"]],
+            [self.product.product_id],
+        )
+        self.assertEqual(
+            [item["product_id"] for item in by_variant_color.json()["data"]],
             [self.product.product_id],
         )
 

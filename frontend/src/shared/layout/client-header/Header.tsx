@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { AUTH_LOCAL_STORAGE_KEYS } from '../../../app/constants';
-import SearchInput from './SearchInput';
+import SearchInput from './search-input/SearchInput';
 import CartButton from './CartButton';
 import ClientNavbar from '../client-navbar/ClientNavbar';
 import AppLogo from '../../components/app-logo/AppLogo';
