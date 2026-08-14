@@ -51,7 +51,7 @@ const AdminProductImageUploader: React.FC<AdminProductImageUploaderProps> = ({
   const confirmRemoveImage = (onConfirm: () => void) => {
     Modal.confirm({
       title: 'Remove image?',
-      content: 'This image will be removed from the variant when you save the product.',
+      content: 'This image will be permanently deleted when you save the product.',
       okText: 'Remove image',
       cancelText: 'Keep image',
       okButtonProps: { danger: true },

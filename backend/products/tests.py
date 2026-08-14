@@ -531,6 +531,52 @@ class ProductVariantApiTests(TestCase):
         self.assertEqual(delete_response.status_code, 204)
         self.assertFalse(ProductVariant.objects.filter(variant_id=variant["variant_id"]).exists())
 
+    def test_admin_can_clear_variant_images_with_an_empty_image_ids_list(self):
+        self.authorize(self.admin)
+        assigned_image = self.black_small.product_images.get()
+
+        response = self.client.patch(
+            reverse(
+                "admin-product-variant-detail",
+                kwargs={
+                    "product_id": self.product.product_id,
+                    "variant_id": self.black_small.variant_id,
+                },
+            ),
+            {"image_ids": []},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        updated_variant = next(
+            variant
+            for variant in response.json()["data"]["variants"]
+            if variant["variant_id"] == self.black_small.variant_id
+        )
+        self.assertEqual(updated_variant["images"], [])
+        assigned_image.refresh_from_db()
+        self.assertIsNone(assigned_image.variant_id)
+
+    def test_variant_patch_without_image_ids_preserves_existing_images(self):
+        self.authorize(self.admin)
+        assigned_image = self.black_small.product_images.get()
+
+        response = self.client.patch(
+            reverse(
+                "admin-product-variant-detail",
+                kwargs={
+                    "product_id": self.product.product_id,
+                    "variant_id": self.black_small.variant_id,
+                },
+            ),
+            {"quantity": 4},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        assigned_image.refresh_from_db()
+        self.assertEqual(assigned_image.variant_id, self.black_small.variant_id)
+
     def test_variant_creation_rejects_an_image_from_another_product_atomically(self):
         self.authorize(self.admin)
         other_product_image = ProductImage.objects.create(

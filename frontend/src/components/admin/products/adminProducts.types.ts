@@ -96,3 +96,8 @@ export interface IAdminProductImageUploadRequestParams {
   display_orders?: number[];
   primary_image_index?: number;
 }
+
+export interface IDeleteAdminProductImageRequestParams {
+  product_id: ProductId;
+  image_id: IAdminProductImage['image_id'];
+}

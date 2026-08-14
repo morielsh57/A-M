@@ -89,6 +89,10 @@ export const API_ROUTES = {
       variantId: string | number,
     ) => `/admin/products/${productId}/variants/${variantId}`,
     PRODUCT_IMAGES_UPLOAD: (productId: string | number) => `/admin/products/${productId}/images/upload`,
+    PRODUCT_IMAGE_DETAIL: (
+      productId: string | number,
+      imageId: string | number,
+    ) => `/admin/products/${productId}/images/${imageId}`,
   },
   USERS: '/users',
   USERS_ME: '/users/me',

@@ -25,6 +25,7 @@ import type {
   IAdminProductVariantWriteRequestParams,
   IAdminProductWriteRequest,
   IDeleteAdminProductRequestParams,
+  IDeleteAdminProductImageRequestParams,
   IUpdateAdminProductRequestParams,
 } from './adminProducts.types';
 
@@ -203,6 +204,16 @@ export const updateAdminProductVariant = createApiThunk<
 export const deleteAdminProduct = createApiThunk<void, IDeleteAdminProductRequestParams>(
   'adminProducts/deleteAdminProduct',
   ({ product_id }) => apiService.delete<void>(API_ROUTES.ADMIN.PRODUCT_DETAIL(product_id)),
+);
+
+export const deleteAdminProductImage = createApiThunk<
+  void,
+  IDeleteAdminProductImageRequestParams
+>(
+  'adminProducts/deleteAdminProductImage',
+  ({ image_id, product_id }) => apiService.delete<void>(
+    API_ROUTES.ADMIN.PRODUCT_IMAGE_DETAIL(product_id, image_id),
+  ),
 );
 
 export const adminProductsStoreReducer = createReducer(initialState, (builder) => {
