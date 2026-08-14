@@ -34,6 +34,7 @@ const getLocationPathKey = (pathname: string, search: string) => `${pathname}${s
 
 interface ScrollRestorationLocationState {
   restoreScroll?: boolean;
+  preventScrollReset?: boolean;
 }
 
 const ScrollRestoration: React.FC = () => {
@@ -76,6 +77,14 @@ const ScrollRestoration: React.FC = () => {
     const shouldRestoreByPath = !!(
       location.state as ScrollRestorationLocationState | null
     )?.restoreScroll;
+    const shouldPreventScrollReset = !!(
+      location.state as ScrollRestorationLocationState | null
+    )?.preventScrollReset;
+
+    if (shouldPreventScrollReset) {
+      return undefined;
+    }
+
     const nextScrollTop = navigationType === 'POP'
       ? scrollPositionsByLocationKeyRef.current[location.key] || 0
       : scrollPositionsByPathRef.current[pathKey] || 0;

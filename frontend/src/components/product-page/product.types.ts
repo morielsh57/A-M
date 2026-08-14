@@ -8,8 +8,19 @@ export interface IProductVariant {
   color: string | null;
   size: string | null;
   quantity: number;
+  in_stock?: boolean;
   is_active?: boolean;
   images: string[];
+}
+
+export interface IProductImage {
+  image_id: ProductId;
+  variant_id?: ProductVariantId | null;
+  secure_url: string;
+  alt_text?: string | null;
+  display_order?: number;
+  is_primary?: boolean;
+  is_active?: boolean;
 }
 
 export interface IProductColorOption {
@@ -25,10 +36,15 @@ export interface IProductCardProduct {
   name: string;
   price: string | number;
   fabric?: string | null;
+  category_id?: CategoryId;
   selected_color: string | null;
   selected_variant_id: ProductVariantId | null;
   images: string[];
   colors: IProductColorOption[];
+  sizes?: string[];
+  in_stock?: boolean;
+  average_rating?: string | number | null;
+  rating_count?: number;
 }
 
 export interface IProductAutocompleteItem {
@@ -49,7 +65,12 @@ export interface IProduct {
   category_id: CategoryId;
   supplier_id?: SupplierId | null;
   is_active?: boolean;
+  images?: IProductImage[];
   variants: IProductVariant[];
+  in_stock?: boolean;
+  total_quantity?: number;
+  average_rating?: string | number | null;
+  rating_count?: number;
 }
 
 export interface IProductsListRequestParams {
@@ -84,4 +105,5 @@ export interface IProductDetailRequestParams {
 export interface IProductCardProps {
   product?: IProductCardProduct;
   width?: string;
+  display?: 'default' | 'compact';
 }

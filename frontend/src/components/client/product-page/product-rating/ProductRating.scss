@@ -1,0 +1,28 @@
+@import '../../../../shared/styles/colors.scss';
+
+.product-page {
+  &__rating {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 6px;
+
+    strong {
+      color: $purple9;
+      font-size: 0.74rem;
+      font-weight: 800;
+    }
+  }
+
+  &__stars {
+    display: inline-flex;
+    gap: 1px;
+    color: $gold6;
+    font-size: 0.98rem;
+    line-height: 1;
+  }
+
+  &__star--empty {
+    color: $natural5;
+  }
+}

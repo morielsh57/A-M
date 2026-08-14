@@ -1,0 +1,55 @@
+@import '../../../../shared/styles/colors.scss';
+
+.product-page {
+  &__reviews {
+    max-height: 180px;
+    margin-top: 26px;
+    border: 1px solid rgba($natural7, 0.2);
+    overflow-y: auto;
+  }
+
+  &__review {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba($natural7, 0.16);
+
+    &:last-child {
+      border-bottom: 0;
+    }
+
+    h3 {
+      margin: 0 0 4px;
+      color: $purple9;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: $purple8;
+      font-size: 0.72rem;
+    }
+
+    .product-page__rating {
+      margin: 0;
+    }
+
+    .product-page__stars {
+      font-size: 0.82rem;
+    }
+  }
+
+  &__review-avatar {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 999px;
+    background: $pink2;
+    color: $purple7;
+    font-size: 0.74rem;
+    font-weight: 900;
+  }
+}

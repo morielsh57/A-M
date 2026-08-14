@@ -6,9 +6,11 @@ import { type IAPIRequestState, type IMeta } from '../../shared/api/models';
 import { createAPIMapReducerCases, type ApiDataStateType } from '../../shared/store/utils';
 import type {
   IHomeCategoryProductsRequest,
+  IProduct,
   IProductAutocompleteItem,
   IProductAutocompleteRequestParams,
   IProductCardProduct,
+  IProductDetailRequestParams,
   IProductsListRequestParams,
 } from './product.types';
 
@@ -17,6 +19,7 @@ export interface ProductPageStoreState {
   homeCategoryProductsByCategoryReq: Record<string, IAPIRequestState<IProductCardProduct[]>>;
   searchProductsByQueryReq: Record<string, IAPIRequestState<IProductCardProduct[]>>;
   productAutocompleteBySearchReq: Record<string, IAPIRequestState<IProductAutocompleteItem[]>>;
+  productDetailByProductReq: Record<string, IAPIRequestState<IProduct>>;
   selectedProduct?: IProductCardProduct;
 }
 
@@ -25,6 +28,7 @@ const initialState: ProductPageStoreState = {
   homeCategoryProductsByCategoryReq: {},
   searchProductsByQueryReq: {},
   productAutocompleteBySearchReq: {},
+  productDetailByProductReq: {},
   selectedProduct: undefined,
 };
 
@@ -56,6 +60,10 @@ export const getProductAutocompleteCacheKey = (params: IProductAutocompleteReque
   `search:${params.search.trim().toLowerCase()}`,
   `limit:${params.limit || 10}`,
 ].join('|');
+
+export const getProductDetailCacheKey = (params: IProductDetailRequestParams) => (
+  String(params.product_id)
+);
 
 export const getCategoryProducts = createApiThunk<IProductCardProduct[], IProductsListRequestParams>(
   'productPage/getCategoryProducts',
@@ -98,6 +106,13 @@ export const getHomeCategoryProducts = createApiThunk<IProductCardProduct[], IHo
   ),
 );
 
+export const getProductDetail = createApiThunk<IProduct, IProductDetailRequestParams>(
+  'productPage/getProductDetail',
+  ({ product_id }) => apiService.get<IProduct>(
+    API_ROUTES.PRODUCT_DETAIL(product_id),
+  ),
+);
+
 export const productPageStoreReducer = createReducer(initialState, (builder) => {
   const apiBuilder = builder as unknown as ActionReducerMapBuilder<ApiDataStateType>;
 
@@ -126,6 +141,13 @@ export const productPageStoreReducer = createReducer(initialState, (builder) => 
     getProductAutocomplete,
     'productAutocompleteBySearchReq',
     getProductAutocompleteCacheKey,
+    apiBuilder,
+  );
+
+  createAPIMapReducerCases(
+    getProductDetail,
+    'productDetailByProductReq',
+    getProductDetailCacheKey,
     apiBuilder,
   );
 

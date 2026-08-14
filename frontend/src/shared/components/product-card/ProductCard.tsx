@@ -5,12 +5,20 @@ import type { IProductCardProps } from '../../../components/product-page/product
 import { formatPrice, getColorValue, getProductPageUrl, mockProductItem } from './productCard.utils';
 import './ProductCard.scss';
 
-const ProductCard: React.FC<IProductCardProps> = ({ product = mockProductItem, width }) => {
+const ProductCard: React.FC<IProductCardProps> = ({
+  product = mockProductItem,
+  width,
+  display = 'default',
+}) => {
   const selectedVariantId = product.selected_variant_id;
   const productImage = product.images[0] || product.colors.find((color) => color.images[0])?.images[0] || mockProductImage;
+  const cardClassName = [
+    'product-card',
+    display === 'compact' ? 'product-card--compact' : '',
+  ].filter(Boolean).join(' ');
 
   return (
-    <article className="product-card" style={width ? { width } : undefined}>
+    <article className={cardClassName} style={width ? { width } : undefined}>
       <Link
         className="product-card__stretched-link"
         to={getProductPageUrl(product)}
