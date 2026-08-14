@@ -92,7 +92,7 @@ export const API_ROUTES = {
   },
   USERS: '/users',
   USERS_ME: '/users/me',
-  CATEGORIES: '/categories',
+  CATEGORIES: '/categories/',
   CATEGORIES_MAIN: '/categories/main',
   CATEGORIES_COUNT: '/categories/count',
   CATEGORY_DETAIL: (categoryId: string | number) => `/categories/${categoryId}`,

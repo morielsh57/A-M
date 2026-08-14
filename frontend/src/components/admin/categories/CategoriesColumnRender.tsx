@@ -17,7 +17,17 @@ export interface IAdminCategoryTableItem {
   subcategories_count: number | null;
 }
 
-const CategoriesColumnRender = (): AppTableColumn<IAdminCategoryTableItem>[] => [
+interface CategoriesColumnRenderProps {
+  isDeletePending: boolean;
+  onEditCategory: (category: IAdminCategoryTableItem) => void;
+  onDeleteCategory: (category: IAdminCategoryTableItem) => void | Promise<void>;
+}
+
+const CategoriesColumnRender = ({
+  isDeletePending,
+  onDeleteCategory,
+  onEditCategory,
+}: CategoriesColumnRenderProps): AppTableColumn<IAdminCategoryTableItem>[] => [
   createRenderColumn<IAdminCategoryTableItem>({
     title: 'ID',
     key: 'category_id',
@@ -59,7 +69,14 @@ const CategoriesColumnRender = (): AppTableColumn<IAdminCategoryTableItem>[] => 
     dataIndex: 'subcategories_count',
     width: 150,
   }),
-  createActionsColumn<IAdminCategoryTableItem>({}),
+  createActionsColumn<IAdminCategoryTableItem>({
+    onEdit: onEditCategory,
+    onDelete: onDeleteCategory,
+    deleteConfirmTitle: (category) => `Delete ${category.name}?`,
+    deleteConfirmContent: 'This action cannot be undone. Categories assigned to products may be protected by the server.',
+    deleteOkText: 'Delete category',
+    isDeleteDisabled: isDeletePending,
+  }),
 ];
 
 export default CategoriesColumnRender;
