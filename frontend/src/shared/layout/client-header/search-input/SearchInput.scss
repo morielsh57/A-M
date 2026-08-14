@@ -1,0 +1,40 @@
+@import "../../../styles/colors.scss";
+
+.client-search {
+  position: relative;
+  align-items: center;
+  width: min(320px, 64vw);
+
+  .search-input {
+    width: 100%;
+    padding: 4px 38px 4px 4px;
+    color: $natural9;
+
+    &::placeholder {
+      color: $natural6;
+    }
+  }
+
+  .btn-search {
+    margin-left: -34px;
+  }
+
+  .search-autocomplete-menu {
+    right: 0;
+    left: auto;
+  }
+
+  @media (max-width: 768px) {
+    width: min(360px, 72vw);
+    margin-left: auto;
+
+    .search-input {
+      width: 100%;
+    }
+
+    .search-autocomplete-menu {
+      right: 0;
+      text-align: start;
+    }
+  }
+}

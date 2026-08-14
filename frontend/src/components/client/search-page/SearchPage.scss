@@ -1,0 +1,23 @@
+@import "../../../shared/styles/colors.scss";
+
+.search-page {
+  flex: 0 0 auto;
+  padding: 24px 0 56px;
+  background: $natural1;
+
+  &__summary {
+    width: min(1120px, calc(100% - 32px));
+    margin: 0 auto 18px;
+    color: $purple6;
+    font-size: 0.96rem;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  &__message {
+    margin: 34px auto 48px;
+    color: $purple6;
+    font-size: 1rem;
+    text-align: center;
+  }
+}

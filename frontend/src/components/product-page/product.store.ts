@@ -6,6 +6,8 @@ import { type IAPIRequestState, type IMeta } from '../../shared/api/models';
 import { createAPIMapReducerCases, type ApiDataStateType } from '../../shared/store/utils';
 import type {
   IHomeCategoryProductsRequest,
+  IProductAutocompleteItem,
+  IProductAutocompleteRequestParams,
   IProductCardProduct,
   IProductsListRequestParams,
 } from './product.types';
@@ -13,12 +15,16 @@ import type {
 export interface ProductPageStoreState {
   categoryProductsByQueryReq: Record<string, IAPIRequestState<IProductCardProduct[]>>;
   homeCategoryProductsByCategoryReq: Record<string, IAPIRequestState<IProductCardProduct[]>>;
+  searchProductsByQueryReq: Record<string, IAPIRequestState<IProductCardProduct[]>>;
+  productAutocompleteBySearchReq: Record<string, IAPIRequestState<IProductAutocompleteItem[]>>;
   selectedProduct?: IProductCardProduct;
 }
 
 const initialState: ProductPageStoreState = {
   categoryProductsByQueryReq: {},
   homeCategoryProductsByCategoryReq: {},
+  searchProductsByQueryReq: {},
+  productAutocompleteBySearchReq: {},
   selectedProduct: undefined,
 };
 
@@ -44,10 +50,36 @@ export const getHomeCategoryProductsCacheKey = (params: IHomeCategoryProductsReq
   String(params.main_category)
 );
 
+export const getSearchProductsCacheKey = getCategoryProductsCacheKey;
+
+export const getProductAutocompleteCacheKey = (params: IProductAutocompleteRequestParams) => [
+  `search:${params.search.trim().toLowerCase()}`,
+  `limit:${params.limit || 10}`,
+].join('|');
+
 export const getCategoryProducts = createApiThunk<IProductCardProduct[], IProductsListRequestParams>(
   'productPage/getCategoryProducts',
   (params) => apiService.get<IProductCardProduct[], IMeta>(
     API_ROUTES.PRODUCTS,
+    { params },
+  ),
+);
+
+export const getSearchProducts = createApiThunk<IProductCardProduct[], IProductsListRequestParams>(
+  'productPage/getSearchProducts',
+  (params) => apiService.get<IProductCardProduct[], IMeta>(
+    API_ROUTES.PRODUCTS,
+    { params },
+  ),
+);
+
+export const getProductAutocomplete = createApiThunk<
+  IProductAutocompleteItem[],
+  IProductAutocompleteRequestParams
+>(
+  'productPage/getProductAutocomplete',
+  (params) => apiService.get<IProductAutocompleteItem[]>(
+    API_ROUTES.PRODUCT_AUTOCOMPLETE,
     { params },
   ),
 );
@@ -80,6 +112,20 @@ export const productPageStoreReducer = createReducer(initialState, (builder) => 
     getHomeCategoryProducts,
     'homeCategoryProductsByCategoryReq',
     getHomeCategoryProductsCacheKey,
+    apiBuilder,
+  );
+
+  createAPIMapReducerCases(
+    getSearchProducts,
+    'searchProductsByQueryReq',
+    getSearchProductsCacheKey,
+    apiBuilder,
+  );
+
+  createAPIMapReducerCases(
+    getProductAutocomplete,
+    'productAutocompleteBySearchReq',
+    getProductAutocompleteCacheKey,
     apiBuilder,
   );
 
