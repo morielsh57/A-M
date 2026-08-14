@@ -1,0 +1,70 @@
+@import '../../../../shared/styles/colors.scss';
+
+.product-page {
+  &__section {
+    margin-top: 14px;
+  }
+
+  &__field-label {
+    display: block;
+    margin-bottom: 8px;
+    color: $purple9;
+    font-size: 0.86rem;
+    font-weight: 500;
+  }
+
+  &__size-list {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  &__size-button {
+    min-height: 30px;
+    border: 1px solid rgba($natural7, 0.26);
+    border-radius: 2px;
+    background: $natural1;
+    color: $purple8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+
+    &:hover:not(:disabled, .product-page__size-button--selected),
+    &:focus-visible:not(:disabled) {
+      background: $pink2;
+      outline: none;
+    }
+
+    &--selected {
+      background: $purple6;
+      color: $natural1;
+    }
+
+    &--sold-out {
+      background:
+        linear-gradient(
+          to bottom right,
+          transparent calc(50% - 1px),
+          rgba($red8, 0.72) 50%,
+          transparent calc(50% + 1px)
+        ),
+        $natural3;
+    }
+
+    &:disabled {
+      color: rgba($natural7, 0.76);
+      cursor: not-allowed;
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .product-page {
+    &__size-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+}

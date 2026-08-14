@@ -1,0 +1,126 @@
+@import '../../../../shared/styles/colors.scss';
+
+.product-page {
+  &__gallery {
+    position: sticky;
+    top: 18px;
+    min-width: 0;
+  }
+
+  &__slide-count {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    z-index: 2;
+    color: $natural7;
+    font-size: 0.64rem;
+    font-weight: 700;
+  }
+
+  &__carousel {
+    height: min(58vw, 560px);
+    min-height: 420px;
+
+    .ant-carousel {
+      background: $natural1;
+    }
+
+    .slick-slide .slide-outer {
+      padding: 0;
+    }
+
+    .slide-outer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .slick-dots {
+      display: none !important;
+    }
+
+    .slick-prev,
+    .slick-next {
+      width: 26px;
+      height: 26px;
+      opacity: 0.72;
+    }
+  }
+
+  &__thumbnail-list {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 18px;
+  }
+
+  &__thumbnail {
+    width: 56px;
+    height: 72px;
+    padding: 0;
+    border: 1px solid transparent;
+    background: $natural1;
+    cursor: pointer;
+    transition:
+      border-color 160ms ease,
+      transform 160ms ease;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: rgba($purple6, 0.45);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    &--active {
+      border: 2px solid $purple7;
+    }
+  }
+
+  &__image-placeholder {
+    display: grid;
+    min-height: 420px;
+    place-items: center;
+    border: 1px solid rgba($purple6, 0.08);
+    background: $pink0;
+    color: $purple5;
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 1050px) {
+  .product-page {
+    &__gallery {
+      position: static;
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  .product-page {
+    &__carousel {
+      height: min(112vw, 520px);
+      min-height: 330px;
+    }
+
+    &__thumbnail-list {
+      gap: 12px;
+      margin-top: 12px;
+    }
+  }
+}

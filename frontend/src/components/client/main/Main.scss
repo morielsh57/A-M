@@ -12,9 +12,13 @@
     justify-content: space-between;
     overflow-y: auto;
 
-    >* {
+    > :not(.footer) {
       flex: 1;
       width: 100%;
+    }
+
+    > .footer {
+      flex: 0 0 auto;
     }
   }
 }
