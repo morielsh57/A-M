@@ -279,14 +279,15 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
             </AdminFormField>
           )}
 
-          <AdminFormField error={errors.mainCategoryName} label="Main category name">
-            <AdminFormInput
-              disabled={values.categoryType === 'sub'}
-              placeholder="e.g. Women"
-              value={values.mainCategoryName}
-              onChange={(event) => updateValue('mainCategoryName', event.target.value)}
-            />
-          </AdminFormField>
+          {values.categoryType === 'main' && (
+            <AdminFormField error={errors.mainCategoryName} label="Main category name">
+              <AdminFormInput
+                placeholder="e.g. Women"
+                value={values.mainCategoryName}
+                onChange={(event) => updateValue('mainCategoryName', event.target.value)}
+              />
+            </AdminFormField>
+          )}
 
           {values.categoryType === 'sub' && (
             <AdminFormField error={errors.subCategoryName} label="Subcategory name">
