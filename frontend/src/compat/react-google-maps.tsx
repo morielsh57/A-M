@@ -8,21 +8,7 @@ import {
 
 type ElementProp = React.ReactElement<{ style?: React.CSSProperties }>;
 
-const getGoogleMapsApiKey = (googleMapURL?: string) => {
-  if (import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
-    return import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  }
-
-  if (!googleMapURL) {
-    return '';
-  }
-
-  try {
-    return new URL(googleMapURL).searchParams.get('key') || '';
-  } catch {
-    return '';
-  }
-};
+const googleMapsApiKey = import.meta.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
 
 const getStyle = (element?: ElementProp) => element?.props?.style || {};
 
@@ -65,15 +51,13 @@ export const withGoogleMap = (Component: React.ComponentType<any>) => {
 };
 
 export const withScriptjs = (Component: React.ComponentType<any>) => {
-  const WithScriptjs: React.FC<any> = ({ googleMapURL, loadingElement, ...props }) => {
-    const apiKey = getGoogleMapsApiKey(googleMapURL);
-
-    if (!apiKey) {
+  const WithScriptjs: React.FC<any> = ({ googleMapURL: _googleMapURL, loadingElement, ...props }) => {
+    if (!googleMapsApiKey) {
       return loadingElement || null;
     }
 
     return (
-      <APIProvider apiKey={apiKey} libraries={['places']}>
+      <APIProvider apiKey={googleMapsApiKey} libraries={['places']}>
         <Component {...props} />
       </APIProvider>
     );
