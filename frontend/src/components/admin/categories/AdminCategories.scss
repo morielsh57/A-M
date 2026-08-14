@@ -1,0 +1,36 @@
+@import '../../../shared/styles/colors.scss';
+
+.admin-categories-page {
+  &__category-id {
+    color: $purple6;
+    font-weight: 800;
+  }
+
+  &__type {
+    display: inline-flex;
+    min-width: 54px;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 800;
+
+    &--main {
+      background: $purple6;
+      color: $natural1;
+    }
+
+    &--sub {
+      background: $natural3;
+      color: $natural7;
+    }
+  }
+}
+.admin-category-form__loading {
+  padding: 18px;
+  border: 1px solid $natural4;
+  border-radius: 12px;
+  background: $natural1;
+  color: $natural6;
+  font-weight: 700;
+}
