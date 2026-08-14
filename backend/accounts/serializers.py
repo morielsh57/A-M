@@ -41,6 +41,7 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=255)
     password = serializers.CharField(write_only=True, trim_whitespace=False)
     isAdmin = serializers.BooleanField(required=False, default=False, write_only=True)
+    guest_cart_id = serializers.UUIDField(required=False, write_only=True)
 
     def validate_email(self, value):
         return value.strip().lower()

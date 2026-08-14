@@ -1,55 +1,76 @@
-from decimal import Decimal
-
-from django.db.models import Sum
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
-from rest_framework.exceptions import NotFound, ValidationError
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from carts.models import Cart, CartProduct
-from carts.serializers import AddCartItemSerializer, CartItemResponseSerializer
+from carts.serializers import (
+    AddCartItemSerializer,
+    CartResponseSerializer,
+    MergeCartSerializer,
+    UpdateCartItemSerializer,
+)
+from carts.services import (
+    GUEST_CART_HEADER,
+    add_cart_item,
+    create_guest_cart,
+    get_request_cart,
+    merge_guest_cart,
+    remove_cart_item,
+    serialize_cart,
+    update_cart_item,
+)
 from config.api.serializers import ErrorResponseSerializer
-from products.models import ProductVariant
 
 
-def serialize_cart_item(cart_product):
-    return {
-        "cart_product_id": cart_product.cart_product_id,
-        "cart_id": cart_product.cart_id,
-        "variant_id": cart_product.variant_id,
-        "product_id": cart_product.variant.product_id,
-        "quantity": cart_product.quantity,
-        "unit_price": cart_product.unit_price,
-        "total_price": cart_product.total_price,
-    }
+guest_header_parameter = OpenApiParameter(
+    name=GUEST_CART_HEADER,
+    type=str,
+    location=OpenApiParameter.HEADER,
+    required=False,
+    description="Secure identifier returned when a guest cart is created.",
+)
 
 
-def recalculate_cart_total(cart):
-    cart.total_price = (
-        CartProduct.objects
-        .filter(cart=cart)
-        .aggregate(total=Sum("total_price"))["total"]
-        or Decimal("0")
-    )
-    cart.save(update_fields=["total_price"])
-
-
-class CartItemView(APIView):
-    permission_classes = [IsAuthenticated]
+class GuestCartCreateView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = CartResponseSerializer
 
     @extend_schema(
-        summary="Add a variant to the current cart",
-        description=(
-            "Authenticated endpoint. Adds or updates a cart item by variant_id. "
-            "The requested quantity cannot exceed the variant quantity."
-        ),
+        summary="Create a guest cart",
+        responses={201: CartResponseSerializer},
+        auth=[],
+        tags=["Cart"],
+    )
+    def post(self, request):
+        cart = create_guest_cart()
+        return Response(serialize_cart(cart), status=status.HTTP_201_CREATED)
+
+
+class CurrentCartView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="Get the current customer or guest cart",
+        parameters=[guest_header_parameter],
+        responses={200: CartResponseSerializer, 400: ErrorResponseSerializer, 404: ErrorResponseSerializer},
+        tags=["Cart"],
+    )
+    def get(self, request):
+        cart = get_request_cart(request, create_customer=True)
+        return Response(serialize_cart(cart))
+
+
+class CartItemListCreateView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        summary="Add a product variant to the current cart",
+        parameters=[guest_header_parameter],
         request=AddCartItemSerializer,
         responses={
-            201: CartItemResponseSerializer,
+            201: CartResponseSerializer,
             400: ErrorResponseSerializer,
-            401: ErrorResponseSerializer,
             404: ErrorResponseSerializer,
         },
         tags=["Cart"],
@@ -57,38 +78,51 @@ class CartItemView(APIView):
     def post(self, request):
         serializer = AddCartItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        variant = ProductVariant.objects.select_related("product").filter(
-            variant_id=serializer.validated_data["variant_id"],
-            is_active=True,
-            product__is_active=True,
-        ).first()
-        if variant is None:
-            raise NotFound("Product variant was not found.")
+        cart = get_request_cart(request, create_customer=True)
+        cart = add_cart_item(cart, **serializer.validated_data)
+        return Response(serialize_cart(cart), status=status.HTTP_201_CREATED)
 
-        requested_quantity = serializer.validated_data["quantity"]
-        if requested_quantity > variant.quantity:
-            raise ValidationError(
-                {"quantity": ["Requested quantity exceeds available variant quantity."]}
-            )
 
-        cart = Cart.objects.filter(customer=request.user).order_by("-date_created").first()
-        if cart is None:
-            cart = Cart.objects.create(customer=request.user, total_price=Decimal("0"))
+class CartItemDetailView(APIView):
+    permission_classes = [AllowAny]
 
-        unit_price = variant.product.price
-        total_price = unit_price * requested_quantity
-        cart_product, created = CartProduct.objects.update_or_create(
-            cart=cart,
-            variant=variant,
-            defaults={
-                "quantity": requested_quantity,
-                "unit_price": unit_price,
-                "total_price": total_price,
-            },
-        )
-        recalculate_cart_total(cart)
+    @extend_schema(
+        summary="Update a cart-item quantity",
+        parameters=[guest_header_parameter],
+        request=UpdateCartItemSerializer,
+        responses={200: CartResponseSerializer, 400: ErrorResponseSerializer, 404: ErrorResponseSerializer},
+        tags=["Cart"],
+    )
+    def patch(self, request, cart_product_id):
+        serializer = UpdateCartItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cart = get_request_cart(request)
+        cart = update_cart_item(cart, cart_product_id, serializer.validated_data["quantity"])
+        return Response(serialize_cart(cart))
 
-        return Response(
-            serialize_cart_item(cart_product),
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
-        )
+    @extend_schema(
+        summary="Remove an item from the current cart",
+        parameters=[guest_header_parameter],
+        responses={200: CartResponseSerializer, 404: ErrorResponseSerializer},
+        tags=["Cart"],
+    )
+    def delete(self, request, cart_product_id):
+        cart = get_request_cart(request)
+        cart = remove_cart_item(cart, cart_product_id)
+        return Response(serialize_cart(cart))
+
+
+class CartMergeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Merge a guest cart into the authenticated customer cart",
+        request=MergeCartSerializer,
+        responses={200: CartResponseSerializer, 400: ErrorResponseSerializer, 404: ErrorResponseSerializer},
+        tags=["Cart"],
+    )
+    def post(self, request):
+        serializer = MergeCartSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cart = merge_guest_cart(request.user, serializer.validated_data["guest_cart_id"])
+        return Response(serialize_cart(cart))
