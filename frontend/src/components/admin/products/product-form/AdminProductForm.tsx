@@ -11,6 +11,7 @@ import type { IAdminProductListItem } from '../adminProducts.types';
 import {
   createAdminProduct,
   createAdminProductVariant,
+  deleteAdminProductImage,
   getAdminProductDetail,
   getAdminProductDetailCacheKey,
   updateAdminProduct,
@@ -216,6 +217,20 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
     })).unwrap();
   };
 
+  const deleteRemovedImages = async (productId: ProductId) => {
+    const retainedImageIds = new Set(
+      variantRows.flatMap((row) => getExistingImageIds(row).map(String)),
+    );
+    const removedImages = (selectedProductDetail?.images || []).filter((image) => (
+      image.variant_id != null && !retainedImageIds.has(String(image.image_id))
+    ));
+
+    await Promise.all(removedImages.map((image) => dispatch(deleteAdminProductImage({
+      product_id: productId,
+      image_id: image.image_id,
+    })).unwrap()));
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(undefined);
@@ -246,6 +261,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
       }
 
       await Promise.all(variantRows.map((row) => saveVariantRow(productId as ProductId, row)));
+      await deleteRemovedImages(productId as ProductId);
       await dispatch(getAdminProductDetail({ product_id: productId as ProductId })).unwrap();
 
       addToast(isExistingProduct ? 'Product updated successfully.' : 'Product created successfully.', {

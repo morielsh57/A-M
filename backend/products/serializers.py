@@ -146,7 +146,11 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.ListField(child=serializers.CharField()))
     def get_images(self, variant):
-        return get_variant_image_urls(variant)
+        return [
+            image.secure_url
+            for image in variant.product_images.all()
+            if image.is_active
+        ]
 
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_in_stock(self, variant):
@@ -562,16 +566,21 @@ class AdminProductVariantWriteSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        images = validated_data.pop("image_ids", [])
+        images = validated_data.pop("image_ids", serializers.empty)
         variant = super().update(instance, validated_data)
-        self.assign_images(variant, images)
+        if images is not serializers.empty:
+            self.assign_images(variant, images)
         return variant
 
     def assign_images(self, variant, images):
-        if images:
-            ProductImage.objects.filter(pk__in=[image.pk for image in images]).update(
-                variant=variant
-            )
+        image_ids = [image.pk for image in images]
+        current_images = ProductImage.objects.filter(variant=variant)
+
+        if image_ids:
+            current_images.exclude(pk__in=image_ids).update(variant=None)
+            ProductImage.objects.filter(pk__in=image_ids).update(variant=variant)
+        else:
+            current_images.update(variant=None)
 
     def validate(self, attrs):
         product = self.context.get("product")
