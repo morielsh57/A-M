@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "catalogue",
     "products",
     "carts",
+    "payments",
     "orders",
     "reviews",
     "notifications",
@@ -170,6 +171,22 @@ DEFAULT_FROM_EMAIL = os.getenv(
 
 BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "https://localhost:8000").rstrip("/")
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "https://localhost:3001").rstrip("/")
+
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "").strip()
+PAYPAL_CLIENT_SECRET = os.getenv("PAYPAL_CLIENT_SECRET", "").strip()
+PAYPAL_BASE_URL = os.getenv(
+    "PAYPAL_BASE_URL", "https://api-m.sandbox.paypal.com"
+).rstrip("/")
+PAYPAL_CURRENCY = os.getenv("PAYPAL_CURRENCY", "USD").strip().upper()
+PAYPAL_RETURN_URL = os.getenv(
+    "PAYPAL_RETURN_URL", f"{FRONTEND_BASE_URL}/checkout/paypal/success"
+)
+PAYPAL_CANCEL_URL = os.getenv(
+    "PAYPAL_CANCEL_URL", f"{FRONTEND_BASE_URL}/checkout/paypal/cancel"
+)
+PAYPAL_REQUEST_TIMEOUT_SECONDS = int(
+    os.getenv("PAYPAL_REQUEST_TIMEOUT_SECONDS", "15")
+)
 FRONTEND_VERIFICATION_SUCCESS_URL = os.getenv(
     "FRONTEND_VERIFICATION_SUCCESS_URL",
     f"{FRONTEND_BASE_URL}/app",
