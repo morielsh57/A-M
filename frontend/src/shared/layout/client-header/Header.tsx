@@ -7,6 +7,7 @@ import CartButton from './CartButton';
 import ClientNavbar from '../client-navbar/ClientNavbar';
 import AppLogo from '../../components/app-logo/AppLogo';
 import ClientUserMenu from './ClientUserMenu';
+import CartSideWindow from '../../../components/client/cart/CartSideWindow';
 import "./Header.scss";
 
 const Header: React.FC = () => {
@@ -30,6 +31,7 @@ const Header: React.FC = () => {
         </div>
       </div>
       <ClientNavbar />
+      <CartSideWindow />
     </header>
   );
 };
