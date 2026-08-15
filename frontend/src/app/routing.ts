@@ -109,4 +109,11 @@ export const API_ROUTES = {
   PRODUCTS: '/products/',
   PRODUCT_AUTOCOMPLETE: '/products/autocomplete',
   PRODUCT_DETAIL: (productId: string | number) => `/products/${productId}`,
+  CART: {
+    DETAIL: '/cart/',
+    GUEST: '/cart/guest',
+    ITEMS: '/cart/items',
+    ITEM_DETAIL: (cartProductId: string | number) => `/cart/items/${cartProductId}`,
+    MERGE: '/cart/merge',
+  },
 } as const;

@@ -5,11 +5,13 @@ import ClientFooter from '../../../shared/layout/client-footer/ClientFooter';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus } from '../../../shared/api/models';
 import { getMainCategories } from '../../../shared/store/category/category.store';
+import { getCart } from '../cart/cart.store';
 import './Main.scss';
 
 const Main: React.FC = () => {
   const dispatch = useAppDispatch();
   const { getMainCategoriesReq } = useAppSelector((store) => store.categoryStoreReducer);
+  const { getCartReq } = useAppSelector((store) => store.cartStoreReducer);
   const mainCategories = getMainCategoriesReq.data || [];
 
   useEffect(() => {
@@ -20,6 +22,12 @@ const Main: React.FC = () => {
       dispatch(getMainCategories());
     }
   }, [dispatch, getMainCategoriesReq.status, mainCategories.length]);
+
+  useEffect(() => {
+    if (getCartReq.status === EAPIStatus.IDLE) {
+      dispatch(getCart());
+    }
+  }, [dispatch, getCartReq.status]);
 
   return (
     <main className="client-main-container">

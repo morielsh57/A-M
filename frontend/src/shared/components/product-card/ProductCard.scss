@@ -148,6 +148,50 @@
     white-space: nowrap;
   }
 
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 10px 4px 4px;
+    pointer-events: none;
+  }
+
+  &__cart-button {
+    display: grid;
+    width: 38px;
+    height: 26px;
+    place-items: center;
+    border: 1px solid rgba($purple6, 0.2);
+    border-radius: 999px;
+    background: rgba($natural1, 0.9);
+    color: $purple7;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba($purple9, 0.12);
+    pointer-events: auto;
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease,
+      opacity 160ms ease,
+      transform 160ms ease;
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      border-color: $purple6;
+      background: $purple6;
+      color: $natural1;
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+    }
+  }
+
   &__colors {
     display: flex;
     position: relative;
@@ -156,6 +200,7 @@
     gap: 8px;
     min-height: 34px;
     pointer-events: auto;
+    flex-wrap: wrap;
   }
 
   &__color {
@@ -197,7 +242,7 @@
         border-color: rgba($purple6, 0.16);
         box-shadow: none;
         transform: none;
-      }      
+      }
     }
   }
 
@@ -242,28 +287,25 @@
     }
 
     .product-card {
+
       &__skeleton-block,
       &__skeleton-line,
       &__skeleton-circle {
         background:
-          linear-gradient(
-            110deg,
+          linear-gradient(110deg,
             var(--skeleton-base) 8%,
             var(--skeleton-shine) 18%,
-            var(--skeleton-base) 33%
-          );
+            var(--skeleton-base) 33%);
         background-size: 220% 100%;
         animation: productCardSkeletonShimmer 1.15s ease-in-out infinite;
       }
 
       &__skeleton-block {
         background:
-          linear-gradient(
-            110deg,
+          linear-gradient(110deg,
             #eadfe6 8%,
             var(--skeleton-shine) 18%,
-            #eadfe6 33%
-          );
+            #eadfe6 33%);
         background-size: 220% 100%;
       }
 
@@ -311,6 +353,10 @@
 
       &__quick-view {
         display: none;
+      }
+
+      &__cart-button {
+        font-size: 0.72rem;
       }
 
       &__content {
@@ -434,6 +480,10 @@
       display: none;
     }
 
+    &__cart-button {
+      font-size: 0.78rem;
+    }
+
     &__content {
       gap: 6px;
       padding: 8px 6px 6px;
@@ -486,6 +536,7 @@
     }
 
     &--skeleton {
+
       &:hover,
       &:focus-within,
       &:active {
@@ -523,6 +574,10 @@
 
     &__quick-view {
       display: none;
+    }
+
+    &__cart-button {
+      font-size: 0.78rem;
     }
 
     &__content {
@@ -575,6 +630,7 @@
     }
 
     &--skeleton {
+
       &:hover,
       &:focus-within,
       &:active {

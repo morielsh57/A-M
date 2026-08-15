@@ -4,6 +4,7 @@
   background: $natural1;
 
   .cart-header-btn {
+    position: relative;
     background: transparent;
     border: none;
     display: flex;
@@ -30,6 +31,26 @@
 
     &:active {
       color: $pink7;
+    }
+
+    &__badge {
+      position: absolute;
+      top: -2px;
+      left: 25px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border: 2px solid $natural1;
+      border-radius: 999px;
+      background: $red7;
+      color: $natural1;
+      font-size: 0.68rem;
+      font-weight: 900;
+      line-height: 1;
+      box-shadow: 0 4px 10px rgba($purple9, 0.16);
     }
   }
 }

@@ -6,4 +6,8 @@ export const AUTH_LOCAL_STORAGE_KEYS = {
   ADMIN_OR_SUPPLIER_USER: 'adminOrSupplierUser',
 } as const;
 
+export const CART_LOCAL_STORAGE_KEYS = {
+  GUEST_CART_ID: 'guestCartId',
+} as const;
+
 export const ADMIN_TABLE_PAGE_SIZE = 10;
