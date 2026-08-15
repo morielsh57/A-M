@@ -11,9 +11,8 @@ from rest_framework.views import APIView
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, User
 from accounts.permissions import HasAnyRole
 from accounts.serializers import DashboardOverviewResponseSerializer
-from carts.models import CartProduct
 from products.models import Product
-from orders.models import Order
+from orders.models import Order, OrderItem
 
 
 def calculate_trend_percent(current_value, previous_value):
@@ -110,17 +109,17 @@ class DashboardOverviewView(APIView):
         previous_period_start,
     ):
         supplier_products = Product.objects.filter(supplier__user=supplier_user)
-        supplier_order_items = CartProduct.objects.filter(
-            variant__product__supplier__user=supplier_user,
-            cart__orders__order_status=Order.Status.COMPLETED,
+        supplier_order_items = OrderItem.objects.filter(
+            product__supplier__user=supplier_user,
+            order__order_status=Order.Status.COMPLETED,
         )
 
         current_order_items = supplier_order_items.filter(
-            cart__orders__date_created__gte=current_period_start,
+            order__date_created__gte=current_period_start,
         )
         previous_order_items = supplier_order_items.filter(
-            cart__orders__date_created__gte=previous_period_start,
-            cart__orders__date_created__lt=current_period_start,
+            order__date_created__gte=previous_period_start,
+            order__date_created__lt=current_period_start,
         )
         current_revenue = (
             current_order_items.aggregate(total=Sum("total_price"))["total"]
@@ -130,8 +129,8 @@ class DashboardOverviewView(APIView):
             previous_order_items.aggregate(total=Sum("total_price"))["total"]
             or Decimal("0")
         )
-        current_orders_count = current_order_items.values("cart__orders").distinct().count()
-        previous_orders_count = previous_order_items.values("cart__orders").distinct().count()
+        current_orders_count = current_order_items.values("order").distinct().count()
+        previous_orders_count = previous_order_items.values("order").distinct().count()
 
         return {
             "dashboard_type": SUPPLIER_ROLE,
