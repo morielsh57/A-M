@@ -10,6 +10,7 @@ import AdminFormField from '../../../shared/components/admin-form/AdminFormField
 import AdminFormInput from '../../../shared/components/admin-form/AdminFormInput';
 import AdminFormTextarea from '../../../shared/components/admin-form/AdminFormTextarea';
 import { createAdminCustomer } from './adminCustomers.store';
+import type { AdminManagedRole } from './adminCustomers.types';
 
 interface CustomerCreateValues {
   name: string;
@@ -29,6 +30,8 @@ interface CustomerCreateErrors {
 }
 
 interface AdminCustomerCreateFormProps {
+  accountLabel?: string;
+  accountRole?: AdminManagedRole;
   onCancel: () => void;
   onDirtyChange: (isDirty: boolean) => void;
   onSaved: () => void;
@@ -46,14 +49,14 @@ const EMPTY_VALUES: CustomerCreateValues = {
 
 const EMAIL_PATTERN = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
-const getErrorMessage = (error: unknown) => {
+const getErrorMessage = (error: unknown, accountLabel: string) => {
   const apiError = error as IAPIError | undefined;
   const details = apiError?.details;
   if (details && typeof details === 'object') {
     const messages = Object.values(details as Record<string, string[] | string>).flat();
     if (messages.length) return messages.join(' ');
   }
-  return apiError?.message || 'The customer could not be created. Please try again.';
+  return apiError?.message || `The ${accountLabel} could not be created. Please try again.`;
 };
 
 const validate = (values: CustomerCreateValues): CustomerCreateErrors => {
@@ -68,6 +71,8 @@ const validate = (values: CustomerCreateValues): CustomerCreateErrors => {
 };
 
 const AdminCustomerCreateForm: React.FC<AdminCustomerCreateFormProps> = ({
+  accountLabel = 'customer',
+  accountRole = 'Customer',
   onCancel,
   onDirtyChange,
   onSaved,
@@ -106,16 +111,19 @@ const AdminCustomerCreateForm: React.FC<AdminCustomerCreateFormProps> = ({
         name: values.name.trim(),
         email: values.email.trim().toLowerCase(),
         password: values.password,
-        role: 'Customer',
+        role: accountRole,
         phone: values.phone.trim(),
         address: values.address.trim(),
         is_active: values.is_active,
       })).unwrap();
       onDirtyChange(false);
-      addToast('Customer created successfully.', { appearance: 'success', autoDismiss: true });
+      addToast(`${accountLabel[0].toUpperCase()}${accountLabel.slice(1)} created successfully.`, {
+        appearance: 'success',
+        autoDismiss: true,
+      });
       onSaved();
     } catch (error) {
-      setRequestError(getErrorMessage(error));
+      setRequestError(getErrorMessage(error, accountLabel));
     }
   };
 
@@ -181,7 +189,7 @@ const AdminCustomerCreateForm: React.FC<AdminCustomerCreateFormProps> = ({
           </AdminFormField>
         </div>
         <AdminFormCheckbox
-          label="Active customer account"
+          label={`Active ${accountLabel} account`}
           checked={values.is_active}
           onChange={(event) => updateValue('is_active', event.target.checked)}
         />
@@ -189,7 +197,7 @@ const AdminCustomerCreateForm: React.FC<AdminCustomerCreateFormProps> = ({
       <AdminFormError message={requestError} />
       <AdminFormActions
         isSubmitting={isSubmitting}
-        submitLabel="Create customer"
+        submitLabel={`Create ${accountLabel}`}
         onCancel={onCancel}
       />
     </AdminForm>

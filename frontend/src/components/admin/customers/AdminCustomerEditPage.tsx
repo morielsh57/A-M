@@ -24,6 +24,13 @@ interface CustomerFormValues {
   is_active: boolean;
 }
 
+interface AdminCustomerEditPageProps {
+  accountLabel?: string;
+  expectedRole?: 'Customer' | 'Admin' | 'Supplier';
+  listSegment?: string;
+  protectCurrentUser?: boolean;
+}
+
 const EMPTY_VALUES: CustomerFormValues = {
   name: '',
   phone: '',
@@ -31,17 +38,22 @@ const EMPTY_VALUES: CustomerFormValues = {
   is_active: true,
 };
 
-const getErrorMessage = (error: unknown) => {
+const getErrorMessage = (error: unknown, accountLabel: string) => {
   const apiError = error as IAPIError | undefined;
   const details = apiError?.details;
   if (details && typeof details === 'object') {
     const messages = Object.values(details as Record<string, string[] | string>).flat();
     if (messages.length) return messages.join(' ');
   }
-  return apiError?.message || 'The customer could not be saved. Please try again.';
+  return apiError?.message || `The ${accountLabel} could not be saved. Please try again.`;
 };
 
-const AdminCustomerEditPage: React.FC = () => {
+const AdminCustomerEditPage: React.FC<AdminCustomerEditPageProps> = ({
+  accountLabel = 'customer',
+  expectedRole = 'Customer',
+  listSegment = APP_ROUTING_PATHS.ADMIN.CUSTOMERS,
+  protectCurrentUser = false,
+}) => {
   const { userId } = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -49,16 +61,20 @@ const AdminCustomerEditPage: React.FC = () => {
   const { customerByIdReq, updateCustomerReq } = useAppSelector(
     (store) => store.adminCustomersStoreReducer,
   );
+  const currentAdmin = useAppSelector((store) => store.userStoreReducer.adminOrSupplierUser);
   const customerReq = userId ? customerByIdReq[String(userId)] : undefined;
   const customer = customerReq?.data;
   const [values, setValues] = useState<CustomerFormValues>(EMPTY_VALUES);
   const [initialSnapshot, setInitialSnapshot] = useState(JSON.stringify(EMPTY_VALUES));
   const [nameError, setNameError] = useState<string>();
   const [requestError, setRequestError] = useState<string>();
-  const listPath = APP_ROUTING_PATHS.ADMIN_PAGE(APP_ROUTING_PATHS.ADMIN.CUSTOMERS);
+  const listPath = APP_ROUTING_PATHS.ADMIN_PAGE(listSegment);
   const currentSnapshot = useMemo(() => JSON.stringify(values), [values]);
   const isDirty = currentSnapshot !== initialSnapshot;
   const isSubmitting = updateCustomerReq.status === EAPIStatus.PENDING;
+  const isEditingCurrentUser = protectCurrentUser
+    && String(currentAdmin?.user_id) === String(userId);
+  const hasUnexpectedRole = !!customer && customer.role !== expectedRole;
 
   useEffect(() => {
     if (userId && !customerReq) void dispatch(getAdminCustomer({ user_id: userId }));
@@ -92,7 +108,7 @@ const AdminCustomerEditPage: React.FC = () => {
     }
     Modal.confirm({
       title: 'Discard unsaved changes?',
-      content: 'Your customer changes have not been saved.',
+      content: `Your ${accountLabel} changes have not been saved.`,
       okText: 'Discard changes',
       cancelText: 'Keep editing',
       okButtonProps: { danger: true },
@@ -122,30 +138,35 @@ const AdminCustomerEditPage: React.FC = () => {
           name: values.name.trim(),
           phone: values.phone.trim(),
           address: values.address.trim(),
-          is_active: values.is_active,
+          is_active: isEditingCurrentUser ? true : values.is_active,
         },
       })).unwrap();
       setInitialSnapshot(JSON.stringify(values));
-      addToast('Customer updated successfully.', { appearance: 'success', autoDismiss: true });
+      addToast(`${accountLabel[0].toUpperCase()}${accountLabel.slice(1)} updated successfully.`, {
+        appearance: 'success',
+        autoDismiss: true,
+      });
       navigate(listPath);
     } catch (error) {
-      setRequestError(getErrorMessage(error));
+      setRequestError(getErrorMessage(error, accountLabel));
     }
   };
 
-  if (!userId || customerReq?.status === EAPIStatus.REJECTED) {
+  if (!userId || customerReq?.status === EAPIStatus.REJECTED || hasUnexpectedRole) {
     return (
       <AdminTablePageLayout
         eyebrow="User management"
-        title="Edit customer"
-        subtitle="The requested customer could not be loaded."
+        title={`Edit ${accountLabel}`}
+        subtitle={`The requested ${accountLabel} could not be loaded.`}
       >
         <Alert
           showIcon
           type="error"
-          message="Customer could not be loaded"
-          description={getErrorMessage(customerReq?.error)}
-          action={<AppButton variant="secondary" onClick={() => navigate(listPath)}>Back to customers</AppButton>}
+          message={`${accountLabel[0].toUpperCase()}${accountLabel.slice(1)} could not be loaded`}
+          description={hasUnexpectedRole
+            ? `This account is not an ${expectedRole}.`
+            : getErrorMessage(customerReq?.error, accountLabel)}
+          action={<AppButton variant="secondary" onClick={() => navigate(listPath)}>Back to list</AppButton>}
         />
       </AdminTablePageLayout>
     );
@@ -154,8 +175,8 @@ const AdminCustomerEditPage: React.FC = () => {
   return (
     <AdminTablePageLayout
       eyebrow="User management"
-      title={customer ? `Edit ${customer.name}` : 'Edit customer'}
-      subtitle="Update the customer information and account status permitted by the backend."
+      title={customer ? `Edit ${customer.name}` : `Edit ${accountLabel}`}
+      subtitle={`Update the ${accountLabel} information and account status permitted by the backend.`}
     >
       <div className="admin-customer-edit-page__card">
         {!customer ? (
@@ -163,7 +184,7 @@ const AdminCustomerEditPage: React.FC = () => {
         ) : (
           <AdminForm onSubmit={handleSubmit}>
             <section className="admin-form__section">
-              <h2 className="admin-form__section-title">Customer details</h2>
+              <h2 className="admin-form__section-title">Account details</h2>
               <div className="admin-form__grid">
                 <AdminFormField htmlFor="customer-name" label="Name" error={nameError}>
                   <AdminFormInput
@@ -191,15 +212,21 @@ const AdminCustomerEditPage: React.FC = () => {
                 </AdminFormField>
               </div>
               <AdminFormCheckbox
-                label="Active customer account"
+                label={`Active ${accountLabel} account`}
                 checked={values.is_active}
+                disabled={isEditingCurrentUser}
                 onChange={(event) => updateValue('is_active', event.target.checked)}
               />
+              {isEditingCurrentUser && (
+                <p className="admin-form__request-error">
+                  You cannot deactivate your own administrator account.
+                </p>
+              )}
             </section>
             <AdminFormError message={requestError} />
             <AdminFormActions
               isSubmitting={isSubmitting}
-              submitLabel="Save customer"
+              submitLabel={`Save ${accountLabel}`}
               onCancel={leavePage}
             />
           </AdminForm>

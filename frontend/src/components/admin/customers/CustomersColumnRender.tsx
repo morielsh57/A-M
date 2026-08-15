@@ -9,6 +9,8 @@ import {
 import type { IAdminCustomer } from './adminCustomers.types';
 
 interface CustomersColumnRenderProps {
+  accountLabel?: string;
+  isDeleteDisabled?: (customer: IAdminCustomer) => boolean;
   isDeletePending: boolean;
   onDeleteCustomer: (customer: IAdminCustomer) => void | Promise<void>;
   onEditCustomer: (customer: IAdminCustomer) => void;
@@ -27,7 +29,9 @@ const formatDate = (value: string) => {
 };
 
 const CustomersColumnRender = ({
+  accountLabel = 'customer',
   isDeletePending,
+  isDeleteDisabled,
   onDeleteCustomer,
   onEditCustomer,
 }: CustomersColumnRenderProps): AppTableColumn<IAdminCustomer>[] => [
@@ -102,9 +106,9 @@ const CustomersColumnRender = ({
     onEdit: onEditCustomer,
     onDelete: onDeleteCustomer,
     deleteConfirmTitle: (customer) => `Delete ${customer.name}?`,
-    deleteConfirmContent: 'This permanently deletes the customer account. Accounts referenced by protected business records may be blocked by the server.',
-    deleteOkText: 'Delete customer',
-    isDeleteDisabled: isDeletePending,
+    deleteConfirmContent: `This permanently deletes the ${accountLabel} account. Accounts referenced by protected business records may be blocked by the server.`,
+    deleteOkText: `Delete ${accountLabel}`,
+    isDeleteDisabled: (customer) => isDeletePending || !!isDeleteDisabled?.(customer),
   }),
 ];
 

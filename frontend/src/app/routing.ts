@@ -75,6 +75,9 @@ export const APP_ROUTING_PATHS = {
   ADMIN_CUSTOMER_EDIT_PAGE: (userId: string | number) => (
     `${ADMIN_ROOT_PATH}/${ADMIN_CUSTOMERS_SEGMENT}/${userId}/edit`
   ),
+  ADMIN_ADMINISTRATOR_EDIT_PAGE: (userId: string | number) => (
+    `${ADMIN_ROOT_PATH}/${ADMIN_ADMINS_SEGMENT}/${userId}/edit`
+  ),
   ADMIN_PAGE: (segment: string) => `${ADMIN_ROOT_PATH}/${segment}`,
   ADMIN_PAGE_WITH_PAGE: (segment: string, page: string | number) => `${ADMIN_ROOT_PATH}/${segment}/${page}`,
 } as const;

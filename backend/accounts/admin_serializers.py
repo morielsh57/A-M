@@ -73,6 +73,19 @@ class AdminUserUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         user = self.instance
+        request = self.context.get("request")
+        removing_own_admin_access = (
+            request is not None
+            and request.user.pk == user.pk
+            and (
+                attrs.get("is_active") is False
+                or attrs.get("role", ADMIN_ROLE) != ADMIN_ROLE
+            )
+        )
+        if removing_own_admin_access:
+            raise serializers.ValidationError(
+                {"is_active": ["You cannot remove your own Administrator access."]}
+            )
         leaving_active_admin = (
             user.role.role_name == ADMIN_ROLE
             and user.is_active

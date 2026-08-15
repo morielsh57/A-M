@@ -10,6 +10,7 @@ import { ProtectedAdministratorRoute } from '../app/guards/admin/ProtectedAdmini
 import AdminCategories from './admin/categories/AdminCategories';
 import AdminCustomersTablePage from './admin/customers/AdminCustomersTablePage';
 import AdminCustomerEditPage from './admin/customers/AdminCustomerEditPage';
+import AdminAdministratorsTablePage from './admin/administrators/AdminAdministratorsTablePage';
 
 function AppAdmin() {
   return (
@@ -47,6 +48,27 @@ function AppAdmin() {
           element={(
             <ProtectedAdministratorRoute>
               <AdminCustomerEditPage />
+            </ProtectedAdministratorRoute>
+          )}
+        />
+        <Route
+          path={APP_ROUTING_PATHS.ADMIN.ADMINS}
+          element={(
+            <ProtectedAdministratorRoute>
+              <AdminAdministratorsTablePage />
+            </ProtectedAdministratorRoute>
+          )}
+        />
+        <Route
+          path={`${APP_ROUTING_PATHS.ADMIN.ADMINS}/:userId/edit`}
+          element={(
+            <ProtectedAdministratorRoute>
+              <AdminCustomerEditPage
+                accountLabel="administrator"
+                expectedRole="Admin"
+                listSegment={APP_ROUTING_PATHS.ADMIN.ADMINS}
+                protectCurrentUser
+              />
             </ProtectedAdministratorRoute>
           )}
         />

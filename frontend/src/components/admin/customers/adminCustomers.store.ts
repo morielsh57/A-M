@@ -33,6 +33,7 @@ const initialState: AdminCustomersStoreState = {
 };
 
 export const getAdminCustomersCacheKey = (params: IAdminCustomersListRequestParams) => [
+  `role:${params.role}`,
   `page:${params.page || 1}`,
   `page_size:${params.page_size || ''}`,
   `search:${params.search || ''}`,
