@@ -11,6 +11,7 @@ import AdminCategories from './admin/categories/AdminCategories';
 import AdminCustomersTablePage from './admin/customers/AdminCustomersTablePage';
 import AdminCustomerEditPage from './admin/customers/AdminCustomerEditPage';
 import AdminAdministratorsTablePage from './admin/administrators/AdminAdministratorsTablePage';
+import AdminSuppliersTablePage from './admin/suppliers/AdminSuppliersTablePage';
 
 function AppAdmin() {
   return (
@@ -68,6 +69,26 @@ function AppAdmin() {
                 expectedRole="Admin"
                 listSegment={APP_ROUTING_PATHS.ADMIN.ADMINS}
                 protectCurrentUser
+              />
+            </ProtectedAdministratorRoute>
+          )}
+        />
+        <Route
+          path={APP_ROUTING_PATHS.ADMIN.SUPPLIERS}
+          element={(
+            <ProtectedAdministratorRoute>
+              <AdminSuppliersTablePage />
+            </ProtectedAdministratorRoute>
+          )}
+        />
+        <Route
+          path={`${APP_ROUTING_PATHS.ADMIN.SUPPLIERS}/:userId/edit`}
+          element={(
+            <ProtectedAdministratorRoute>
+              <AdminCustomerEditPage
+                accountLabel="supplier"
+                expectedRole="Supplier"
+                listSegment={APP_ROUTING_PATHS.ADMIN.SUPPLIERS}
               />
             </ProtectedAdministratorRoute>
           )}
