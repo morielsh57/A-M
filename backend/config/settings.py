@@ -158,6 +158,7 @@ EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND",
     "django.core.mail.backends.smtp.EmailBackend",
 )
+EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "smtp").strip().lower()
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
@@ -166,6 +167,11 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.getenv(
     "DEFAULT_FROM_EMAIL",
     "A&M Fashion <am.fashion.service@gmail.com>",
+)
+DEFAULT_FROM_NAME = os.getenv("DEFAULT_FROM_NAME", "A&M Fashion").strip()
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "").strip()
+EMAIL_REQUEST_TIMEOUT_SECONDS = int(
+    os.getenv("EMAIL_REQUEST_TIMEOUT_SECONDS", "15")
 )
 
 BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "https://localhost:8000").rstrip("/")

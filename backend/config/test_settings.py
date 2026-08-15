@@ -11,6 +11,8 @@ DATABASES = {  # noqa: F405
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+EMAIL_PROVIDER = "smtp"
+DEFAULT_FROM_EMAIL = "A&M Fashion <am.fashion.service@gmail.com>"
 
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
