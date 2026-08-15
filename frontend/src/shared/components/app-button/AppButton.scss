@@ -54,6 +54,13 @@
       color: $natural1;
       outline: none;
     }
+
+    &:disabled {
+      border-color: $natural5;
+      background: $natural3;
+      color: $natural7;
+      opacity: 1;
+    }
   }
 
   &:disabled {

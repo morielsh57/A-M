@@ -68,7 +68,6 @@ function AppAdmin() {
                 accountLabel="administrator"
                 expectedRole="Admin"
                 listSegment={APP_ROUTING_PATHS.ADMIN.ADMINS}
-                protectCurrentUser
               />
             </ProtectedAdministratorRoute>
           )}

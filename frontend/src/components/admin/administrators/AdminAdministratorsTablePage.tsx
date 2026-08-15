@@ -127,6 +127,11 @@ const AdminAdministratorsTablePage: React.FC = () => {
     isDeleteDisabled: (administrator) => (
       String(administrator.user_id) === String(currentAdmin?.user_id)
     ),
+    deleteDisabledTooltip: (administrator) => (
+      String(administrator.user_id) === String(currentAdmin?.user_id)
+        ? "You can't delete your own account."
+        : undefined
+    ),
     onDeleteCustomer: handleDelete,
     onEditCustomer: (administrator) => navigate(
       APP_ROUTING_PATHS.ADMIN_ADMINISTRATOR_EDIT_PAGE(administrator.user_id),

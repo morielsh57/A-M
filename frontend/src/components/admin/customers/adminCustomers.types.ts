@@ -30,6 +30,7 @@ export interface IAdminCustomerUpdateRequest {
   phone?: string;
   address?: string;
   is_active?: boolean;
+  role?: AdminManagedRole;
 }
 
 export interface IAdminCustomerCreateRequest {

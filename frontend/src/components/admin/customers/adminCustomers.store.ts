@@ -2,7 +2,12 @@ import type { ActionReducerMapBuilder } from '@reduxjs/toolkit';
 import { createReducer } from '@reduxjs/toolkit';
 import { API_ROUTES } from '../../../app/routing';
 import { apiService, createApiThunk } from '../../../shared/api/axios';
-import { APIRequestState, type IAPIRequestState, type IMeta } from '../../../shared/api/models';
+import {
+  APIRequestState,
+  EAPIStatus,
+  type IAPIRequestState,
+  type IMeta,
+} from '../../../shared/api/models';
 import {
   createAPIMapReducerCases,
   createAPIReducerCases,
@@ -86,7 +91,23 @@ export const adminCustomersStoreReducer = createReducer(initialState, (builder) 
     ({ user_id }) => String(user_id),
     apiBuilder,
   );
-  createAPIReducerCases(updateAdminCustomer, 'updateCustomerReq', apiBuilder);
-  createAPIReducerCases(createAdminCustomer, 'createCustomerReq', apiBuilder);
-  createAPIReducerCases(deleteAdminCustomer, 'deleteCustomerReq', apiBuilder);
+  createAPIReducerCases(updateAdminCustomer, 'updateCustomerReq', apiBuilder, {
+    onFulfilled: (state, user) => {
+      state.customerByIdReq[String(user.user_id)] = {
+        status: EAPIStatus.FULFILLED,
+        data: user,
+      };
+      state.customersByQueryReq = {};
+    },
+  });
+  createAPIReducerCases(createAdminCustomer, 'createCustomerReq', apiBuilder, {
+    onFulfilled: (state) => {
+      state.customersByQueryReq = {};
+    },
+  });
+  createAPIReducerCases(deleteAdminCustomer, 'deleteCustomerReq', apiBuilder, {
+    onFulfilled: (state) => {
+      state.customersByQueryReq = {};
+    },
+  });
 });

@@ -11,6 +11,7 @@ import type { IAdminCustomer } from './adminCustomers.types';
 interface CustomersColumnRenderProps {
   accountLabel?: string;
   isDeleteDisabled?: (customer: IAdminCustomer) => boolean;
+  deleteDisabledTooltip?: (customer: IAdminCustomer) => React.ReactNode;
   isDeletePending: boolean;
   onDeleteCustomer: (customer: IAdminCustomer) => void | Promise<void>;
   onEditCustomer: (customer: IAdminCustomer) => void;
@@ -32,6 +33,7 @@ const CustomersColumnRender = ({
   accountLabel = 'customer',
   isDeletePending,
   isDeleteDisabled,
+  deleteDisabledTooltip,
   onDeleteCustomer,
   onEditCustomer,
 }: CustomersColumnRenderProps): AppTableColumn<IAdminCustomer>[] => [
@@ -109,6 +111,7 @@ const CustomersColumnRender = ({
     deleteConfirmContent: `This permanently deletes the ${accountLabel} account. Accounts referenced by protected business records may be blocked by the server.`,
     deleteOkText: `Delete ${accountLabel}`,
     isDeleteDisabled: (customer) => isDeletePending || !!isDeleteDisabled?.(customer),
+    deleteDisabledTooltip,
   }),
 ];
 

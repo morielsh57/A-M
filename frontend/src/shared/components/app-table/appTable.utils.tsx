@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal } from 'antd';
+import { Modal, Tooltip } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import type { TableProps } from 'antd';
 import AppButton from '../app-button/AppButton';
@@ -30,6 +30,7 @@ interface AppTableActionsConfig<T extends object> {
   deleteConfirmContent?: React.ReactNode | ((record: T) => React.ReactNode);
   deleteOkText?: string;
   deleteCancelText?: string;
+  deleteDisabledTooltip?: React.ReactNode;
   isEditDisabled?: boolean;
   isDeleteDisabled?: boolean;
 }
@@ -45,6 +46,7 @@ interface AppTableActionsColumnConfig<T extends object> {
   deleteConfirmContent?: React.ReactNode | ((record: T) => React.ReactNode);
   deleteOkText?: string;
   deleteCancelText?: string;
+  deleteDisabledTooltip?: React.ReactNode | ((record: T) => React.ReactNode);
   isEditDisabled?: boolean | ((record: T) => boolean);
   isDeleteDisabled?: boolean | ((record: T) => boolean);
 }
@@ -156,6 +158,7 @@ export const createRenderColumn = <T extends object>({
 
 export const renderAppTableActions = <T extends object>({
   deleteCancelText = 'Cancel',
+  deleteDisabledTooltip,
   deleteConfirmContent = 'This action cannot be undone.',
   deleteConfirmTitle = 'Delete item?',
   deleteOkText = 'Delete',
@@ -192,22 +195,27 @@ export const renderAppTableActions = <T extends object>({
       >
         <EditOutlined />
       </AppButton>
-      <AppButton
-        aria-label="Delete"
-        className="app-table-actions__button"
-        disabled={!onDelete || isDeleteDisabled}
-        title="Delete"
-        variant="danger"
-        onClick={handleDeleteClick}
-      >
-        <DeleteOutlined />
-      </AppButton>
+      <Tooltip title={isDeleteDisabled ? deleteDisabledTooltip : undefined}>
+        <span>
+        <AppButton
+          aria-label="Delete"
+          className="app-table-actions__button"
+          disabled={!onDelete || isDeleteDisabled}
+          title="Delete"
+          variant="danger"
+          onClick={handleDeleteClick}
+        >
+          <DeleteOutlined />
+        </AppButton>
+        </span>
+      </Tooltip>
     </div>
   );
 };
 
 export const createActionsColumn = <T extends object>({
   deleteCancelText,
+  deleteDisabledTooltip,
   deleteConfirmContent,
   deleteConfirmTitle,
   deleteOkText,
@@ -232,6 +240,7 @@ export const createActionsColumn = <T extends object>({
     deleteConfirmContent,
     deleteOkText,
     deleteCancelText,
+    deleteDisabledTooltip: getActionValue(deleteDisabledTooltip, record, ''),
     isEditDisabled: typeof isEditDisabled === 'function' ? isEditDisabled(record) : isEditDisabled,
     isDeleteDisabled: typeof isDeleteDisabled === 'function'
       ? isDeleteDisabled(record)

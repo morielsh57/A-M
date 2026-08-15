@@ -1,0 +1,45 @@
+@import '../../../shared/styles/colors.scss';
+
+.admin-user-form {
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    background: $purple6;
+    color: $natural1;
+    font-weight: 800;
+  }
+
+  &__avatar-help {
+    margin: 5px 0 0;
+    color: $natural6;
+    font-size: 0.8rem;
+  }
+
+  &__protected-note {
+    margin: 0;
+    color: $natural6;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 260px;
+    color: $natural6;
+    font-weight: 700;
+  }
+
+  @media (max-width: 640px) {
+    &__identity {
+      align-items: flex-start;
+    }
+  }
+}
