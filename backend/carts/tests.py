@@ -1,7 +1,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework.test import APIClient
 
@@ -69,6 +69,25 @@ class CartApiTests(TestCase):
         response = self.client.post(reverse("guest-cart-create"))
         self.assertEqual(response.status_code, 201)
         return response.json()["data"]
+
+    @override_settings(CORS_ALLOWED_ORIGINS=["http://localhost:3001"])
+    def test_guest_cart_header_is_allowed_by_cors_preflight(self):
+        response = self.client.options(
+            reverse("cart-items"),
+            HTTP_ORIGIN="http://localhost:3001",
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD="POST",
+            HTTP_ACCESS_CONTROL_REQUEST_HEADERS="content-type,x-guest-cart-id",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Access-Control-Allow-Origin"],
+            "http://localhost:3001",
+        )
+        self.assertIn(
+            "x-guest-cart-id",
+            response["Access-Control-Allow-Headers"],
+        )
 
     def add_guest_item(self, guest_cart_id, variant, quantity):
         return self.client.post(
