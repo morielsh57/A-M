@@ -1,0 +1,29 @@
+@import '../../../shared/styles/colors.scss';
+@import '../../../shared/styles/layout.scss';
+
+.admin-customer-edit-page {
+  &__card {
+    max-width: $adminContentMaxWidth;
+    margin: 0 auto;
+    padding: 24px;
+    border: 1px solid $natural4;
+    border-radius: 16px;
+    background: $natural1;
+  }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 260px;
+    color: $natural6;
+    font-weight: 700;
+  }
+
+  @media (max-width: 640px) {
+    &__card {
+      padding: 16px;
+    }
+  }
+}

@@ -3,6 +3,7 @@ import { ReloadOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
 import { useToasts } from 'react-toast-notifications';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
+import { ADMIN_TABLE_PAGE_SIZE } from '../../../app/constants';
 import { EAPIStatus, type IAPIError } from '../../../shared/api/models';
 import AdminFormDrawer from '../../../shared/components/admin-form-drawer/AdminFormDrawer';
 import AdminTablePageLayout from '../../../shared/components/admin-table-page-layout/AdminTablePageLayout';
@@ -57,6 +58,7 @@ const AdminCategories: React.FC = () => {
   const dispatch = useAppDispatch();
   const { addToast } = useToasts();
   const [searchValue, setSearchValue] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<CategoryId>();
   const [editingCategoryName, setEditingCategoryName] = useState<string>();
@@ -83,6 +85,15 @@ const AdminCategories: React.FC = () => {
       category.short_id,
     ].some((value) => String(value).toLowerCase().includes(search)));
   }, [searchValue, tableData]);
+  const paginatedCategories = useMemo(() => {
+    const startIndex = (currentPage - 1) * ADMIN_TABLE_PAGE_SIZE;
+    return filteredCategories.slice(startIndex, startIndex + ADMIN_TABLE_PAGE_SIZE);
+  }, [currentPage, filteredCategories]);
+
+  useEffect(() => {
+    const lastPage = Math.max(1, Math.ceil(filteredCategories.length / ADMIN_TABLE_PAGE_SIZE));
+    if (currentPage > lastPage) setCurrentPage(lastPage);
+  }, [currentPage, filteredCategories.length]);
 
   useEffect(() => {
     if (getMainCategoriesReq.status === EAPIStatus.IDLE) {
@@ -170,11 +181,18 @@ const AdminCategories: React.FC = () => {
       <AppTable<IAdminCategoryTableItem>
         actions={retryAction}
         columns={columns}
-        data={isError ? [] : filteredCategories}
+        data={isError ? [] : paginatedCategories}
         emptyText={isError
           ? getMainCategoriesReq.error?.message || 'Categories could not be loaded. Please try again.'
           : 'No categories found.'}
         loading={isLoading}
+        pagination={{
+          current: currentPage,
+          pageSize: ADMIN_TABLE_PAGE_SIZE,
+          total: filteredCategories.length,
+          showSizeChanger: false,
+          onChange: setCurrentPage,
+        }}
         rowKey="category_id"
         scroll={{ x: 1116 }}
         searchPlaceholder="Search categories on this page..."
@@ -183,7 +201,10 @@ const AdminCategories: React.FC = () => {
           ? 'Categories could not be loaded.'
           : 'Search and sorting apply to the currently loaded categories.'}
         title="Categories management"
-        onSearchChange={setSearchValue}
+        onSearchChange={(value) => {
+          setSearchValue(value);
+          setCurrentPage(1);
+        }}
       />
 
       <AdminFormDrawer
