@@ -43,7 +43,7 @@ const ClientSignup: React.FC = () => {
 
     try {
       await dispatch(signupRequest(formData)).unwrap();
-      addToast(`Verify your email`,
+      addToast(`Verify your email. Please check your inbox and spam folder.`,
         {
           appearance: 'info',
         });
