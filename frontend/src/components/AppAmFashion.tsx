@@ -19,6 +19,8 @@ import ClientSignup from '../app/auth/client/client-signup/ClientSignup';
 import { Auth } from '../app/auth/Auth';
 import AppAdmin from './AppAdmin';
 import ScrollRestoration from '../shared/components/scroll-restoration/ScrollRestoration';
+import CheckoutPage from './client/checkout/CheckoutPage';
+import { ProtectedCheckoutRoute } from '../app/guards/client/ProtectedCheckoutRoute';
 
 const AppAMFashion: React.FC = (props) => {
   const theme = createTheme(
@@ -77,6 +79,11 @@ const AppAMFashion: React.FC = (props) => {
                     <Route path={`${APP_ROUTING_PATHS.PRODUCT}/:productId`} element={<ProductPage />} />
                     <Route path={`${APP_ROUTING_PATHS.CATEGORY}/:categoryType/:categoryId`} element={<CategoryPage />} />
                     <Route path={APP_ROUTING_PATHS.SEARCH} element={<SearchPage />} />
+                    <Route path={APP_ROUTING_PATHS.CHECKOUT} element={(
+                      <ProtectedCheckoutRoute>
+                        <CheckoutPage />
+                      </ProtectedCheckoutRoute>
+                    )} />
                   </Route>
                   <Route path={`${APP_ROUTING_PATHS.ADMIN.ROOT}/*`} element={<AppAdmin />} />
                   <Route path={APP_ROUTING_PATHS.ROOT} element={<Navigate to={APP_ROUTING_PATHS.APP_HOME_PAGE} replace />} />

@@ -1,0 +1,35 @@
+@import '../../../shared/styles/colors.scss';
+
+.checkout-delivery {
+  &__choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
+
+  &__choice {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 16px;
+    border: 1px solid rgba($purple6, 0.18);
+    border-radius: 12px;
+
+    &--selected { border-color: $purple6; background: $pink1; }
+    &--disabled { color: $natural7; opacity: 0.66; }
+    input { margin-top: 4px; accent-color: $purple6; }
+    strong, small { display: block; }
+    strong { color: $purple9; }
+    small { margin-top: 4px; }
+  }
+
+  &__address {
+    > span { display: block; margin-bottom: 8px; color: $purple9; font-weight: 800; }
+    textarea {
+      width: 100%; resize: vertical; padding: 13px 15px; border: 1px solid rgba($purple6, 0.28);
+      border-radius: 10px; color: $purple9; background: $natural1; font: inherit;
+      &:focus { border-color: $purple6; outline: 2px solid rgba($purple6, 0.12); }
+    }
+    small { display: block; margin-top: 6px; color: $red7; }
+  }
+}
+
+@media (max-width: 560px) {
+  .checkout-delivery__choices { grid-template-columns: 1fr; }
+}

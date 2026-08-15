@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
 import { removeItemFromLocalStorage, setItemInLocalStorage } from '../../shared/utils/localStorage.utils';
 import { AUTH_LOCAL_STORAGE_KEYS } from '../constants';
@@ -18,6 +18,7 @@ import { getCart } from '../../components/client/cart/cart.store';
 export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { loginRes, adminLoginRes } = useAppSelector((store) => store.authStoreReducer);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const { addToast } = useToasts();
 
@@ -50,7 +51,13 @@ export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
         autoDismiss: true,
       });
     } finally {
-      navigate(APP_ROUTING_PATHS.APP);
+      const requestedPath = (location.state as { returnTo?: unknown } | null)?.returnTo;
+      navigate(
+        typeof requestedPath === 'string' && requestedPath.startsWith(`${APP_ROUTING_PATHS.APP}/`)
+          ? requestedPath
+          : APP_ROUTING_PATHS.APP,
+        { replace: true },
+      );
     }
   };
 
