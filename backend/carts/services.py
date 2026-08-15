@@ -5,7 +5,7 @@ from django.db import transaction
 from django.db.models import Sum
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from accounts.models import CUSTOMER_ROLE
+from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE
 from carts.models import Cart, CartProduct
 from products.models import ProductVariant
 
@@ -14,8 +14,13 @@ GUEST_CART_HEADER = "X-Guest-Cart-ID"
 
 
 def require_customer(user):
-    if not user.is_authenticated or user.role.role_name != CUSTOMER_ROLE:
-        raise PermissionDenied("Only Customer accounts can use a saved cart.")
+    if (
+        not user.is_authenticated
+        or user.role.role_name not in {CUSTOMER_ROLE, ADMIN_ROLE}
+    ):
+        raise PermissionDenied(
+            "Only Customer and Admin accounts can use a saved cart."
+        )
 
 
 def create_guest_cart():

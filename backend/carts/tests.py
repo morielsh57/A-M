@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from accounts.models import CUSTOMER_ROLE, Role, User
+from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, Role, User
 from carts.models import Cart, CartProduct
 from carts.services import GUEST_CART_HEADER
 from catalogue.models import Category
@@ -18,8 +18,17 @@ class CartApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.customer_role = Role.objects.get_or_create(role_name=CUSTOMER_ROLE)[0]
+        self.admin_role = Role.objects.get_or_create(role_name=ADMIN_ROLE)[0]
         self.customer = self.create_customer("customer@example.com")
         self.other_customer = self.create_customer("other@example.com")
+        self.admin = User.objects.create_user(
+            email="admin@example.com",
+            name="admin",
+            password=self.password,
+            role=self.admin_role,
+            is_active=True,
+            is_valid_email=True,
+        )
         self.category = Category.objects.create(
             short_id="cart-shirts",
             main_category_name="Cart Shirts",
@@ -78,6 +87,17 @@ class CartApiTests(TestCase):
         self.assertEqual(first.status_code, 200)
         self.assertEqual(first.json()["data"]["cart_id"], second.json()["data"]["cart_id"])
         self.assertEqual(Cart.objects.filter(customer=self.customer).count(), 1)
+        self.assertIsNone(first.json()["data"]["guest_cart_id"])
+
+    def test_authenticated_admin_has_a_saved_cart(self):
+        self.authorize(self.admin)
+
+        first = self.client.get(reverse("cart-detail"))
+        second = self.client.get(reverse("cart-detail"))
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.json()["data"]["cart_id"], second.json()["data"]["cart_id"])
+        self.assertEqual(Cart.objects.filter(customer=self.admin).count(), 1)
         self.assertIsNone(first.json()["data"]["guest_cart_id"])
 
     def test_guest_cart_identifier_is_secure_and_unique(self):
