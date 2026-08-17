@@ -4,15 +4,20 @@ from django.db import IntegrityError, transaction
 from django.db.models import F
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
-from accounts.models import CUSTOMER_ROLE
+from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE
 from carts.models import Cart, CartProduct
 from orders.models import Order, OrderItem
 from products.models import ProductVariant
 
 
 def require_customer(user):
-    if not user.is_authenticated or user.role.role_name != CUSTOMER_ROLE:
-        raise PermissionDenied("Only Customer accounts can manage customer orders.")
+    if (
+        not user.is_authenticated
+        or user.role.role_name not in {CUSTOMER_ROLE, ADMIN_ROLE}
+    ):
+        raise PermissionDenied(
+            "Only Customer and Admin accounts can manage customer orders."
+        )
 
 
 def get_customer_order(user, order_id, *, lock=False):
