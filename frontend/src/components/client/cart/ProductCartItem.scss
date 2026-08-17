@@ -99,8 +99,7 @@
       font-size: 0.78rem;
     }
 
-    strong,
-    span {
+    strong {
       display: block;
       color: $purple8;
       font-size: 0.8rem;
@@ -117,79 +116,23 @@
   }
 
   &__remove {
-    display: grid;
     flex: 0 0 auto;
-    width: 28px;
-    height: 28px;
-    place-items: center;
-    border: 1px solid rgba($red7, 0.7);
+    min-width: 34px;
+    min-height: 32px;
+    width: 34px;
+    height: 32px;
+    padding: 5px 8px;
     border-radius: 8px;
-    background: $natural1;
-    color: $red7;
-    cursor: pointer;
-    transition:
-      background-color 160ms ease,
-      border-color 160ms ease,
-      color 160ms ease;
+    font-size: 0.95rem;
+    color: $red8;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    justify-content: flex-end !important;
 
     &:hover:not(:disabled),
     &:focus-visible:not(:disabled) {
-      border-color: $red7;
-      background: $red7;
-      color: $natural1;
-      outline: none;
-    }
-
-    &:disabled {
-      cursor: not-allowed;
-      opacity: 0.58;
-    }
-  }
-
-  &__quantity {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-    padding: 3px;
-    border: 1px solid rgba($purple6, 0.14);
-    border-radius: 999px;
-    background: rgba($natural1, 0.86);
-
-    button {
-      display: grid;
-      width: 24px;
-      height: 24px;
-      place-items: center;
-      border: 0;
-      border-radius: 999px;
-      background: transparent;
-      color: $purple8;
-      font-size: 0.8rem;
-      font-weight: 900;
-      cursor: pointer;
-      transition:
-        background-color 160ms ease,
-        color 160ms ease;
-
-      &:hover:not(:disabled),
-      &:focus-visible:not(:disabled) {
-        background: $purple6;
-        color: $natural1;
-        outline: none;
-      }
-
-      &:disabled {
-        color: rgba($natural7, 0.54);
-        cursor: not-allowed;
-      }
-    }
-
-    span {
-      min-width: 18px;
-      color: $purple9;
-      font-size: 0.78rem;
-      text-align: center;
+      color: $red6;
     }
   }
 
