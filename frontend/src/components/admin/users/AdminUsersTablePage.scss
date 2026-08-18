@@ -1,7 +1,7 @@
-@import '../../../../shared/styles/colors.scss';
+@import '../../../shared/styles/colors.scss';
 
-.admin-customers-page {
-  &__customer-id {
+.admin-users-page {
+  &__user-id {
     color: $purple6;
     font-weight: 800;
   }

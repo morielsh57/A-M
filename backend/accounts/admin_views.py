@@ -66,12 +66,17 @@ class AdminUserDetailView(APIView):
             self.get_user(user_id),
             data=request.data,
             partial=True,
+            context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
         return Response(AdminUserSerializer(serializer.save()).data)
 
     def delete(self, request, user_id):
         user = self.get_user(user_id)
+        if user.pk == request.user.pk:
+            raise ValidationError(
+                {"user_id": ["You cannot delete your own Administrator account."]}
+            )
         if user.role.role_name == ADMIN_ROLE and user.is_active and not User.objects.filter(
             role__role_name=ADMIN_ROLE,
             is_active=True,

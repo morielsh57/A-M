@@ -19,9 +19,9 @@ import {
 import { EUserRole } from '../../../../shared/store/user/user.types';
 import type { IAdminUser, IAdminUsersListRequestParams } from '../adminUsers.types';
 import { getAdminUserFormErrorMessage } from '../adminUsers.utils';
-import CustomersColumnRender from './CustomersColumnRender';
+import AdminUsersColumnRender from '../AdminUsersColumnRender';
 import AdminUsersForm from '../user-form/AdminUsersForm';
-import './AdminCustomersTablePage.scss';
+import '../AdminUsersTablePage.scss';
 
 const CUSTOMER_ROLE = EUserRole.CUSTOMER;
 
@@ -131,10 +131,11 @@ const AdminCustomersTablePage: React.FC = () => {
     }
   }, [addToast, dispatch, refetch]);
 
-  const columns = useMemo(() => CustomersColumnRender({
+  const columns = useMemo(() => AdminUsersColumnRender({
+    accountLabel: 'customer',
     isDeletePending: deleteUserReq.status === EAPIStatus.PENDING,
-    onDeleteCustomer: handleDelete,
-    onEditCustomer: openEditDrawer,
+    onDeleteUser: handleDelete,
+    onEditUser: openEditDrawer,
   }), [deleteUserReq.status, handleDelete, openEditDrawer]);
 
   const drawerTitle = editingCustomerId === undefined ? 'Create customer' : (
@@ -156,7 +157,7 @@ const AdminCustomersTablePage: React.FC = () => {
     >
       {customersReq?.status === EAPIStatus.REJECTED && (
         <Alert
-          className="admin-customers-page__error"
+          className="admin-users-page__error"
           type="error"
           showIcon
           message="Customers could not be loaded"
@@ -170,7 +171,7 @@ const AdminCustomersTablePage: React.FC = () => {
       <AppTable<IAdminUser>
         actions={(
           <AppSelect
-            className="admin-customers-page__status-filter"
+            className="admin-users-page__status-filter"
             value={statusValue}
             options={[
               { value: 'all', label: 'All statuses' },
