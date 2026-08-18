@@ -12,7 +12,7 @@ export interface IUserNotification {
 }
 
 export interface IUser {
-  user_id: string;
+  user_id: string | number;
   name: string;
   email: string;
   role: EUserRole;
@@ -20,7 +20,7 @@ export interface IUser {
   address: string;
   avatar?: string;
   isValidEmail?: boolean;
-  date_created: Date;
+  date_created: string | Date;
 }
 
 export interface IUpdateUserProfileRequest {

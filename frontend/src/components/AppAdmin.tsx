@@ -8,8 +8,7 @@ import AdminProfile from './admin/profile/AdminProfile';
 import AdminProductsTablePage from './admin/products/AdminProductsTablePage';
 import { ProtectedAdministratorRoute } from '../app/guards/admin/ProtectedAdministratorRoute';
 import AdminCategories from './admin/categories/AdminCategories';
-import AdminCustomersTablePage from './admin/customers/AdminCustomersTablePage';
-import AdminCustomerEditPage from './admin/customers/AdminCustomerEditPage';
+import AdminCustomersTablePage from './admin/users/customers/AdminCustomersTablePage';
 
 function AppAdmin() {
   return (
@@ -39,14 +38,6 @@ function AppAdmin() {
           element={(
             <ProtectedAdministratorRoute>
               <AdminCustomersTablePage />
-            </ProtectedAdministratorRoute>
-          )}
-        />
-        <Route
-          path={`${APP_ROUTING_PATHS.ADMIN.CUSTOMERS}/:userId/edit`}
-          element={(
-            <ProtectedAdministratorRoute>
-              <AdminCustomerEditPage />
             </ProtectedAdministratorRoute>
           )}
         />

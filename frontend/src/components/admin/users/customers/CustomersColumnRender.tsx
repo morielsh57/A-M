@@ -5,33 +5,22 @@ import {
   createRenderColumn,
   createTextColumn,
   type AppTableColumn,
-} from '../../../shared/components/app-table/appTable.utils';
-import type { IAdminCustomer } from './adminCustomers.types';
+} from '../../../../shared/components/app-table/appTable.utils';
+import type { IAdminUser } from '../adminUsers.types';
+import { formatAdminUserDate, getAdminUserInitials } from '../adminUsers.utils';
 
 interface CustomersColumnRenderProps {
   isDeletePending: boolean;
-  onDeleteCustomer: (customer: IAdminCustomer) => void | Promise<void>;
-  onEditCustomer: (customer: IAdminCustomer) => void;
+  onDeleteCustomer: (customer: IAdminUser) => void | Promise<void>;
+  onEditCustomer: (customer: IAdminUser) => void;
 }
-
-const getInitials = (name: string) => name
-  .split(/\s+/)
-  .filter(Boolean)
-  .slice(0, 2)
-  .map((part) => part[0]?.toUpperCase())
-  .join('') || '?';
-
-const formatDate = (value: string) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString();
-};
 
 const CustomersColumnRender = ({
   isDeletePending,
   onDeleteCustomer,
   onEditCustomer,
-}: CustomersColumnRenderProps): AppTableColumn<IAdminCustomer>[] => [
-  createRenderColumn<IAdminCustomer>({
+}: CustomersColumnRenderProps): AppTableColumn<IAdminUser>[] => [
+  createRenderColumn<IAdminUser>({
     title: 'ID',
     key: 'user_id',
     fixed: 'left',
@@ -40,39 +29,39 @@ const CustomersColumnRender = ({
       <span className="admin-customers-page__customer-id">#{customer.user_id}</span>
     ),
   }),
-  createRenderColumn<IAdminCustomer>({
+  createRenderColumn<IAdminUser>({
     title: 'Avatar',
     key: 'avatar',
     width: 90,
     render: (_, customer) => (
       <Avatar className="admin-customers-page__avatar">
-        {getInitials(customer.name)}
+        {getAdminUserInitials(customer.name)}
       </Avatar>
     ),
   }),
-  createTextColumn<IAdminCustomer, 'name'>({
+  createTextColumn<IAdminUser, 'name'>({
     title: 'Name',
     dataIndex: 'name',
     fixed: 'left',
     width: 190,
     className: 'admin-table-page-name',
   }),
-  createTextColumn<IAdminCustomer, 'email'>({
+  createTextColumn<IAdminUser, 'email'>({
     title: 'Email',
     dataIndex: 'email',
     width: 250,
   }),
-  createTextColumn<IAdminCustomer, 'phone'>({
+  createTextColumn<IAdminUser, 'phone'>({
     title: 'Phone',
     dataIndex: 'phone',
     width: 160,
   }),
-  createTextColumn<IAdminCustomer, 'address'>({
+  createTextColumn<IAdminUser, 'address'>({
     title: 'Address',
     dataIndex: 'address',
     width: 270,
   }),
-  createRenderColumn<IAdminCustomer>({
+  createRenderColumn<IAdminUser>({
     title: 'Account status',
     key: 'is_active',
     width: 145,
@@ -82,7 +71,7 @@ const CustomersColumnRender = ({
       </Tag>
     ),
   }),
-  createRenderColumn<IAdminCustomer>({
+  createRenderColumn<IAdminUser>({
     title: 'Email status',
     key: 'is_valid_email',
     width: 145,
@@ -92,13 +81,13 @@ const CustomersColumnRender = ({
       </Tag>
     ),
   }),
-  createRenderColumn<IAdminCustomer>({
+  createRenderColumn<IAdminUser>({
     title: 'Joined',
     key: 'date_created',
     width: 130,
-    render: (_, customer) => formatDate(customer.date_created),
+    render: (_, customer) => formatAdminUserDate(customer.date_created),
   }),
-  createActionsColumn<IAdminCustomer>({
+  createActionsColumn<IAdminUser>({
     onEdit: onEditCustomer,
     onDelete: onDeleteCustomer,
     deleteConfirmTitle: (customer) => `Delete ${customer.name}?`,

@@ -105,6 +105,16 @@ $adminFormErrorColor: $red7;
     font-weight: 700;
   }
 
+  &__loading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 240px;
+    color: $adminFormMutedColor;
+    font-weight: 800;
+  }
+
   &__actions {
     position: fixed;
     right: 6px;
