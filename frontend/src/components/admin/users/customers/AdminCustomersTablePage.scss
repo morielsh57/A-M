@@ -1,0 +1,23 @@
+@import '../../../../shared/styles/colors.scss';
+
+.admin-customers-page {
+  &__customer-id {
+    color: $purple6;
+    font-weight: 800;
+  }
+
+  &__avatar {
+    background: $purple6;
+    color: $natural1;
+    font-weight: 800;
+  }
+
+  &__status-filter {
+    min-width: 160px;
+  }
+
+  &__error {
+    max-width: 1600px;
+    margin: 0 auto 18px;
+  }
+}
