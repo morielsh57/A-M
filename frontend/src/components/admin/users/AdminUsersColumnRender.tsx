@@ -11,6 +11,7 @@ import { formatAdminUserDate, getAdminUserInitials } from './adminUsers.utils';
 
 interface AdminUsersColumnRenderProps {
   accountLabel: string;
+  deleteDisabledTooltip?: (user: IAdminUser) => React.ReactNode;
   isDeletePending: boolean;
   isDeleteDisabled?: (user: IAdminUser) => boolean;
   onDeleteUser: (user: IAdminUser) => void | Promise<void>;
@@ -19,6 +20,7 @@ interface AdminUsersColumnRenderProps {
 
 const AdminUsersColumnRender = ({
   accountLabel,
+  deleteDisabledTooltip,
   isDeleteDisabled,
   isDeletePending,
   onDeleteUser,
@@ -98,6 +100,7 @@ const AdminUsersColumnRender = ({
     deleteConfirmContent: `This permanently deletes the ${accountLabel} account. Accounts referenced by protected business records may be blocked by the server.`,
     deleteOkText: `Delete ${accountLabel}`,
     isDeleteDisabled: (user) => isDeletePending || Boolean(isDeleteDisabled?.(user)),
+    deleteDisabledTooltip,
   }),
 ];
 

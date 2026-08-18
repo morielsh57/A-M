@@ -138,6 +138,11 @@ const AdminAdministratorsTablePage: React.FC = () => {
     isDeleteDisabled: (administrator) => (
       String(administrator.user_id) === String(currentAdmin?.user_id)
     ),
+    deleteDisabledTooltip: (administrator) => (
+      String(administrator.user_id) === String(currentAdmin?.user_id)
+        ? "You can't delete your own account."
+        : undefined
+    ),
     onDeleteUser: handleDelete,
     onEditUser: openEditDrawer,
   }), [currentAdmin?.user_id, deleteUserReq.status, handleDelete, openEditDrawer]);
