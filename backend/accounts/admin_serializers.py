@@ -28,7 +28,7 @@ class AdminUserCreateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     email = serializers.EmailField(max_length=255)
     password = serializers.CharField(write_only=True, trim_whitespace=False)
-    role = serializers.ChoiceField(choices=(ADMIN_ROLE, SUPPLIER_ROLE))
+    role = serializers.ChoiceField(choices=(CUSTOMER_ROLE, ADMIN_ROLE, SUPPLIER_ROLE))
     phone = serializers.CharField(max_length=50, required=False, allow_blank=True)
     address = serializers.CharField(required=False, allow_blank=True)
     is_active = serializers.BooleanField(default=True)

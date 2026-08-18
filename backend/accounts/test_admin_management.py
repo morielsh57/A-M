@@ -76,8 +76,18 @@ class AdministratorManagementApiTests(TestCase):
                     response = getattr(self.client, method)(url, body or {}, format="json")
                     self.assertEqual(response.status_code, 403)
 
-    def test_admin_can_create_supplier_and_administrator_accounts(self):
+    def test_admin_can_create_customer_supplier_and_administrator_accounts(self):
         self.authorize(self.admin)
+        customer_response = self.client.post(
+            reverse("admin-user-list"),
+            {
+                "name": "New Customer",
+                "email": "new-customer@example.com",
+                "password": "A-Strong-Password-2026!",
+                "role": CUSTOMER_ROLE,
+            },
+            format="json",
+        )
         supplier_response = self.client.post(
             reverse("admin-user-list"),
             {
@@ -99,6 +109,9 @@ class AdministratorManagementApiTests(TestCase):
             format="json",
         )
 
+        self.assertEqual(customer_response.status_code, 201)
+        self.assertEqual(customer_response.data["role"], CUSTOMER_ROLE)
+        self.assertTrue(User.objects.get(email="new-customer@example.com").is_valid_email)
         self.assertEqual(supplier_response.status_code, 201)
         self.assertTrue(Supplier.objects.filter(user__email="new-supplier@example.com").exists())
         self.assertEqual(admin_response.status_code, 201)
