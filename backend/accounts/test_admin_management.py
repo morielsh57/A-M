@@ -138,6 +138,22 @@ class AdministratorManagementApiTests(TestCase):
         self.assertEqual(self.client.patch(url, {"role": CUSTOMER_ROLE}, format="json").status_code, 400)
         self.assertEqual(self.client.delete(url).status_code, 400)
 
+    def test_administrator_cannot_remove_their_own_access_when_another_admin_exists(self):
+        self.create_user("second-admin@example.com", ADMIN_ROLE)
+        self.authorize(self.admin)
+        url = reverse("admin-user-detail", kwargs={"user_id": self.admin.pk})
+
+        deactivate_response = self.client.patch(url, {"is_active": False}, format="json")
+        reassign_response = self.client.patch(url, {"role": CUSTOMER_ROLE}, format="json")
+        delete_response = self.client.delete(url)
+
+        self.assertEqual(deactivate_response.status_code, 400)
+        self.assertEqual(reassign_response.status_code, 400)
+        self.assertEqual(delete_response.status_code, 400)
+        self.admin.refresh_from_db()
+        self.assertTrue(self.admin.is_active)
+        self.assertEqual(self.admin.role.role_name, ADMIN_ROLE)
+
     def test_admin_can_filter_users(self):
         self.authorize(self.admin)
         response = self.client.get(reverse("admin-user-list"), {"role": SUPPLIER_ROLE})

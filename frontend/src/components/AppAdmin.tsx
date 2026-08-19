@@ -9,6 +9,7 @@ import AdminProductsTablePage from './admin/products/AdminProductsTablePage';
 import { ProtectedAdministratorRoute } from '../app/guards/admin/ProtectedAdministratorRoute';
 import AdminCategories from './admin/categories/AdminCategories';
 import AdminCustomersTablePage from './admin/users/customers/AdminCustomersTablePage';
+import AdminAdministratorsTablePage from './admin/users/administrators/AdminAdministratorsTablePage';
 
 function AppAdmin() {
   return (
@@ -38,6 +39,14 @@ function AppAdmin() {
           element={(
             <ProtectedAdministratorRoute>
               <AdminCustomersTablePage />
+            </ProtectedAdministratorRoute>
+          )}
+        />
+                <Route
+          path={APP_ROUTING_PATHS.ADMIN.ADMINS}
+          element={(
+            <ProtectedAdministratorRoute>
+              <AdminAdministratorsTablePage />
             </ProtectedAdministratorRoute>
           )}
         />
