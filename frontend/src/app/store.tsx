@@ -11,6 +11,7 @@ import { productPageStoreReducer } from '../components/product-page/product.stor
 import { userStoreReducer } from '../shared/store/user/user.store';
 import { categoryStoreReducer } from '../shared/store/category/category.store';
 import { adminProductsStoreReducer } from '../components/admin/products/adminProducts.store';
+import { cartStoreReducer } from '../components/client/cart/cart.store';
 import { adminUsersStoreReducer } from '../components/admin/users/adminUsers.store';
 
 export const rootReducer = {
@@ -22,6 +23,7 @@ export const rootReducer = {
   adminProductsStoreReducer,
   adminUsersStoreReducer,
   productPageStoreReducer,
+  cartStoreReducer,
 };
 
 enableMapSet();

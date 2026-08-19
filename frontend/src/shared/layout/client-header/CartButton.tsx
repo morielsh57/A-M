@@ -1,13 +1,14 @@
 import React from 'react';
-import { useAppDispatch, useAppSelector } from '../../../app/store';
+import { useAppDispatch } from '../../../app/store';
+import { openCart } from '../../../components/client/cart/cart.store';
 import { cartIcon } from '../../../components/util/iconsFunc';
 
 const CartButton: React.FC = () => {
   const cartsAr: { amount: number }[] = []; // TODO: Replace with actual cart items from redux cart store when implemented
+  const dispatch = useAppDispatch();
 
   const handleOpenCart = () => {
-    // TODO: Implement the logic to open the cart modal window
-    // dispatch(showHideCart(true));
+    dispatch(openCart());
   };
 
   return (
