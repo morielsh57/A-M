@@ -5,6 +5,7 @@ import { APIRequestState, type IAPIRequestState } from '../../shared/api/models'
 import { createAPIReducerCases, type ApiDataStateType } from '../../shared/store/utils';
 import { IChangePasswordRequest, ILoginRequest, ILoginResponse, ISignUpRequest } from './auth.types';
 import { API_ROUTES } from '../routing';
+import { clearGuestCartId, getStoredGuestCartId } from '../../components/client/cart/cart.utils';
 
 export interface AuthStoreState extends ApiDataStateType {
   signupRes: IAPIRequestState<void>;
@@ -22,7 +23,14 @@ const initialState: AuthStoreState = {
 
 export const loginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
   'auth/login',
-  (payload) => apiService.post<ILoginResponse>(API_ROUTES.AUTH.LOGIN, payload),
+  (payload) => {
+    const guestCartId = getStoredGuestCartId();
+
+    return apiService.post<ILoginResponse>(API_ROUTES.AUTH.LOGIN, {
+      ...payload,
+      ...(guestCartId ? { guest_cart_id: guestCartId } : {}),
+    });
+  },
 );
 
 export const adminLoginRequest = createApiThunk<ILoginResponse, ILoginRequest>(
@@ -60,6 +68,7 @@ export const authStoreReducer = createReducer(initialState, (builder) => {
     },
     onFulfilled: (state) => {
       state.loginRes.error = undefined;
+      clearGuestCartId();
     },
   });
 

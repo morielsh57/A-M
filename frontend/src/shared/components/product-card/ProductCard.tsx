@@ -37,7 +37,6 @@ const ProductCard: React.FC<IProductCardProps> = ({
           <span className="product-card__price">{formatPrice(product.price)}</span>
           {product.fabric && <span className="product-card__fabric">{product.fabric}</span>}
         </div>
-
         <div className="product-card__colors" aria-label={`Available colors for ${product.name}`}>
           {product.colors.map((colorOption) => {
             const colorValue = getColorValue(colorOption.color);

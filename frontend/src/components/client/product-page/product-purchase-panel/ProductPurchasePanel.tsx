@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../../../app/store';
+import { EAPIStatus } from '../../../../shared/api/models';
 import AppButton from '../../../../shared/components/app-button/AppButton';
 import { formatPrice } from '../../../../shared/components/product-card/productCard.utils';
+import { addCartItem, openCart } from '../../cart/cart.store';
 import type { IProduct, IProductVariant, ProductVariantId } from '../../../product-page/product.types';
 import ProductColorPicker from '../product-color-picker/ProductColorPicker';
 import ProductRating from '../product-rating/ProductRating';
@@ -26,6 +29,8 @@ const ProductPurchasePanel: React.FC<ProductPurchasePanelProps> = ({
   selectedVariant,
   onVariantSelect,
 }) => {
+  const dispatch = useAppDispatch();
+  const addCartItemReqStatus = useAppSelector((store) => store.cartStoreReducer.addCartItemReq.status);
   const [quantity, setQuantity] = useState(1);
   const selectedColor = selectedVariant?.color?.trim() || 'Default';
   const colorOptions = useMemo(
@@ -37,10 +42,25 @@ const ProductPurchasePanel: React.FC<ProductPurchasePanelProps> = ({
     [activeVariants, selectedColor],
   );
   const selectedVariantInStock = isVariantInStock(selectedVariant);
+  const isAddingToCart = addCartItemReqStatus === EAPIStatus.PENDING;
 
   const onColorSelect = (color: string) => {
     const nextVariant = getBestVariantForColor(activeVariants, color, selectedVariant?.size);
     onVariantSelect(nextVariant?.variant_id);
+  };
+
+  const handleAddToCart = async () => {
+    if (!selectedVariant || !selectedVariantInStock || isAddingToCart) return;
+
+    try {
+      await dispatch(addCartItem({
+        variant_id: selectedVariant.variant_id,
+        quantity,
+      })).unwrap();
+      dispatch(openCart());
+    } catch (error) {
+      dispatch(openCart());
+    }
   };
 
   return (
@@ -85,10 +105,10 @@ const ProductPurchasePanel: React.FC<ProductPurchasePanelProps> = ({
 
       <AppButton
         className="product-page__add-to-cart"
-        disabled={!selectedVariantInStock}
-        onClick={() => undefined}
+        disabled={!selectedVariantInStock || isAddingToCart}
+        onClick={handleAddToCart}
       >
-        Add To Bag
+        {isAddingToCart ? 'Adding...' : 'Add To Bag'}
       </AppButton>
     </section>
   );

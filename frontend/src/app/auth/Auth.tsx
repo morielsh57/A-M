@@ -13,6 +13,7 @@ import {
 } from '../../shared/store/user/user.store';
 import { APP_ROUTING_PATHS } from '../routing';
 import { useToasts } from 'react-toast-notifications';
+import { getCart } from '../../components/client/cart/cart.store';
 
 export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { loginRes, adminLoginRes } = useAppSelector((store) => store.authStoreReducer);
@@ -43,6 +44,7 @@ export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
 
     try {
       const userData = await dispatch(getCurrentUser()).unwrap();
+      await dispatch(getCart()).unwrap();
       addToast(`welcome ${userData?.name || ''} to our store, you logged in`, {
         appearance: 'success',
         autoDismiss: true,
@@ -50,10 +52,6 @@ export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
     } finally {
       navigate(APP_ROUTING_PATHS.APP);
     }
-    // TODO: on successfull login check if user has cart items in the local storage and if so, add them to the cart in the backend DB.
-    // Then, request the user's cart from the backend database. 
-    // The response includes the complete cart: items saved during previous logged-in sessions and items added locally during the current session before login. 
-    // Finally, update the cart in the frontend store and localStorage.
   };
 
   const handleAdminLoginSuccess = async (loginData: typeof adminLoginRes.data) => {

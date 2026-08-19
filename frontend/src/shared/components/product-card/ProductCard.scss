@@ -156,6 +156,7 @@
     gap: 8px;
     min-height: 34px;
     pointer-events: auto;
+    flex-wrap: wrap;
   }
 
   &__color {
@@ -197,7 +198,7 @@
         border-color: rgba($purple6, 0.16);
         box-shadow: none;
         transform: none;
-      }      
+      }
     }
   }
 
@@ -242,28 +243,25 @@
     }
 
     .product-card {
+
       &__skeleton-block,
       &__skeleton-line,
       &__skeleton-circle {
         background:
-          linear-gradient(
-            110deg,
+          linear-gradient(110deg,
             var(--skeleton-base) 8%,
             var(--skeleton-shine) 18%,
-            var(--skeleton-base) 33%
-          );
+            var(--skeleton-base) 33%);
         background-size: 220% 100%;
         animation: productCardSkeletonShimmer 1.15s ease-in-out infinite;
       }
 
       &__skeleton-block {
         background:
-          linear-gradient(
-            110deg,
+          linear-gradient(110deg,
             #eadfe6 8%,
             var(--skeleton-shine) 18%,
-            #eadfe6 33%
-          );
+            #eadfe6 33%);
         background-size: 220% 100%;
       }
 
@@ -486,6 +484,7 @@
     }
 
     &--skeleton {
+
       &:hover,
       &:focus-within,
       &:active {
@@ -575,6 +574,7 @@
     }
 
     &--skeleton {
+
       &:hover,
       &:focus-within,
       &:active {

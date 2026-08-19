@@ -2,10 +2,63 @@
 
 .product-cart-item {
   display: grid;
-  grid-template-columns: 76px 1fr;
-  gap: 12px;
-  padding: 12px 0;
+  grid-template-columns: 22px 76px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 14px 0;
   border-bottom: 1px solid rgba($purple6, 0.1);
+
+  &__select {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    margin-top: 28px;
+    cursor: pointer;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    span {
+      position: relative;
+      width: 17px;
+      height: 17px;
+      border: 1px solid rgba($purple6, 0.34);
+      border-radius: 5px;
+      background: $natural1;
+      transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+    }
+
+    input:checked + span {
+      border-color: $purple6;
+      background: $purple6;
+      box-shadow: 0 6px 14px rgba($purple8, 0.16);
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 5px;
+        width: 5px;
+        height: 9px;
+        border: solid $natural1;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+      }
+    }
+
+    input:focus-visible + span {
+      box-shadow:
+        0 0 0 2px $natural1,
+        0 0 0 4px rgba($purple6, 0.28);
+    }
+  }
 
   &__image {
     display: grid;
@@ -46,12 +99,52 @@
       font-size: 0.78rem;
     }
 
-    strong,
-    span {
+    strong {
       display: block;
       color: $purple8;
       font-size: 0.8rem;
       font-weight: 800;
     }
+  }
+
+  &__top-row,
+  &__bottom-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &__remove {
+    flex: 0 0 auto;
+    min-width: 34px;
+    min-height: 32px;
+    width: 34px;
+    height: 32px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    color: $red8;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    justify-content: flex-end !important;
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      color: $red6;
+    }
+  }
+
+  &__line-total {
+    margin-top: 14px;
+    color: $purple9 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .product-cart-item {
+    grid-template-columns: 20px 66px 1fr;
+    gap: 8px;
   }
 }

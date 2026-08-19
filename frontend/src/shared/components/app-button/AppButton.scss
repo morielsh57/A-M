@@ -45,11 +45,12 @@
 
   &--danger {
     border: 1px solid $red7;
-    background: $natural1;
+    background: transparent;
     color: $red7;
 
     &:hover:not(:disabled),
     &:focus-visible:not(:disabled) {
+      border-color: $red7;
       background: $red7;
       color: $natural1;
       outline: none;

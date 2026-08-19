@@ -94,6 +94,37 @@
     overflow-y: auto;
   }
 
+  &__select-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 4px;
+    color: $purple8;
+    font-size: 0.78rem;
+    font-weight: 800;
+
+    button {
+      border: 0;
+      background: transparent;
+      color: $purple6;
+      font-size: 0.78rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: color 160ms ease;
+
+      &:hover,
+      &:focus-visible {
+        color: $purple8;
+        outline: none;
+      }
+    }
+  }
+
+  &__items {
+    display: grid;
+  }
+
   &__empty-state {
     display: grid;
     min-height: 300px;
@@ -117,6 +148,23 @@
       color: $natural7;
       font-size: 0.88rem;
       line-height: 1.55;
+    }
+
+    .app-button {
+      min-width: 0;
+      min-height: 36px;
+      margin: 18px auto 0;
+      padding: 8px 18px;
+      font-size: 0.82rem;
+    }
+
+    &--error {
+      border-color: rgba($red7, 0.28);
+      background: rgba($pink2, 0.45);
+
+      h3 {
+        color: $red7;
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 export interface ILoginRequest {
   email: string;
   password: string;
+  guest_cart_id?: string;
 }
 
 export interface ILoginResponse {
