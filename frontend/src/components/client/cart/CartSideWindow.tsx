@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { ArrowLeftOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus } from '../../../shared/api/models';
 import AppButton from '../../../shared/components/app-button/AppButton';
@@ -22,6 +24,7 @@ import './CartSideWindow.scss';
 
 const CartSideWindow: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const {
     getCartReq,
     isCartOpen,
@@ -184,7 +187,10 @@ const CartSideWindow: React.FC = () => {
           <AppButton
             className="cart-side-window__checkout-button"
             disabled={selectedItemsCount === 0}
-            onClick={() => undefined}
+            onClick={() => {
+              dispatch(closeCart());
+              navigate(APP_ROUTING_PATHS.APP_CHECKOUT_PAGE);
+            }}
           >
             Checkout
           </AppButton>
