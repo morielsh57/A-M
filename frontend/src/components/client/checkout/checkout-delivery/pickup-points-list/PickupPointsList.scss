@@ -1,0 +1,59 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.pickup-points-list {
+  margin-top: 22px;
+
+  h3 {
+    margin: 0 0 12px;
+    color: $purple9;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  >p {
+    margin: 0;
+    color: $natural7;
+  }
+
+  ul {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: grid;
+    width: 100%;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid rgba($purple6, 0.18);
+    border-radius: 10px;
+    color: $purple9;
+    background: $natural1;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:focus,
+    &:hover,
+    &--selected {
+      border-color: $purple6;
+      outline: 2px solid rgba($purple6, 0.12);
+    }
+
+    &--selected {
+      background: $pink1;
+    }
+
+    span,
+    small {
+      color: $natural7;
+    }
+
+    small {
+      white-space: pre-line;
+    }
+  }
+}

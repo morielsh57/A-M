@@ -6,16 +6,15 @@ import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus } from '../../../shared/api/models';
 import AppButton from '../../../shared/components/app-button/AppButton';
 import AppTitle from '../../../shared/components/app-title/AppTitle';
+import Breadcrumbs from '../../../shared/components/breadcrumbs/Breadcrumbs';
 import { formatPrice } from '../../../shared/components/product-card/productCard.utils';
 import { getCurrentUser } from '../../../shared/store/user/user.store';
 import { getProductDetail, getProductDetailCacheKey } from '../../product-page/product.store';
 import { getCart } from '../cart/cart.store';
 import { getCartItemImage } from '../cart/cart.utils';
-import CheckoutDelivery from './CheckoutDelivery';
+import CheckoutDelivery from './checkout-delivery/CheckoutDelivery';
 import CheckoutItem from './CheckoutItem';
 import './CheckoutPage.scss';
-
-const HOME_DELIVERY_FEE = 10;
 
 const CheckoutPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -24,7 +23,7 @@ const CheckoutPage: React.FC = () => {
   const { getCartReq, selectedCartProductIds } = useAppSelector((store) => store.cartStoreReducer);
   const { productDetailByProductReq } = useAppSelector((store) => store.productPageStoreReducer);
   const { user, getCurrentUserRequest } = useAppSelector((store) => store.userStoreReducer);
-  const [address, setAddress] = useState(user?.address || '');
+  const [selectedPickupPointId, setSelectedPickupPointId] = useState<number | null>(null);
 
   const selectedIds = useMemo(
     () => new Set(selectedCartProductIds.map(String)),
@@ -35,19 +34,15 @@ const CheckoutPage: React.FC = () => {
     [getCartReq.data, selectedIds],
   );
   const subtotal = checkoutItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
-  const total = subtotal + HOME_DELIVERY_FEE;
+  const total = subtotal;
   const isLoading = getCartReq.status === EAPIStatus.PENDING
     || getCurrentUserRequest.status === EAPIStatus.PENDING;
-  const canContinue = checkoutItems.length > 0 && Boolean(address.trim());
+  const canContinue = checkoutItems.length > 0 && selectedPickupPointId !== null;
 
   useEffect(() => {
     if (getCartReq.status === EAPIStatus.IDLE) dispatch(getCart());
     if (!user && getCurrentUserRequest.status === EAPIStatus.IDLE) dispatch(getCurrentUser());
   }, [dispatch, getCartReq.status, getCurrentUserRequest.status, user]);
-
-  useEffect(() => {
-    if (!address && user?.address) setAddress(user.address);
-  }, [address, user?.address]);
 
   useEffect(() => {
     checkoutItems.forEach((item) => {
@@ -67,7 +62,7 @@ const CheckoutPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="checkout-page checkout-page__state"><h2>Loading checkout…</h2><p>Preparing your selected items.</p></div>;
+    return <div className="checkout-page checkout-page__state"><h2>Loading checkout...</h2><p>Preparing your selected items.</p></div>;
   }
 
   if (getCartReq.error || getCurrentUserRequest.error) {
@@ -92,8 +87,9 @@ const CheckoutPage: React.FC = () => {
 
   return (
     <div className="checkout-page">
+      <Breadcrumbs pageName="Checkout" />
       <div className="checkout-page__title"><AppTitle title="Checkout" /></div>
-      <p className="checkout-page__intro">Review your selected items and delivery details before payment.</p>
+      <p className="checkout-page__intro">Review your selected items and pickup details before payment.</p>
 
       <div className="checkout-page__layout">
         <main className="checkout-page__main">
@@ -106,16 +102,20 @@ const CheckoutPage: React.FC = () => {
               })}
             </div>
           </section>
-          <CheckoutDelivery address={address} onAddressChange={setAddress} />
+          <CheckoutDelivery
+            userAddress={user?.address || ''}
+            selectedPickupPointId={selectedPickupPointId}
+            onPickupPointSelect={setSelectedPickupPointId}
+          />
         </main>
 
         <aside className="checkout-summary checkout-card">
           <h2>Order summary</h2>
           <div><span>Selected items</span><strong>{formatPrice(subtotal)}</strong></div>
-          <div><span>Home delivery</span><strong>{formatPrice(HOME_DELIVERY_FEE)}</strong></div>
+          <div><span>Pickup point</span><strong>Free</strong></div>
           <div className="checkout-summary__total"><span>Total</span><strong>{formatPrice(total)}</strong></div>
           <AppButton className="checkout-summary__button" disabled={!canContinue} onClick={handleContinue}>Continue to payment</AppButton>
-          <p>Only the products selected in your cart are shown here.</p>
+          <p>{selectedPickupPointId === null ? 'Choose a pickup point before continuing to payment.' : `Pickup point #${selectedPickupPointId} selected.`}</p>
         </aside>
       </div>
     </div>
