@@ -524,6 +524,39 @@ class AdminProductDetailSerializer(ProductDetailSerializer):
     pass
 
 
+class SupplierProductWriteSerializer(serializers.ModelSerializer):
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        source="category",
+        required=False,
+    )
+
+    class Meta:
+        model = Product
+        fields = (
+            "name",
+            "description",
+            "information",
+            "price",
+            "tags",
+            "fabric",
+            "category_id",
+            "is_active",
+        )
+
+    def validate(self, attrs):
+        protected = {"product_id", "catalog_number", "supplier", "supplier_id"}
+        attempted = protected.intersection(self.initial_data)
+        if attempted:
+            raise serializers.ValidationError(
+                {
+                    field: ["This field cannot be modified by a supplier."]
+                    for field in sorted(attempted)
+                }
+            )
+        return attrs
+
+
 class AdminProductVariantWriteSerializer(serializers.ModelSerializer):
     image_ids = serializers.PrimaryKeyRelatedField(
         queryset=ProductImage.objects.all(),
