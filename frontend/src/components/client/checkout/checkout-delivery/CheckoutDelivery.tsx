@@ -1,7 +1,12 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { APIProvider } from '@vis.gl/react-google-maps';
-import { API_ROUTES } from '../../../../app/routing';
-import { apiService } from '../../../../shared/api/axios';
+import { useAppDispatch, useAppSelector } from '../../../../app/store';
+import { EAPIStatus } from '../../../../shared/api/models';
+import {
+  clearSelectedPickupPoint,
+  getPickupPoints,
+  setSelectedPickupPointId,
+} from '../checkout.store';
 import DefaultLocationLoader from './default-location-loader/DefaultLocationLoader';
 import PickupMap from './pickup-map/PickupMap';
 import PickupPointsList from './pickup-points-list/PickupPointsList';
@@ -9,79 +14,56 @@ import PickupSearch from './pickup-search/PickupSearch';
 import type {
   CheckoutDeliveryProps,
   LatLngLiteral,
-  PickupPoint,
-  PickupPointRequestState,
 } from './CheckoutDelivery.types';
 import {
   DEFAULT_CENTER,
-  getErrorMessage,
-  getPickupPointsWithinRadius,
-  normalizePickupPoints,
   PICKUP_PAGE_SIZE,
   PICKUP_SEARCH_RADIUS_KM,
 } from './CheckoutDelivery.utils';
 import './CheckoutDelivery.scss';
 
-const CheckoutDelivery: React.FC<CheckoutDeliveryProps> = ({
-  userAddress,
-  selectedPickupPointId,
-  onPickupPointSelect,
-}) => {
+const CheckoutDelivery: React.FC<CheckoutDeliveryProps> = ({ userAddress }) => {
+  const dispatch = useAppDispatch();
   const googleMapsApiKey = import.meta.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
-  const shouldUseMockPickupPoints = import.meta.env.REACT_APP_USE_MOCK_PICKUP_POINTS || false;
-  const [pickupPoints, setPickupPoints] = useState<PickupPoint[]>([]);
   const [center, setCenter] = useState<LatLngLiteral>(DEFAULT_CENTER);
-  const [pickupRequest, setPickupRequest] = useState<PickupPointRequestState>({ isLoading: false });
   const [mapError, setMapError] = useState<string>();
   const [geocodingError, setGeocodingError] = useState<string>();
+  const hasManuallySelectedLocationRef = useRef(false);
+  const { selectedPickupPointId, getPickupPointsReq } = useAppSelector(
+    (store) => store.checkoutStoreReducer,
+  );
+  const pickupPoints = getPickupPointsReq.data || [];
+  const isPickupPointsLoading = getPickupPointsReq.status === EAPIStatus.PENDING;
 
-  const loadPickupPointsFromApi = async (location: LatLngLiteral) => {
-    try {
-      const response = await apiService.get<PickupPoint[]>(API_ROUTES.PICKUP_POINTS, {
-        params: {
-          lat: location.lat,
-          lng: location.lng,
-          radius_km: PICKUP_SEARCH_RADIUS_KM,
-          page_size: PICKUP_PAGE_SIZE,
-          is_active: true,
-        },
-      });
-
-      return normalizePickupPoints(response.data);
-    } catch (error) {
-      throw new Error(getErrorMessage(error, 'Pickup points could not be loaded.'));
-    }
-  };
-
-  const loadPickupPoints = useCallback(async (location: LatLngLiteral) => {
+  const loadPickupPoints = useCallback((location: LatLngLiteral) => {
     setCenter(location);
-    setPickupRequest({ isLoading: true, error: undefined });
+    dispatch(getPickupPoints({
+      lat: location.lat,
+      lng: location.lng,
+      radius_km: PICKUP_SEARCH_RADIUS_KM,
+      page_size: PICKUP_PAGE_SIZE,
+      is_active: true,
+    }));
+  }, [dispatch]);
 
-    try {
-      const nextPickupPoints = shouldUseMockPickupPoints
-        ? getPickupPointsWithinRadius(location)
-        : await loadPickupPointsFromApi(location);
+  const handleDefaultLocationSelect = useCallback((location: LatLngLiteral) => {
+    if (hasManuallySelectedLocationRef.current) return;
 
-      setPickupPoints(nextPickupPoints);
-      setPickupRequest({ isLoading: false });
-    } catch (error) {
-      setPickupPoints([]);
-      setPickupRequest({
-        isLoading: false,
-        error: getErrorMessage(error, 'Pickup points could not be loaded.'),
-      });
-    }
-  }, []);
+    setGeocodingError(undefined);
+    dispatch(clearSelectedPickupPoint());
+    loadPickupPoints(location);
+  }, [dispatch, loadPickupPoints]);
 
   const handleLocationSelect = useCallback((location: LatLngLiteral) => {
+    hasManuallySelectedLocationRef.current = true;
     setGeocodingError(undefined);
-    onPickupPointSelect(null);
+    dispatch(clearSelectedPickupPoint());
     loadPickupPoints(location);
-  }, [loadPickupPoints, onPickupPointSelect]);
+  }, [dispatch, loadPickupPoints]);
 
   const handlePickupPointSelect = useCallback((pickupPointId: number | null) => {
-    onPickupPointSelect(pickupPointId);
-  }, [onPickupPointSelect]);
+    dispatch(setSelectedPickupPointId(pickupPointId));
+  }, [dispatch]);
 
   return (
     <section className="checkout-delivery checkout-card">
@@ -103,7 +85,7 @@ const CheckoutDelivery: React.FC<CheckoutDeliveryProps> = ({
         >
           <DefaultLocationLoader
             userAddress={userAddress}
-            onLocationResolve={handleLocationSelect}
+            onLocationResolve={handleDefaultLocationSelect}
             onLocationError={setGeocodingError}
           />
           <PickupSearch
@@ -125,12 +107,12 @@ const CheckoutDelivery: React.FC<CheckoutDeliveryProps> = ({
         </APIProvider>
       )}
 
-      {pickupRequest.isLoading && <p className="checkout-delivery__status">Loading pickup points...</p>}
-      {pickupRequest.error && <p className="checkout-delivery__error">{pickupRequest.error}</p>}
+      {isPickupPointsLoading && <p className="checkout-delivery__status">Loading pickup points...</p>}
+      {getPickupPointsReq.error && <p className="checkout-delivery__error">{getPickupPointsReq.error.message || 'Pickup points could not be loaded.'}</p>}
 
       <PickupPointsList
         pickupPoints={pickupPoints}
-        isLoading={pickupRequest.isLoading}
+        isLoading={isPickupPointsLoading}
         userAddress={userAddress}
         selectedPickupPointId={selectedPickupPointId}
         onPickupPointSelect={handlePickupPointSelect}

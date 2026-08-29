@@ -50,6 +50,13 @@ export const getPickupPointPosition = (point: PickupPoint): LatLngLiteral => ({
   lng: Number(point.lng),
 });
 
+export const isValidLocation = (location: LatLngLiteral) => (
+  Number.isFinite(location.lat)
+  && Number.isFinite(location.lng)
+  && Math.abs(location.lat) <= 90
+  && Math.abs(location.lng) <= 180
+);
+
 export const getDistanceKm = (pointA: LatLngLiteral, pointB: LatLngLiteral) => {
   const earthRadiusKm = 6371;
   const toRadians = (degree: number) => degree * (Math.PI / 180);
@@ -68,25 +75,16 @@ export const getDistanceKm = (pointA: LatLngLiteral, pointB: LatLngLiteral) => {
 export const getPickupPointsWithinRadius = (
   center: LatLngLiteral,
   pickupPoints: PickupPoint[] = MOCK_PICKUP_POINTS,
-) => pickupPoints.filter((point) => (
-  point.is_active !== false
-  && getDistanceKm(center, getPickupPointPosition(point)) <= PICKUP_SEARCH_RADIUS_KM
-));
+) => {
+  if (!isValidLocation(center)) return [];
 
-export const normalizePickupPoints = (payload: unknown): PickupPoint[] => {
-  if (Array.isArray(payload)) return payload as PickupPoint[];
+  return pickupPoints.filter((point) => {
+    const pointLocation = getPickupPointPosition(point);
 
-  if (payload && typeof payload === 'object') {
-    const objectPayload = payload as {
-      data?: unknown;
-      results?: unknown;
-    };
-
-    if (Array.isArray(objectPayload.data)) return objectPayload.data as PickupPoint[];
-    if (Array.isArray(objectPayload.results)) return objectPayload.results as PickupPoint[];
-  }
-
-  return [];
+    return point.is_active !== false
+      && isValidLocation(pointLocation)
+      && getDistanceKm(center, pointLocation) <= PICKUP_SEARCH_RADIUS_KM;
+  });
 };
 
 export const getErrorMessage = (error: unknown, fallback: string) => {

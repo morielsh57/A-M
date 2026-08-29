@@ -13,13 +13,6 @@ export interface PickupPoint {
   is_active?: boolean;
 }
 
-export interface PickupPointRequestState {
-  isLoading: boolean;
-  error?: string;
-}
-
 export interface CheckoutDeliveryProps {
   userAddress: string;
-  selectedPickupPointId: number | null;
-  onPickupPointSelect: (pickupPointId: number | null) => void;
 }

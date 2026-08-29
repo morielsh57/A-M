@@ -1,0 +1,13 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.checkout-paypal-provider {
+  margin-top: 16px;
+
+  &__error {
+    margin: 14px 0 0;
+    color: $red7;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    text-align: center;
+  }
+}

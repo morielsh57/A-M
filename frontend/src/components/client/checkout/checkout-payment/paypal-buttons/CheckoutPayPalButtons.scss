@@ -1,0 +1,10 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.checkout-paypal-buttons {
+  display: grid;
+  min-height: 48px;
+
+  paypal-button {
+    width: 100%;
+  }
+}
