@@ -19,6 +19,7 @@ from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from config.api.views import HealthCheckView
+from pickup_points.views import CustomerPickUpPointListView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +30,11 @@ urlpatterns = [
     path("api/v1/admin/orders/", include("orders.urls")),
     path("api/v1/admin/pickup-points/", include("pickup_points.urls")),
     path("api/v1/supplier/", include("config.supplier_urls")),
+    path(
+        "api/v1/pickup-points/",
+        CustomerPickUpPointListView.as_view(),
+        name="customer-pickup-point-list",
+    ),
     path("api/v1/cart/", include("carts.urls")),
     path("api/v1/orders/", include("orders.customer_urls")),
     path("api/v1/checkout/paypal/", include("payments.urls")),
