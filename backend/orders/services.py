@@ -2,11 +2,12 @@ from decimal import Decimal
 
 from django.db import IntegrityError, transaction
 from django.db.models import F
+from django.utils import timezone
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE
 from carts.models import Cart, CartProduct
-from orders.models import Order, OrderItem
+from orders.models import Order, OrderItem, SupplierOrderFulfillment
 from products.models import ProductVariant
 
 
@@ -40,6 +41,20 @@ def _get_existing_payment_order(customer, payment_id):
             {"payment_id": ["This payment confirmation has already been used."]}
         )
     return order
+
+
+def create_supplier_fulfillments(order):
+    supplier_ids = (
+        order.items.exclude(product__supplier_id__isnull=True)
+        .values_list("product__supplier_id", flat=True)
+        .distinct()
+    )
+    for supplier_id in supplier_ids:
+        SupplierOrderFulfillment.objects.get_or_create(
+            order=order,
+            supplier_id=supplier_id,
+            defaults={"status": order.order_status},
+        )
 
 
 def create_order_from_cart(customer, payment_id):
@@ -120,6 +135,11 @@ def create_order_from_cart(customer, payment_id):
                     for cart_item, variant, unit_price, item_total in snapshots
                 ]
             )
+            create_supplier_fulfillments(order)
+            from notifications.models import Notification
+            from notifications.services import create_order_notifications
+
+            create_order_notifications(order, Notification.Type.NEW_ORDER)
             for cart_item, variant, _, _ in snapshots:
                 ProductVariant.objects.filter(pk=variant.pk).update(
                     quantity=F("quantity") - cart_item.quantity
@@ -170,7 +190,54 @@ def transition_order_status(order, next_status):
 
     order.order_status = next_status
     order.save(update_fields=("order_status", "date_updated"))
+    if next_status == Order.Status.COMPLETED:
+        SupplierOrderFulfillment.objects.filter(order=order).update(
+            status=SupplierOrderFulfillment.Status.COMPLETED,
+            date_updated=timezone.now(),
+        )
+    elif next_status == Order.Status.CANCELLED:
+        SupplierOrderFulfillment.objects.filter(order=order).update(
+            status=SupplierOrderFulfillment.Status.CANCELLED,
+            date_updated=timezone.now(),
+        )
+        from notifications.models import Notification
+        from notifications.services import create_order_notifications
+
+        create_order_notifications(order, Notification.Type.CANCELLED_ORDER)
     return order
+
+
+@transaction.atomic
+def transition_supplier_fulfillment(fulfillment, next_status):
+    fulfillment = SupplierOrderFulfillment.objects.select_for_update().select_related(
+        "order"
+    ).get(pk=fulfillment.pk)
+    if fulfillment.status == next_status:
+        return fulfillment
+    if fulfillment.status != SupplierOrderFulfillment.Status.PENDING or (
+        next_status != SupplierOrderFulfillment.Status.COMPLETED
+    ):
+        raise ValidationError(
+            {
+                "order_status": [
+                    f"Supplier order status cannot change from "
+                    f"{fulfillment.status} to {next_status}."
+                ]
+            }
+        )
+    if fulfillment.order.order_status != Order.Status.PENDING:
+        raise ValidationError(
+            {"order_status": ["The overall order is no longer pending."]}
+        )
+
+    fulfillment.status = next_status
+    fulfillment.save(update_fields=("status", "date_updated"))
+    has_incomplete = SupplierOrderFulfillment.objects.filter(
+        order=fulfillment.order,
+    ).exclude(status=SupplierOrderFulfillment.Status.COMPLETED).exists()
+    if not has_incomplete:
+        transition_order_status(fulfillment.order, Order.Status.COMPLETED)
+    return fulfillment
 
 
 def cancel_customer_order(customer, order_id):

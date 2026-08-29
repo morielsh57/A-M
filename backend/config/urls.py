@@ -29,6 +29,7 @@ urlpatterns = [
     path("api/v1/admin/products/", include("products.admin_urls")),
     path("api/v1/admin/orders/", include("orders.urls")),
     path("api/v1/admin/pickup-points/", include("pickup_points.urls")),
+    path("api/v1/supplier/", include("config.supplier_urls")),
     path(
         "api/v1/pickup-points/",
         CustomerPickUpPointListView.as_view(),
