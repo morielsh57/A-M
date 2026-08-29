@@ -1,12 +1,14 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   PayPalOneTimePaymentButton,
   type OnApproveDataOneTimePayments,
   type OnCancelDataOneTimePayments,
   type OnErrorData,
 } from '@paypal/react-paypal-js/sdk-v6';
+import { APP_ROUTING_PATHS } from '../../../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../../../app/store';
-import { getCart } from '../../../cart/cart.store';
+import { getCart, keepNextCartSyncUnselected } from '../../../cart/cart.store';
 import {
   capturePayPalOrder,
   createCheckoutOrder,
@@ -22,9 +24,11 @@ import './CheckoutPayPalButtons.scss';
 
 const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
   disabled,
+  selectedCartProductIds,
   selectedPickupPointId,
 }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const {
     createPayPalOrderReq,
     capturePayPalOrderReq,
@@ -39,14 +43,20 @@ const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
   ].some(isRequestPending);
 
   const createOrder = async () => {
+    const selectedIds = selectedCartProductIds.map(Number).filter(Number.isFinite);
+
     if (disabled || selectedPickupPointId === null) {
       throw new Error('Choose a pickup point before starting PayPal payment.');
+    }
+    if (selectedIds.length === 0) {
+      throw new Error('Select at least one cart item before starting PayPal payment.');
     }
 
     idempotencyKeyRef.current = idempotencyKeyRef.current || createCheckoutIdempotencyKey();
     dispatch(setPaymentStatusMessage('Creating PayPal payment...'));
     const payment = await dispatch(createPayPalOrder({
       idempotency_key: idempotencyKeyRef.current,
+      cart_product_ids: selectedIds,
     })).unwrap();
     paypalOrderIdRef.current = payment.paypal_order_id;
 
@@ -70,21 +80,27 @@ const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
     }
 
     dispatch(setPaymentStatusMessage('Creating your order...'));
-    await dispatch(createCheckoutOrder({
+    const order = await dispatch(createCheckoutOrder({
       payment_id: payment.payment_id,
       pickup_point_id: selectedPickupPointId,
     })).unwrap();
     idempotencyKeyRef.current = undefined;
     paypalOrderIdRef.current = undefined;
-    dispatch(setPaymentStatusMessage('Order created successfully.'));
+    dispatch(setPaymentStatusMessage(undefined));
+    dispatch(keepNextCartSyncUnselected());
     dispatch(getCart());
+    navigate(APP_ROUTING_PATHS.APP_ORDER_PAGE(order.order_id), { replace: true });
   };
 
   const handleCancel = (_data: OnCancelDataOneTimePayments) => {
+    idempotencyKeyRef.current = undefined;
+    paypalOrderIdRef.current = undefined;
     dispatch(setPaymentStatusMessage('PayPal payment was cancelled. You can try again when ready.'));
   };
 
   const handleError = (error: OnErrorData) => {
+    idempotencyKeyRef.current = undefined;
+    paypalOrderIdRef.current = undefined;
     dispatch(setPaymentStatusMessage(error.message || 'PayPal payment failed. Please try again.'));
   };
 

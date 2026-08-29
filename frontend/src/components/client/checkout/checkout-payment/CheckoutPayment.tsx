@@ -7,6 +7,7 @@ import './CheckoutPayment.scss';
 
 const CheckoutPayment: React.FC<CheckoutPaymentProps> = ({
   hasSelectedItems,
+  selectedCartProductIds,
   selectedItemCount,
   total,
 }) => {
@@ -26,6 +27,7 @@ const CheckoutPayment: React.FC<CheckoutPaymentProps> = ({
       {!checkoutSuccessOrder && (
         <CheckoutPayPalProvider
           isCheckoutReady={isCheckoutReady}
+          selectedCartProductIds={selectedCartProductIds}
           selectedPickupPointId={selectedPickupPointId}
         />
       )}

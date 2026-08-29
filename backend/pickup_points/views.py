@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.permissions import IsAdministrator, IsCustomer
+from accounts.permissions import IsAdministrator, IsCustomerOrAdministrator
 from config.api.pagination import StandardPageNumberPagination
 from config.api.serializers import ErrorResponseSerializer
 from pickup_points.models import PickUpPoint
@@ -36,7 +36,7 @@ def distance_km(origin_lat, origin_lng, destination_lat, destination_lng):
 
 
 class CustomerPickUpPointListView(APIView):
-    permission_classes = [IsAuthenticated, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomerOrAdministrator]
     serializer_class = CustomerPickUpPointSerializer
 
     @extend_schema(

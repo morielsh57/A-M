@@ -46,7 +46,12 @@ def _get_existing_payment_order(customer, payment_id):
 
 
 def _get_completed_payment(customer, payment_id):
-    payment = Payment.objects.select_for_update().filter(pk=payment_id).first()
+    payment = (
+        Payment.objects.select_for_update()
+        .prefetch_related("items")
+        .filter(pk=payment_id)
+        .first()
+    )
     if payment is None:
         raise ValidationError({"payment_id": ["Payment was not found."]})
     if payment.customer_id != customer.pk:
@@ -91,40 +96,35 @@ def create_order_from_cart(customer, payment_id, pickup_point_id):
             if existing is not None:
                 return existing, False
 
-            cart = (
-                Cart.objects.select_for_update()
-                .filter(pk=payment.cart_id, customer=customer, orders__isnull=True)
-                .order_by("-date_created")
-                .first()
-            )
+            cart = Cart.objects.select_for_update().filter(
+                pk=payment.cart_id,
+                customer=customer,
+            ).first()
             if cart is None:
                 raise ValidationError({"cart": ["The shopping cart is empty."]})
 
-            cart_items = list(
-                CartProduct.objects.select_for_update()
-                .select_related("variant__product")
-                .filter(cart=cart)
-                .order_by("cart_product_id")
+            payment_items = list(
+                payment.items.select_related("variant__product")
+                .order_by("payment_item_id")
             )
-            if not cart_items:
-                raise ValidationError({"cart": ["The shopping cart is empty."]})
+            if not payment_items:
+                raise ValidationError({"payment_id": ["Payment has no items."]})
 
             variants = {
                 variant.variant_id: variant
                 for variant in ProductVariant.objects.select_for_update()
                 .select_related("product")
-                .filter(variant_id__in=[item.variant_id for item in cart_items])
+                .filter(variant_id__in=[item.variant_id for item in payment_items])
             }
             order_total = Decimal("0")
-            snapshots = []
 
-            for cart_item in cart_items:
-                variant = variants.get(cart_item.variant_id)
+            for payment_item in payment_items:
+                variant = variants.get(payment_item.variant_id)
                 if variant is None or not variant.is_active or not variant.product.is_active:
                     raise ValidationError(
-                        {"cart": [f"Variant {cart_item.variant_id} is no longer available."]}
+                        {"cart": [f"Variant {payment_item.variant_id} is no longer available."]}
                     )
-                if cart_item.quantity > variant.quantity:
+                if payment_item.quantity > variant.quantity:
                     raise ValidationError(
                         {
                             "quantity": [
@@ -133,10 +133,7 @@ def create_order_from_cart(customer, payment_id, pickup_point_id):
                             ]
                         }
                     )
-                unit_price = variant.product.price
-                item_total = unit_price * cart_item.quantity
-                order_total += item_total
-                snapshots.append((cart_item, variant, unit_price, item_total))
+                order_total += payment_item.total_price
 
             if order_total != payment.amount:
                 raise ValidationError(
@@ -154,16 +151,16 @@ def create_order_from_cart(customer, payment_id, pickup_point_id):
                 [
                     OrderItem(
                         order=order,
-                        product=variant.product,
-                        variant=variant,
-                        product_name=variant.product.name,
-                        color=variant.color,
-                        size=variant.size,
-                        quantity=cart_item.quantity,
-                        unit_price=unit_price,
-                        total_price=item_total,
+                        product=payment_item.product,
+                        variant=payment_item.variant,
+                        product_name=payment_item.product_name,
+                        color=payment_item.color,
+                        size=payment_item.size,
+                        quantity=payment_item.quantity,
+                        unit_price=payment_item.unit_price,
+                        total_price=payment_item.total_price,
                     )
-                    for cart_item, variant, unit_price, item_total in snapshots
+                    for payment_item in payment_items
                 ]
             )
             create_supplier_fulfillments(order)
@@ -171,9 +168,36 @@ def create_order_from_cart(customer, payment_id, pickup_point_id):
             from notifications.services import create_order_notifications
 
             create_order_notifications(order, Notification.Type.NEW_ORDER)
-            for cart_item, variant, _, _ in snapshots:
-                ProductVariant.objects.filter(pk=variant.pk).update(
-                    quantity=F("quantity") - cart_item.quantity
+            purchased_variant_ids = [item.variant_id for item in payment_items]
+            for payment_item in payment_items:
+                ProductVariant.objects.filter(pk=payment_item.variant_id).update(
+                    quantity=F("quantity") - payment_item.quantity
+                )
+            remaining_cart_items = list(
+                CartProduct.objects.select_for_update()
+                .filter(cart=cart)
+                .exclude(variant_id__in=purchased_variant_ids)
+                .order_by("cart_product_id")
+            )
+            if remaining_cart_items:
+                remaining_cart = Cart.objects.create(
+                    customer=customer,
+                    total_price=sum(
+                        (item.total_price for item in remaining_cart_items),
+                        Decimal("0"),
+                    ),
+                )
+                CartProduct.objects.bulk_create(
+                    [
+                        CartProduct(
+                            cart=remaining_cart,
+                            variant=item.variant,
+                            quantity=item.quantity,
+                            unit_price=item.unit_price,
+                            total_price=item.total_price,
+                        )
+                        for item in remaining_cart_items
+                    ]
                 )
             CartProduct.objects.filter(cart=cart).delete()
             cart.total_price = Decimal("0")

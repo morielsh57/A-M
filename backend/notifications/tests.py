@@ -50,11 +50,11 @@ class SupplierApiTests(TestCase):
             quantity=5,
         )
         self.pickup_point = PickUpPoint.objects.create(
-            name="Supplier test pickup",
+            name="Supplier Pickup",
             description="Supplier test pickup description",
-            address="1 Test Street",
-            lat=Decimal("32.0853000"),
-            lng=Decimal("34.7818000"),
+            address="Supplier street",
+            lat=Decimal("32.0000000"),
+            lng=Decimal("34.0000000"),
             is_active=True,
         )
 
@@ -82,14 +82,14 @@ class SupplierApiTests(TestCase):
 
     def checkout_multi_supplier_order(self):
         cart = Cart.objects.create(customer=self.customer, total_price=Decimal("40.00"))
-        cart_item = CartProduct.objects.create(
+        first_cart_product = CartProduct.objects.create(
             cart=cart,
             variant=self.variant,
             quantity=1,
             unit_price=Decimal("20.00"),
             total_price=Decimal("20.00"),
         )
-        other_cart_item = CartProduct.objects.create(
+        second_cart_product = CartProduct.objects.create(
             cart=cart,
             variant=self.other_variant,
             quantity=1,
@@ -100,23 +100,28 @@ class SupplierApiTests(TestCase):
             customer=self.customer,
             cart=cart,
             provider_order_id=f"SUPPLIER-ORDER-{uuid4()}",
+            provider_capture_id=f"SUPPLIER-CAPTURE-{uuid4()}",
             idempotency_key=uuid4(),
             status=Payment.Status.COMPLETED,
-            amount=Decimal("40.00"),
+            amount=cart.total_price,
             currency="USD",
         )
-        for item in (cart_item, other_cart_item):
-            PaymentItem.objects.create(
-                payment=payment,
-                product=item.variant.product,
-                variant=item.variant,
-                product_name=item.variant.product.name,
-                color=item.variant.color,
-                size=item.variant.size,
-                quantity=item.quantity,
-                unit_price=item.unit_price,
-                total_price=item.total_price,
-            )
+        PaymentItem.objects.bulk_create(
+            [
+                PaymentItem(
+                    payment=payment,
+                    product=cart_product.variant.product,
+                    variant=cart_product.variant,
+                    product_name=cart_product.variant.product.name,
+                    color=cart_product.variant.color,
+                    size=cart_product.variant.size,
+                    quantity=cart_product.quantity,
+                    unit_price=cart_product.unit_price,
+                    total_price=cart_product.total_price,
+                )
+                for cart_product in (first_cart_product, second_cart_product)
+            ]
+        )
         self.authorize(self.customer)
         response = self.client.post(
             reverse("customer-order-list"),

@@ -75,15 +75,23 @@ def get_owned_payment(user, provider_order_id):
     return payment
 
 
-def _cart_snapshot(user):
+def _cart_snapshot(user, cart_product_ids):
     cart = get_customer_cart(user)
     if cart is None:
         raise ValidationError({"cart": ["Cart was not found."]})
+
+    selected_ids = set(cart_product_ids)
     cart_items = list(
-        cart.cart_products.select_related("variant__product").order_by("cart_product_id")
+        cart.cart_products.select_related("variant__product")
+        .filter(cart_product_id__in=selected_ids)
+        .order_by("cart_product_id")
     )
+    if len(cart_items) != len(selected_ids):
+        raise ValidationError(
+            {"cart_product_ids": ["One or more selected cart items were not found."]}
+        )
     if not cart_items:
-        raise ValidationError({"cart": ["The cart is empty."]})
+        raise ValidationError({"cart_product_ids": ["Select at least one cart item."]})
 
     snapshot = []
     total = Decimal("0.00")
@@ -100,7 +108,7 @@ def _cart_snapshot(user):
     return cart, snapshot, total
 
 
-def create_paypal_order(user, idempotency_key):
+def create_paypal_order(user, idempotency_key, cart_product_ids):
     require_customer(user)
     existing = Payment.objects.filter(idempotency_key=idempotency_key).first()
     if existing:
@@ -108,7 +116,7 @@ def create_paypal_order(user, idempotency_key):
             raise PaymentConflict("That idempotency key is already in use.")
         return existing, False
 
-    cart, snapshot, total = _cart_snapshot(user)
+    cart, snapshot, total = _cart_snapshot(user, cart_product_ids)
     provider_response = _provider_call(
         paypal_client.create_order,
         amount=f"{total:.2f}",

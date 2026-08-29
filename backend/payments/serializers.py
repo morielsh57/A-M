@@ -3,6 +3,10 @@ from rest_framework import serializers
 
 class CreatePayPalOrderSerializer(serializers.Serializer):
     idempotency_key = serializers.UUIDField()
+    cart_product_ids = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=False,
+    )
 
 
 class PaymentItemSerializer(serializers.Serializer):

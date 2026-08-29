@@ -7,7 +7,6 @@ import { createAPIReducerCases, type ApiDataStateType } from '../../../shared/st
 import type { PickupPoint } from './checkout-delivery/CheckoutDelivery.types';
 import {
   getPickupPointsWithinRadius,
-  PICKUP_PAGE_SIZE,
   PICKUP_SEARCH_RADIUS_KM,
 } from './checkout-delivery/CheckoutDelivery.utils';
 
@@ -15,12 +14,11 @@ export interface IGetPickupPointsRequest {
   lat: number;
   lng: number;
   radius_km?: number;
-  page_size?: number;
-  is_active?: boolean;
 }
 
 export interface ICreatePayPalOrderRequest {
   idempotency_key: string;
+  cart_product_ids: number[];
 }
 
 export interface ICapturePayPalOrderRequest {
@@ -33,6 +31,7 @@ export interface ICreateCheckoutOrderRequest {
 }
 
 export interface ICheckoutPaymentItem {
+  order_item_id?: number;
   variant_id: number;
   product_id: number;
   product_name: string;
@@ -54,12 +53,20 @@ export interface IPayPalPayment {
   items: ICheckoutPaymentItem[];
 }
 
+export enum EOrderStatus {
+  PENDING = "Pending",
+  COMPLETED = "Completed",
+  CANCELLED = "Cancelled",
+}
+
 export interface ICheckoutOrder {
   order_id: number;
   payment_id: number;
   pickup_point_id: number;
+  pickup_point_name?: string | null;
+  pickup_point_address?: string | null;
   total_price: string | number;
-  order_status: string;
+  order_status: EOrderStatus;
   date_created: string;
   date_updated: string;
   items: ICheckoutPaymentItem[];
@@ -71,6 +78,7 @@ export interface CheckoutStoreState extends ApiDataStateType {
   createPayPalOrderReq: IAPIRequestState<IPayPalPayment>;
   capturePayPalOrderReq: IAPIRequestState<IPayPalPayment>;
   createCheckoutOrderReq: IAPIRequestState<ICheckoutOrder>;
+  getCheckoutOrderReq: IAPIRequestState<ICheckoutOrder>;
   checkoutSuccessOrder?: ICheckoutOrder;
   paymentStatusMessage?: string;
 }
@@ -81,6 +89,7 @@ const initialState: CheckoutStoreState = {
   createPayPalOrderReq: APIRequestState.create<IPayPalPayment>(),
   capturePayPalOrderReq: APIRequestState.create<IPayPalPayment>(),
   createCheckoutOrderReq: APIRequestState.create<ICheckoutOrder>(),
+  getCheckoutOrderReq: APIRequestState.create<ICheckoutOrder>(),
 };
 
 const shouldUseMockPickupPoints = () => (
@@ -104,8 +113,6 @@ export const getPickupPoints = createApiThunk<PickupPoint[], IGetPickupPointsReq
         lat: params.lat,
         lng: params.lng,
         radius_km: params.radius_km ?? PICKUP_SEARCH_RADIUS_KM,
-        page_size: params.page_size ?? PICKUP_PAGE_SIZE,
-        is_active: params.is_active ?? true,
       },
     });
   },
@@ -134,6 +141,11 @@ export const createCheckoutOrder = createApiThunk<ICheckoutOrder, ICreateCheckou
   ),
 );
 
+export const getCheckoutOrder = createApiThunk<ICheckoutOrder, number | string>(
+  'checkout/getCheckoutOrder',
+  (orderId) => apiService.get<ICheckoutOrder>(API_ROUTES.ORDER_DETAIL(orderId)),
+);
+
 export const checkoutStoreReducer = createReducer(initialState, (builder) => {
   const apiBuilder = builder as unknown as ActionReducerMapBuilder<ApiDataStateType>;
 
@@ -145,6 +157,11 @@ export const checkoutStoreReducer = createReducer(initialState, (builder) => {
   createAPIReducerCases(createPayPalOrder, 'createPayPalOrderReq', apiBuilder);
   createAPIReducerCases(capturePayPalOrder, 'capturePayPalOrderReq', apiBuilder);
   createAPIReducerCases(createCheckoutOrder, 'createCheckoutOrderReq', apiBuilder, {
+    onFulfilled: (state, order) => {
+      state.checkoutSuccessOrder = order;
+    },
+  });
+  createAPIReducerCases(getCheckoutOrder, 'getCheckoutOrderReq', apiBuilder, {
     onFulfilled: (state, order) => {
       state.checkoutSuccessOrder = order;
     },
@@ -164,6 +181,7 @@ export const checkoutStoreReducer = createReducer(initialState, (builder) => {
       state.createPayPalOrderReq = APIRequestState.create<IPayPalPayment>();
       state.capturePayPalOrderReq = APIRequestState.create<IPayPalPayment>();
       state.createCheckoutOrderReq = APIRequestState.create<ICheckoutOrder>();
+      state.getCheckoutOrderReq = APIRequestState.create<ICheckoutOrder>();
       state.checkoutSuccessOrder = undefined;
       state.paymentStatusMessage = undefined;
     });

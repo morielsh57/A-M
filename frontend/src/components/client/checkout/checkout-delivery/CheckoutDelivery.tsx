@@ -17,7 +17,6 @@ import type {
 } from './CheckoutDelivery.types';
 import {
   DEFAULT_CENTER,
-  PICKUP_PAGE_SIZE,
   PICKUP_SEARCH_RADIUS_KM,
 } from './CheckoutDelivery.utils';
 import './CheckoutDelivery.scss';
@@ -41,8 +40,6 @@ const CheckoutDelivery: React.FC<CheckoutDeliveryProps> = ({ userAddress }) => {
       lat: location.lat,
       lng: location.lng,
       radius_km: PICKUP_SEARCH_RADIUS_KM,
-      page_size: PICKUP_PAGE_SIZE,
-      is_active: true,
     }));
   }, [dispatch]);
 

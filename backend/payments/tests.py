@@ -42,7 +42,7 @@ class PayPalCheckoutApiTests(TestCase):
         self.cart = Cart.objects.create(
             customer=self.customer, total_price=Decimal("19.50")
         )
-        CartProduct.objects.create(
+        self.cart_product = CartProduct.objects.create(
             cart=self.cart,
             variant=self.variant,
             quantity=2,
@@ -91,7 +91,10 @@ class PayPalCheckoutApiTests(TestCase):
         ):
             return self.client.post(
                 reverse("paypal-order-create"),
-                {"idempotency_key": str(key or uuid4())},
+                {
+                    "idempotency_key": str(key or uuid4()),
+                    "cart_product_ids": [self.cart_product.cart_product_id],
+                },
                 format="json",
             )
 
@@ -101,7 +104,10 @@ class PayPalCheckoutApiTests(TestCase):
 
         response = self.client.post(
             reverse("paypal-order-create"),
-            {"idempotency_key": str(uuid4())},
+            {
+                "idempotency_key": str(uuid4()),
+                "cart_product_ids": [self.cart_product.cart_product_id],
+            },
             format="json",
         )
 
@@ -116,15 +122,62 @@ class PayPalCheckoutApiTests(TestCase):
         self.assertEqual(payment.items.get().quantity, 2)
 
     @patch("payments.services.paypal_client.create_order")
+    def test_create_charges_selected_cart_items_only(self, create_order):
+        create_order.return_value = self.create_response()
+        second_product = Product.objects.create(
+            catalog_number="PAYPAL-2",
+            name="Checkout Pants",
+            price=Decimal("7.00"),
+            category=self.variant.product.category,
+        )
+        second_variant = ProductVariant.objects.create(
+            product=second_product, color="Blue", size="S", quantity=5
+        )
+        selected_cart_product = CartProduct.objects.create(
+            cart=self.cart,
+            variant=second_variant,
+            quantity=3,
+            unit_price=Decimal("7.00"),
+            total_price=Decimal("21.00"),
+        )
+
+        response = self.client.post(
+            reverse("paypal-order-create"),
+            {
+                "idempotency_key": str(uuid4()),
+                "cart_product_ids": [selected_cart_product.cart_product_id],
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()["data"]["amount"], "21.00")
+        create_order.assert_called_once()
+        self.assertEqual(create_order.call_args.kwargs["amount"], "21.00")
+        payment_item = Payment.objects.get().items.get()
+        self.assertEqual(payment_item.variant_id, second_variant.variant_id)
+        self.assertEqual(payment_item.quantity, 3)
+
+    @patch("payments.services.paypal_client.create_order")
     def test_create_is_idempotent(self, create_order):
         create_order.return_value = self.create_response()
         key = uuid4()
 
         first = self.client.post(
-            reverse("paypal-order-create"), {"idempotency_key": str(key)}, format="json"
+            reverse("paypal-order-create"),
+            {
+                "idempotency_key": str(key),
+                "cart_product_ids": [self.cart_product.cart_product_id],
+            },
+            format="json",
         )
         second = self.client.post(
-            reverse("paypal-order-create"), {"idempotency_key": str(key)}, format="json"
+            reverse("paypal-order-create"),
+            {
+                "idempotency_key": str(key),
+                "cart_product_ids": [self.cart_product.cart_product_id],
+            },
+            format="json",
         )
 
         self.assertEqual(first.status_code, 201)
@@ -136,12 +189,15 @@ class PayPalCheckoutApiTests(TestCase):
         self.cart.cart_products.all().delete()
         empty = self.client.post(
             reverse("paypal-order-create"),
-            {"idempotency_key": str(uuid4())},
+            {
+                "idempotency_key": str(uuid4()),
+                "cart_product_ids": [self.cart_product.cart_product_id],
+            },
             format="json",
         )
         self.assertEqual(empty.status_code, 400)
 
-        CartProduct.objects.create(
+        stock_cart_product = CartProduct.objects.create(
             cart=self.cart,
             variant=self.variant,
             quantity=6,
@@ -150,7 +206,10 @@ class PayPalCheckoutApiTests(TestCase):
         )
         stock = self.client.post(
             reverse("paypal-order-create"),
-            {"idempotency_key": str(uuid4())},
+            {
+                "idempotency_key": str(uuid4()),
+                "cart_product_ids": [stock_cart_product.cart_product_id],
+            },
             format="json",
         )
         self.assertEqual(stock.status_code, 400)

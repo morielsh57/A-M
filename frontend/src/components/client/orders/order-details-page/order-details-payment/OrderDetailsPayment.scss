@@ -1,0 +1,55 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.order-details-payment {
+  position: sticky;
+  top: 24px;
+  padding: 28px;
+  border: 1px solid rgba($purple6, 0.16);
+  border-radius: 8px;
+  background: $natural1;
+  box-shadow: 0 14px 35px rgba($purple9, 0.06);
+
+  h2 {
+    margin: 0 0 18px;
+    color: $purple9;
+    font-size: 1.18rem;
+    font-weight: 800;
+  }
+
+  >div {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    margin: 14px 0;
+    color: $natural7;
+  }
+
+  strong {
+    color: $purple9;
+    text-align: right;
+  }
+
+  &__total {
+    margin-top: 22px !important;
+    padding-top: 20px;
+    border-top: 1px solid rgba($purple6, 0.18);
+    font-size: 1.12rem;
+  }
+
+  &__continue {
+    width: 100%;
+    margin-top: 18px;
+  }
+}
+
+@media (max-width: 860px) {
+  .order-details-payment {
+    position: static;
+  }
+}
+
+@media (max-width: 520px) {
+  .order-details-payment {
+    padding: 20px 16px;
+  }
+}

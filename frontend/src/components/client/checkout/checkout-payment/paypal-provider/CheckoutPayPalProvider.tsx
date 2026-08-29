@@ -7,6 +7,7 @@ import './CheckoutPayPalProvider.scss';
 
 const CheckoutPayPalProvider: React.FC<CheckoutPayPalProviderProps> = ({
   isCheckoutReady,
+  selectedCartProductIds,
   selectedPickupPointId,
 }) => {
   const clientId = import.meta.env.REACT_APP_PAYPAL_CLIENT_ID || '';
@@ -29,6 +30,7 @@ const CheckoutPayPalProvider: React.FC<CheckoutPayPalProviderProps> = ({
       >
         <CheckoutPayPalButtons
           disabled={!isCheckoutReady}
+          selectedCartProductIds={selectedCartProductIds}
           selectedPickupPointId={selectedPickupPointId}
         />
       </PayPalProvider>

@@ -13,6 +13,7 @@ import { getCart } from '../cart/cart.store';
 import { getCartItemImage } from '../cart/cart.utils';
 import CheckoutDelivery from './checkout-delivery/CheckoutDelivery';
 import CheckoutPayment from './checkout-payment/CheckoutPayment';
+import { clearCheckoutPaymentState } from './checkout.store';
 import CheckoutItem from './CheckoutItem';
 import './CheckoutPage.scss';
 
@@ -35,6 +36,11 @@ const CheckoutPage: React.FC = () => {
   const total = subtotal;
   const isLoading = getCartReq.status === EAPIStatus.PENDING
     || getCurrentUserRequest.status === EAPIStatus.PENDING;
+
+  useEffect(() => {
+    dispatch(clearCheckoutPaymentState());
+  }, [dispatch]);
+
   useEffect(() => {
     if (getCartReq.status === EAPIStatus.IDLE) dispatch(getCart());
     if (!user && getCurrentUserRequest.status === EAPIStatus.IDLE) dispatch(getCurrentUser());
@@ -101,6 +107,7 @@ const CheckoutPage: React.FC = () => {
           <div className="checkout-summary__total"><span>Total</span><strong>{formatPrice(total)}</strong></div>
           <CheckoutPayment
             hasSelectedItems={checkoutItems.length > 0}
+            selectedCartProductIds={checkoutItems.map((item) => item.cart_product_id)}
             selectedItemCount={checkoutItems.length}
             total={formatPrice(total)}
           />

@@ -20,6 +20,7 @@ import { Auth } from '../app/auth/Auth';
 import AppAdmin from './AppAdmin';
 import ScrollRestoration from '../shared/components/scroll-restoration/ScrollRestoration';
 import CheckoutPage from './client/checkout/CheckoutPage';
+import OrderDetailsPage from './client/orders/order-details-page/OrderDetailsPage';
 import { ProtectedCheckoutRoute } from '../app/guards/client/ProtectedCheckoutRoute';
 
 const AppAMFashion: React.FC = (props) => {
@@ -82,6 +83,11 @@ const AppAMFashion: React.FC = (props) => {
                     <Route path={APP_ROUTING_PATHS.CHECKOUT} element={(
                       <ProtectedCheckoutRoute>
                         <CheckoutPage />
+                      </ProtectedCheckoutRoute>
+                    )} />
+                    <Route path={`${APP_ROUTING_PATHS.ORDER}/:orderId`} element={(
+                      <ProtectedCheckoutRoute>
+                        <OrderDetailsPage />
                       </ProtectedCheckoutRoute>
                     )} />
                   </Route>

@@ -28,7 +28,9 @@ class PayPalOrderCreateView(APIView):
         serializer = CreatePayPalOrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payment, created = create_paypal_order(
-            request.user, serializer.validated_data["idempotency_key"]
+            request.user,
+            serializer.validated_data["idempotency_key"],
+            serializer.validated_data["cart_product_ids"],
         )
         return Response(
             serialize_payment(payment),
