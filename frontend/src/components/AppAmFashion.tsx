@@ -20,7 +20,8 @@ import { Auth } from '../app/auth/Auth';
 import AppAdmin from './AppAdmin';
 import ScrollRestoration from '../shared/components/scroll-restoration/ScrollRestoration';
 import CheckoutPage from './client/checkout/CheckoutPage';
-import { ProtectedCheckoutRoute } from '../app/guards/client/ProtectedCheckoutRoute';
+import { ProtectedClientRoute } from '../app/guards/client/ProtectedClientRoute';
+import ProfilePage from './client/profile/ProfilePage';
 
 const AppAMFashion: React.FC = (props) => {
   const theme = createTheme(
@@ -80,9 +81,14 @@ const AppAMFashion: React.FC = (props) => {
                     <Route path={`${APP_ROUTING_PATHS.CATEGORY}/:categoryType/:categoryId`} element={<CategoryPage />} />
                     <Route path={APP_ROUTING_PATHS.SEARCH} element={<SearchPage />} />
                     <Route path={APP_ROUTING_PATHS.CHECKOUT} element={(
-                      <ProtectedCheckoutRoute>
+                      <ProtectedClientRoute>
                         <CheckoutPage />
-                      </ProtectedCheckoutRoute>
+                      </ProtectedClientRoute>
+                    )} />
+                    <Route path={APP_ROUTING_PATHS.PROFILE} element={(
+                      <ProtectedClientRoute>
+                        <ProfilePage />
+                      </ProtectedClientRoute>
                     )} />
                   </Route>
                   <Route path={`${APP_ROUTING_PATHS.ADMIN.ROOT}/*`} element={<AppAdmin />} />

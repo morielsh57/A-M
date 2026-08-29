@@ -5,6 +5,7 @@ const PRODUCT_SEGMENT = 'product';
 const CATEGORY_SEGMENT = 'category';
 const SEARCH_SEGMENT = 'search';
 const CHECKOUT_SEGMENT = 'checkout';
+const PROFILE_SEGMENT = 'profile';
 const ADMIN_ROOT_PATH = '/admin';
 
 const LOGIN_SEGMENT = 'login';
@@ -35,6 +36,7 @@ export const APP_ROUTING_PATHS = {
   CATEGORY: CATEGORY_SEGMENT,
   SEARCH: SEARCH_SEGMENT,
   CHECKOUT: CHECKOUT_SEGMENT,
+  PROFILE: PROFILE_SEGMENT,
   LOGIN: LOGIN_SEGMENT,
   SIGNUP: SIGNUP_SEGMENT,
   ADMIN: {
@@ -72,6 +74,7 @@ export const APP_ROUTING_PATHS = {
     page: string | number = 1,
   ) => `${APP_PATH}/${SEARCH_SEGMENT}?q=${encodeURIComponent(searchQuery)}&page=${page}`,
   APP_CHECKOUT_PAGE: `${APP_PATH}/${CHECKOUT_SEGMENT}`,
+  APP_PROFILE_PAGE: `${APP_PATH}/${PROFILE_SEGMENT}`,
   ADMIN_LOGIN_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_AUTH_SEGMENT}/${ADMIN_LOGIN_SEGMENT}`,
   ADMIN_HOME_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_HOME_SEGMENT}`,
   ADMIN_PRODUCTS_PAGE: (categoryId: string | number) => `${ADMIN_ROOT_PATH}/${ADMIN_PRODUCTS_SEGMENT}/${categoryId}`,

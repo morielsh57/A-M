@@ -26,7 +26,7 @@ const ClientUserMenu: React.FC = () => {
 
   const handleUserMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key === 'profile') {
-      navigate(APP_ROUTING_PATHS.APP_HOME_PAGE);
+      navigate(APP_ROUTING_PATHS.APP_PROFILE_PAGE);
       return;
     }
 

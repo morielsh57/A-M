@@ -1,0 +1,8 @@
+@import '../profile.variables.scss';
+@import '../profile-form.mixin.scss';
+
+.profile-details-form {
+  @include profile-form-layout;
+}
+
+@include profile-form-responsive('.profile-details-form');

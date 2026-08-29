@@ -1,0 +1,133 @@
+@mixin profile-form-layout {
+  padding: 22px;
+  border: 1px solid $profileBorderColor;
+  border-radius: 8px;
+  background: $profilePanelBgColor;
+  box-shadow: 0 16px 36px $profileShadowColor;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 18px;
+
+    h2 {
+      margin: 4px 0 0;
+      color: $profileTitleColor;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    > p {
+      margin: 0;
+      color: $profileMutedTextColor;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      text-align: right;
+    }
+  }
+
+  &__eyebrow {
+    margin: 0;
+    color: $profileAccentColor;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    span {
+      color: $profileTitleColor;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    small {
+      color: $profileErrorColor;
+      font-weight: 600;
+    }
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__input {
+    min-height: 46px;
+    padding: 10px 12px;
+    border: 1px solid $profileInputBorderColor;
+    border-radius: 8px;
+    background: $natural1;
+    color: $profileTitleColor;
+    box-shadow: none;
+
+    &:focus {
+      border-color: $profileAccentColor;
+      box-shadow: 0 0 0 3px rgba($profileAccentColor, 0.12);
+      outline: none;
+    }
+
+    &--readonly {
+      color: $profileMutedTextColor;
+      background: $profileBgColor;
+    }
+
+    &--textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+  }
+
+  &__error {
+    margin-top: 16px;
+    padding: 10px 12px;
+    border: 1px solid rgba($profileErrorColor, 0.22);
+    border-radius: 8px;
+    background: $profileErrorBgColor;
+    color: $profileErrorColor;
+    font-weight: 600;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 18px;
+  }
+}
+
+@mixin profile-form-responsive($selector) {
+  @media (max-width: 900px) {
+    #{$selector} {
+      &__header {
+        display: block;
+
+        > p {
+          max-width: none;
+          margin-top: 8px;
+          text-align: left;
+        }
+      }
+
+      &__grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+
+  @media (max-width: 520px) {
+    #{$selector} {
+      padding: 20px 16px;
+    }
+  }
+}

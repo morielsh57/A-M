@@ -1,0 +1,84 @@
+@import '../profile.variables.scss';
+
+.profile-card {
+  padding: 24px;
+  border: 1px solid $profileBorderColor;
+  border-radius: 8px;
+  background: $profilePanelBgColor;
+  box-shadow: 0 16px 36px $profileShadowColor;
+  display: flex;
+  flex-direction: column;
+
+  &__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: $profileAccentSoftColor;
+    color: $profileAccentColor;
+    font-size: 2.4rem;
+  }
+
+  &__identity {
+    padding: 18px 0 20px;
+    border-bottom: 1px solid $profileBorderColor;
+    text-align: center;
+
+    h2 {
+      margin: 0;
+      color: $profileTitleColor;
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+  }
+
+  &__role {
+    margin: 6px 0 0;
+    color: $profileAccentColor;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 20px;
+  }
+
+  &__detail {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 10px;
+    color: $profileMutedTextColor;
+
+    span {
+      display: block;
+      margin-bottom: 3px;
+      color: $profileMutedTextColor;
+      font-size: 0.82rem;
+    }
+
+    .anticon {
+      margin-top: 2px;
+    }
+
+    strong {
+      display: block;
+      color: $profileTitleColor;
+      font-size: 0.95rem;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .profile-card {
+    padding: 20px 16px;
+  }
+}
