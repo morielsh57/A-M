@@ -33,6 +33,7 @@ urlpatterns = [
     path("api/v1/checkout/paypal/", include("payments.urls")),
     path("api/v1/categories/", include("catalogue.urls")),
     path("api/v1/products/", include("products.urls")),
+    path("api/v1/reviews/", include("reviews.urls")),
     path("api/v1/users/", include("accounts.profile_urls")),
     path("api/v1/health", HealthCheckView.as_view(), name="api-health"),
     path("api/schema", SpectacularAPIView.as_view(), name="api-schema"),
