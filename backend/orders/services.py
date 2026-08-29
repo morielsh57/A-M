@@ -7,6 +7,8 @@ from rest_framework.exceptions import NotFound, PermissionDenied, ValidationErro
 
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE
 from carts.models import Cart, CartProduct
+from payments.models import Payment
+from pickup_points.models import PickUpPoint
 from orders.models import Order, OrderItem, SupplierOrderFulfillment
 from products.models import ProductVariant
 
@@ -43,6 +45,24 @@ def _get_existing_payment_order(customer, payment_id):
     return order
 
 
+def _get_completed_payment(customer, payment_id):
+    payment = Payment.objects.select_for_update().filter(pk=payment_id).first()
+    if payment is None:
+        raise ValidationError({"payment_id": ["Payment was not found."]})
+    if payment.customer_id != customer.pk:
+        raise ValidationError({"payment_id": ["Payment does not belong to this customer."]})
+    if payment.status != Payment.Status.COMPLETED:
+        raise ValidationError({"payment_id": ["Payment must be completed before creating an order."]})
+    return payment
+
+
+def _get_active_pickup_point(pickup_point_id):
+    pickup_point = PickUpPoint.objects.filter(pk=pickup_point_id, is_active=True).first()
+    if pickup_point is None:
+        raise ValidationError({"pickup_point_id": ["Pickup point was not found or is inactive."]})
+    return pickup_point
+
+
 def create_supplier_fulfillments(order):
     supplier_ids = (
         order.items.exclude(product__supplier_id__isnull=True)
@@ -57,18 +77,23 @@ def create_supplier_fulfillments(order):
         )
 
 
-def create_order_from_cart(customer, payment_id):
+def create_order_from_cart(customer, payment_id, pickup_point_id):
     require_customer(customer)
-    payment_id = str(payment_id).strip()
     existing = _get_existing_payment_order(customer, payment_id)
     if existing is not None:
         return existing, False
 
     try:
         with transaction.atomic():
+            payment = _get_completed_payment(customer, payment_id)
+            pickup_point = _get_active_pickup_point(pickup_point_id)
+            existing = _get_existing_payment_order(customer, payment.payment_id)
+            if existing is not None:
+                return existing, False
+
             cart = (
                 Cart.objects.select_for_update()
-                .filter(customer=customer, orders__isnull=True)
+                .filter(pk=payment.cart_id, customer=customer, orders__isnull=True)
                 .order_by("-date_created")
                 .first()
             )
@@ -113,9 +138,15 @@ def create_order_from_cart(customer, payment_id):
                 order_total += item_total
                 snapshots.append((cart_item, variant, unit_price, item_total))
 
+            if order_total != payment.amount:
+                raise ValidationError(
+                    {"payment_id": ["Payment amount does not match the current checkout total."]}
+                )
+
             order = Order.objects.create(
                 cart=cart,
-                payment_id=payment_id,
+                payment=payment,
+                pickup_point=pickup_point,
                 customer=customer,
                 total_price=order_total,
             )

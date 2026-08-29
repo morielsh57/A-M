@@ -25,18 +25,21 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class CustomerOrderCreateSerializer(serializers.Serializer):
-    payment_id = serializers.CharField(max_length=255, trim_whitespace=True)
-    payment_status = serializers.ChoiceField(choices=("COMPLETED",))
+    payment_id = serializers.IntegerField(min_value=1)
+    pickup_point_id = serializers.IntegerField(min_value=1)
 
 
 class CustomerOrderListSerializer(serializers.ModelSerializer):
     item_count = serializers.IntegerField(read_only=True)
+    payment_id = serializers.IntegerField(read_only=True)
+    pickup_point_id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Order
         fields = (
             "order_id",
             "payment_id",
+            "pickup_point_id",
             "total_price",
             "order_status",
             "item_count",
@@ -47,12 +50,15 @@ class CustomerOrderListSerializer(serializers.ModelSerializer):
 
 class CustomerOrderDetailSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    payment_id = serializers.IntegerField(read_only=True)
+    pickup_point_id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Order
         fields = (
             "order_id",
             "payment_id",
+            "pickup_point_id",
             "total_price",
             "order_status",
             "date_created",
@@ -64,6 +70,8 @@ class CustomerOrderDetailSerializer(serializers.ModelSerializer):
 class AdminOrderSerializer(serializers.ModelSerializer):
     customer_email = serializers.EmailField(source="customer.email", read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
+    payment_id = serializers.IntegerField(read_only=True)
+    pickup_point_id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Order
@@ -71,6 +79,7 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "order_id",
             "cart_id",
             "payment_id",
+            "pickup_point_id",
             "customer_id",
             "customer_email",
             "total_price",

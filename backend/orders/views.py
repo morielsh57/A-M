@@ -209,6 +209,7 @@ class CustomerOrderListCreateView(APIView):
         order, created = create_order_from_cart(
             request.user,
             serializer.validated_data["payment_id"],
+            serializer.validated_data["pickup_point_id"],
         )
         order = Order.objects.prefetch_related("items").get(pk=order.pk)
         return Response(
