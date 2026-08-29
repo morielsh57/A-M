@@ -1,0 +1,17 @@
+@import '../../../../shared/styles/colors.scss';
+
+.checkout-delivery {
+  &__status,
+  &__error {
+    margin: 12px 0 0;
+    font-size: 0.9rem;
+  }
+
+  &__status {
+    color: $natural7;
+  }
+
+  &__error {
+    color: $red7;
+  }
+}

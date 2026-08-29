@@ -114,6 +114,7 @@ export const API_ROUTES = {
   PRODUCTS: '/products/',
   PRODUCT_AUTOCOMPLETE: '/products/autocomplete',
   PRODUCT_DETAIL: (productId: string | number) => `/products/${productId}`,
+  PICKUP_POINTS: '/pickup-points/',
   CART: {
     DETAIL: '/cart/',
     GUEST: '/cart/guest',

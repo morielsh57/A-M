@@ -1,0 +1,39 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.pickup-search {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0 16px;
+
+  label {
+    color: $purple9;
+    font-weight: 800;
+  }
+
+  >div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
+
+  input {
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid rgba($purple6, 0.28);
+    border-radius: 10px;
+    color: $purple9;
+    background: $natural1;
+    font: inherit;
+
+    &:focus {
+      border-color: $purple6;
+      outline: 2px solid rgba($purple6, 0.12);
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .pickup-search>div {
+    grid-template-columns: 1fr;
+  }
+}
