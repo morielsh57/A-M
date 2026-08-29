@@ -69,7 +69,6 @@ class ProductReviewApiTests(TestCase):
         cart = Cart.objects.create(customer=customer, total_price=product.price)
         order = Order.objects.create(
             cart=cart,
-            payment_id=f"REVIEW-PAYMENT-{Cart.objects.count()}",
             customer=customer,
             total_price=product.price,
             order_status=order_status,

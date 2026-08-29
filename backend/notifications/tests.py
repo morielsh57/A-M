@@ -51,9 +51,11 @@ class SupplierApiTests(TestCase):
         )
         self.pickup_point = PickUpPoint.objects.create(
             name="Supplier Pickup",
+            description="Supplier test pickup description",
+            address="Supplier street",
             lat=Decimal("32.0000000"),
             lng=Decimal("34.0000000"),
-            address="Supplier street",
+            is_active=True,
         )
 
     @staticmethod
