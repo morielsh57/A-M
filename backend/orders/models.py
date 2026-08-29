@@ -17,7 +17,20 @@ class Order(models.Model):
         on_delete=models.PROTECT,
         related_name="orders",
     )
-    payment_id = models.CharField(max_length=255, unique=True)
+    payment = models.OneToOneField(
+        "payments.Payment",
+        on_delete=models.PROTECT,
+        related_name="order",
+        null=True,
+        blank=True,
+    )
+    pickup_point = models.ForeignKey(
+        "pickup_points.PickUpPoint",
+        on_delete=models.PROTECT,
+        related_name="orders",
+        null=True,
+        blank=True,
+    )
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
