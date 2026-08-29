@@ -13,6 +13,7 @@ import { categoryStoreReducer } from '../shared/store/category/category.store';
 import { adminProductsStoreReducer } from '../components/admin/products/adminProducts.store';
 import { cartStoreReducer } from '../components/client/cart/cart.store';
 import { adminUsersStoreReducer } from '../components/admin/users/adminUsers.store';
+import { checkoutStoreReducer } from '../components/client/checkout/checkout.store';
 
 export const rootReducer = {
   sharedStoreReducer,
@@ -24,6 +25,7 @@ export const rootReducer = {
   adminUsersStoreReducer,
   productPageStoreReducer,
   cartStoreReducer,
+  checkoutStoreReducer,
 };
 
 enableMapSet();

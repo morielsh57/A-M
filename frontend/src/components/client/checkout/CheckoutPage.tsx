@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToasts } from 'react-toast-notifications';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus } from '../../../shared/api/models';
@@ -13,17 +12,16 @@ import { getProductDetail, getProductDetailCacheKey } from '../../product-page/p
 import { getCart } from '../cart/cart.store';
 import { getCartItemImage } from '../cart/cart.utils';
 import CheckoutDelivery from './checkout-delivery/CheckoutDelivery';
+import CheckoutPayment from './checkout-payment/CheckoutPayment';
 import CheckoutItem from './CheckoutItem';
 import './CheckoutPage.scss';
 
 const CheckoutPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { addToast } = useToasts();
   const { getCartReq, selectedCartProductIds } = useAppSelector((store) => store.cartStoreReducer);
   const { productDetailByProductReq } = useAppSelector((store) => store.productPageStoreReducer);
   const { user, getCurrentUserRequest } = useAppSelector((store) => store.userStoreReducer);
-  const [selectedPickupPointId, setSelectedPickupPointId] = useState<number | null>(null);
 
   const selectedIds = useMemo(
     () => new Set(selectedCartProductIds.map(String)),
@@ -37,8 +35,6 @@ const CheckoutPage: React.FC = () => {
   const total = subtotal;
   const isLoading = getCartReq.status === EAPIStatus.PENDING
     || getCurrentUserRequest.status === EAPIStatus.PENDING;
-  const canContinue = checkoutItems.length > 0 && selectedPickupPointId !== null;
-
   useEffect(() => {
     if (getCartReq.status === EAPIStatus.IDLE) dispatch(getCart());
     if (!user && getCurrentUserRequest.status === EAPIStatus.IDLE) dispatch(getCurrentUser());
@@ -53,13 +49,6 @@ const CheckoutPage: React.FC = () => {
       }
     });
   }, [checkoutItems, dispatch, productDetailByProductReq]);
-
-  const handleContinue = () => {
-    addToast(
-      'Payment will be enabled when the backend supports checkout for selected cart items.',
-      { appearance: 'info', autoDismiss: true },
-    );
-  };
 
   if (isLoading) {
     return <div className="checkout-page checkout-page__state"><h2>Loading checkout...</h2><p>Preparing your selected items.</p></div>;
@@ -102,11 +91,7 @@ const CheckoutPage: React.FC = () => {
               })}
             </div>
           </section>
-          <CheckoutDelivery
-            userAddress={user?.address || ''}
-            selectedPickupPointId={selectedPickupPointId}
-            onPickupPointSelect={setSelectedPickupPointId}
-          />
+          <CheckoutDelivery userAddress={user?.address || ''} />
         </main>
 
         <aside className="checkout-summary checkout-card">
@@ -114,8 +99,11 @@ const CheckoutPage: React.FC = () => {
           <div><span>Selected items</span><strong>{formatPrice(subtotal)}</strong></div>
           <div><span>Pickup point</span><strong>Free</strong></div>
           <div className="checkout-summary__total"><span>Total</span><strong>{formatPrice(total)}</strong></div>
-          <AppButton className="checkout-summary__button" disabled={!canContinue} onClick={handleContinue}>Continue to payment</AppButton>
-          <p>{selectedPickupPointId === null ? 'Choose a pickup point before continuing to payment.' : `Pickup point #${selectedPickupPointId} selected.`}</p>
+          <CheckoutPayment
+            hasSelectedItems={checkoutItems.length > 0}
+            selectedItemCount={checkoutItems.length}
+            total={formatPrice(total)}
+          />
         </aside>
       </div>
     </div>

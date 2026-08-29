@@ -1,0 +1,28 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.checkout-payment-status {
+  margin-top: 20px;
+  color: $natural7;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    color: $purple9;
+    text-align: center !important;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  &--success {
+    color: $green7;
+  }
+
+  &--error {
+    color: $red7;
+  }
+}

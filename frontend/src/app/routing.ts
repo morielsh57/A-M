@@ -115,6 +115,11 @@ export const API_ROUTES = {
   PRODUCT_AUTOCOMPLETE: '/products/autocomplete',
   PRODUCT_DETAIL: (productId: string | number) => `/products/${productId}`,
   PICKUP_POINTS: '/pickup-points/',
+  CHECKOUT: {
+    PAYPAL_ORDERS: '/checkout/paypal/orders',
+    PAYPAL_ORDER_CAPTURE: (paypalOrderId: string | number) => `/checkout/paypal/orders/${paypalOrderId}/capture`,
+  },
+  ORDERS: '/orders/',
   CART: {
     DETAIL: '/cart/',
     GUEST: '/cart/guest',
