@@ -1,5 +1,6 @@
 from decimal import Decimal
 from unittest.mock import patch
+from uuid import uuid4
 
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -9,6 +10,7 @@ from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supp
 from carts.models import Cart, CartProduct
 from catalogue.models import Category
 from orders.models import Order
+from payments.models import Payment
 from pickup_points.models import PickUpPoint
 from products.models import Product, ProductImage, ProductVariant
 
@@ -41,9 +43,25 @@ class AdministratorManagementApiTests(TestCase):
             quantity=3,
         )
         self.cart = Cart.objects.create(customer=self.customer, total_price=Decimal("30.00"))
+        self.pickup_point = PickUpPoint.objects.create(
+            name="Admin Fixture Pickup",
+            lat=Decimal("32.0000000"),
+            lng=Decimal("34.0000000"),
+        )
+        self.payment = Payment.objects.create(
+            customer=self.customer,
+            cart=self.cart,
+            provider_order_id=f"ADMIN-PAYPAL-{uuid4()}",
+            provider_capture_id=f"ADMIN-CAPTURE-{uuid4()}",
+            idempotency_key=uuid4(),
+            status=Payment.Status.COMPLETED,
+            amount=Decimal("30.00"),
+            currency="USD",
+        )
         self.order = Order.objects.create(
             cart=self.cart,
-            payment_id=12345,
+            payment=self.payment,
+            pickup_point=self.pickup_point,
             customer=self.customer,
             total_price=Decimal("30.00"),
         )

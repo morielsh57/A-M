@@ -1,0 +1,94 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.order-details-overview {
+  padding: 28px;
+  border: 1px solid rgba($purple6, 0.16);
+  border-radius: 8px;
+  background: $natural1;
+  box-shadow: 0 14px 35px rgba($purple9, 0.06);
+
+  &__heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 20px;
+
+    span {
+      color: $purple9;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    strong {
+      font-size: 0.78rem;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+  }
+
+  &__status {
+    padding: 7px 10px;
+    border-radius: 999px;
+
+    &--completed {
+      background: $green1;
+      color: $green8;
+    }
+
+    &--pending {
+      background: $gold1;
+      color: $gold9;
+    }
+
+    &--cancelled {
+      background: $red1;
+      color: $red7;
+    }
+  }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+
+    div {
+      display: grid;
+      gap: 6px;
+      padding: 16px;
+      border-radius: 8px;
+      background: $pink1;
+    }
+
+    span {
+      color: $natural7;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    strong {
+      color: $purple9;
+      font-size: 0.95rem;
+    }
+
+    small {
+      color: $natural7;
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .order-details-overview {
+    &__meta {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .order-details-overview {
+    padding: 20px 16px;
+  }
+}

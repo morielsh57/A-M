@@ -2,11 +2,14 @@ from decimal import Decimal
 
 from django.db import IntegrityError, transaction
 from django.db.models import F
+from django.utils import timezone
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 
 from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE
 from carts.models import Cart, CartProduct
-from orders.models import Order, OrderItem
+from payments.models import Payment
+from pickup_points.models import PickUpPoint
+from orders.models import Order, OrderItem, SupplierOrderFulfillment
 from products.models import ProductVariant
 
 
@@ -42,49 +45,86 @@ def _get_existing_payment_order(customer, payment_id):
     return order
 
 
-def create_order_from_cart(customer, payment_id):
+def _get_completed_payment(customer, payment_id):
+    payment = (
+        Payment.objects.select_for_update()
+        .prefetch_related("items")
+        .filter(pk=payment_id)
+        .first()
+    )
+    if payment is None:
+        raise ValidationError({"payment_id": ["Payment was not found."]})
+    if payment.customer_id != customer.pk:
+        raise ValidationError({"payment_id": ["Payment does not belong to this customer."]})
+    if payment.status != Payment.Status.COMPLETED:
+        raise ValidationError({"payment_id": ["Payment must be completed before creating an order."]})
+    return payment
+
+
+def _get_active_pickup_point(pickup_point_id):
+    pickup_point = PickUpPoint.objects.filter(pk=pickup_point_id, is_active=True).first()
+    if pickup_point is None:
+        raise ValidationError({"pickup_point_id": ["Pickup point was not found or is inactive."]})
+    return pickup_point
+
+
+def create_supplier_fulfillments(order):
+    supplier_ids = (
+        order.items.exclude(product__supplier_id__isnull=True)
+        .values_list("product__supplier_id", flat=True)
+        .distinct()
+    )
+    for supplier_id in supplier_ids:
+        SupplierOrderFulfillment.objects.get_or_create(
+            order=order,
+            supplier_id=supplier_id,
+            defaults={"status": order.order_status},
+        )
+
+
+def create_order_from_cart(customer, payment_id, pickup_point_id):
     require_customer(customer)
-    payment_id = str(payment_id).strip()
     existing = _get_existing_payment_order(customer, payment_id)
     if existing is not None:
         return existing, False
 
     try:
         with transaction.atomic():
-            cart = (
-                Cart.objects.select_for_update()
-                .filter(customer=customer, orders__isnull=True)
-                .order_by("-date_created")
-                .first()
-            )
+            payment = _get_completed_payment(customer, payment_id)
+            pickup_point = _get_active_pickup_point(pickup_point_id)
+            existing = _get_existing_payment_order(customer, payment.payment_id)
+            if existing is not None:
+                return existing, False
+
+            cart = Cart.objects.select_for_update().filter(
+                pk=payment.cart_id,
+                customer=customer,
+            ).first()
             if cart is None:
                 raise ValidationError({"cart": ["The shopping cart is empty."]})
 
-            cart_items = list(
-                CartProduct.objects.select_for_update()
-                .select_related("variant__product")
-                .filter(cart=cart)
-                .order_by("cart_product_id")
+            payment_items = list(
+                payment.items.select_related("variant__product")
+                .order_by("payment_item_id")
             )
-            if not cart_items:
-                raise ValidationError({"cart": ["The shopping cart is empty."]})
+            if not payment_items:
+                raise ValidationError({"payment_id": ["Payment has no items."]})
 
             variants = {
                 variant.variant_id: variant
                 for variant in ProductVariant.objects.select_for_update()
                 .select_related("product")
-                .filter(variant_id__in=[item.variant_id for item in cart_items])
+                .filter(variant_id__in=[item.variant_id for item in payment_items])
             }
             order_total = Decimal("0")
-            snapshots = []
 
-            for cart_item in cart_items:
-                variant = variants.get(cart_item.variant_id)
+            for payment_item in payment_items:
+                variant = variants.get(payment_item.variant_id)
                 if variant is None or not variant.is_active or not variant.product.is_active:
                     raise ValidationError(
-                        {"cart": [f"Variant {cart_item.variant_id} is no longer available."]}
+                        {"cart": [f"Variant {payment_item.variant_id} is no longer available."]}
                     )
-                if cart_item.quantity > variant.quantity:
+                if payment_item.quantity > variant.quantity:
                     raise ValidationError(
                         {
                             "quantity": [
@@ -93,14 +133,17 @@ def create_order_from_cart(customer, payment_id):
                             ]
                         }
                     )
-                unit_price = variant.product.price
-                item_total = unit_price * cart_item.quantity
-                order_total += item_total
-                snapshots.append((cart_item, variant, unit_price, item_total))
+                order_total += payment_item.total_price
+
+            if order_total != payment.amount:
+                raise ValidationError(
+                    {"payment_id": ["Payment amount does not match the current checkout total."]}
+                )
 
             order = Order.objects.create(
                 cart=cart,
-                payment_id=payment_id,
+                payment=payment,
+                pickup_point=pickup_point,
                 customer=customer,
                 total_price=order_total,
             )
@@ -108,21 +151,53 @@ def create_order_from_cart(customer, payment_id):
                 [
                     OrderItem(
                         order=order,
-                        product=variant.product,
-                        variant=variant,
-                        product_name=variant.product.name,
-                        color=variant.color,
-                        size=variant.size,
-                        quantity=cart_item.quantity,
-                        unit_price=unit_price,
-                        total_price=item_total,
+                        product=payment_item.product,
+                        variant=payment_item.variant,
+                        product_name=payment_item.product_name,
+                        color=payment_item.color,
+                        size=payment_item.size,
+                        quantity=payment_item.quantity,
+                        unit_price=payment_item.unit_price,
+                        total_price=payment_item.total_price,
                     )
-                    for cart_item, variant, unit_price, item_total in snapshots
+                    for payment_item in payment_items
                 ]
             )
-            for cart_item, variant, _, _ in snapshots:
-                ProductVariant.objects.filter(pk=variant.pk).update(
-                    quantity=F("quantity") - cart_item.quantity
+            create_supplier_fulfillments(order)
+            from notifications.models import Notification
+            from notifications.services import create_order_notifications
+
+            create_order_notifications(order, Notification.Type.NEW_ORDER)
+            purchased_variant_ids = [item.variant_id for item in payment_items]
+            for payment_item in payment_items:
+                ProductVariant.objects.filter(pk=payment_item.variant_id).update(
+                    quantity=F("quantity") - payment_item.quantity
+                )
+            remaining_cart_items = list(
+                CartProduct.objects.select_for_update()
+                .filter(cart=cart)
+                .exclude(variant_id__in=purchased_variant_ids)
+                .order_by("cart_product_id")
+            )
+            if remaining_cart_items:
+                remaining_cart = Cart.objects.create(
+                    customer=customer,
+                    total_price=sum(
+                        (item.total_price for item in remaining_cart_items),
+                        Decimal("0"),
+                    ),
+                )
+                CartProduct.objects.bulk_create(
+                    [
+                        CartProduct(
+                            cart=remaining_cart,
+                            variant=item.variant,
+                            quantity=item.quantity,
+                            unit_price=item.unit_price,
+                            total_price=item.total_price,
+                        )
+                        for item in remaining_cart_items
+                    ]
                 )
             CartProduct.objects.filter(cart=cart).delete()
             cart.total_price = Decimal("0")
@@ -170,7 +245,54 @@ def transition_order_status(order, next_status):
 
     order.order_status = next_status
     order.save(update_fields=("order_status", "date_updated"))
+    if next_status == Order.Status.COMPLETED:
+        SupplierOrderFulfillment.objects.filter(order=order).update(
+            status=SupplierOrderFulfillment.Status.COMPLETED,
+            date_updated=timezone.now(),
+        )
+    elif next_status == Order.Status.CANCELLED:
+        SupplierOrderFulfillment.objects.filter(order=order).update(
+            status=SupplierOrderFulfillment.Status.CANCELLED,
+            date_updated=timezone.now(),
+        )
+        from notifications.models import Notification
+        from notifications.services import create_order_notifications
+
+        create_order_notifications(order, Notification.Type.CANCELLED_ORDER)
     return order
+
+
+@transaction.atomic
+def transition_supplier_fulfillment(fulfillment, next_status):
+    fulfillment = SupplierOrderFulfillment.objects.select_for_update().select_related(
+        "order"
+    ).get(pk=fulfillment.pk)
+    if fulfillment.status == next_status:
+        return fulfillment
+    if fulfillment.status != SupplierOrderFulfillment.Status.PENDING or (
+        next_status != SupplierOrderFulfillment.Status.COMPLETED
+    ):
+        raise ValidationError(
+            {
+                "order_status": [
+                    f"Supplier order status cannot change from "
+                    f"{fulfillment.status} to {next_status}."
+                ]
+            }
+        )
+    if fulfillment.order.order_status != Order.Status.PENDING:
+        raise ValidationError(
+            {"order_status": ["The overall order is no longer pending."]}
+        )
+
+    fulfillment.status = next_status
+    fulfillment.save(update_fields=("status", "date_updated"))
+    has_incomplete = SupplierOrderFulfillment.objects.filter(
+        order=fulfillment.order,
+    ).exclude(status=SupplierOrderFulfillment.Status.COMPLETED).exists()
+    if not has_incomplete:
+        transition_order_status(fulfillment.order, Order.Status.COMPLETED)
+    return fulfillment
 
 
 def cancel_customer_order(customer, order_id):

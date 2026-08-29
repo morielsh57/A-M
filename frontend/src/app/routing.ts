@@ -6,6 +6,7 @@ const CATEGORY_SEGMENT = 'category';
 const SEARCH_SEGMENT = 'search';
 const CHECKOUT_SEGMENT = 'checkout';
 const PROFILE_SEGMENT = 'profile';
+const ORDER_SEGMENT = 'order';
 const ADMIN_ROOT_PATH = '/admin';
 
 const LOGIN_SEGMENT = 'login';
@@ -37,6 +38,7 @@ export const APP_ROUTING_PATHS = {
   SEARCH: SEARCH_SEGMENT,
   CHECKOUT: CHECKOUT_SEGMENT,
   PROFILE: PROFILE_SEGMENT,
+  ORDER: ORDER_SEGMENT,
   LOGIN: LOGIN_SEGMENT,
   SIGNUP: SIGNUP_SEGMENT,
   ADMIN: {
@@ -75,6 +77,7 @@ export const APP_ROUTING_PATHS = {
   ) => `${APP_PATH}/${SEARCH_SEGMENT}?q=${encodeURIComponent(searchQuery)}&page=${page}`,
   APP_CHECKOUT_PAGE: `${APP_PATH}/${CHECKOUT_SEGMENT}`,
   APP_PROFILE_PAGE: `${APP_PATH}/${PROFILE_SEGMENT}`,
+  APP_ORDER_PAGE: (orderId: string | number) => `${APP_PATH}/${ORDER_SEGMENT}/${orderId}`,
   ADMIN_LOGIN_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_AUTH_SEGMENT}/${ADMIN_LOGIN_SEGMENT}`,
   ADMIN_HOME_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_HOME_SEGMENT}`,
   ADMIN_PRODUCTS_PAGE: (categoryId: string | number) => `${ADMIN_ROOT_PATH}/${ADMIN_PRODUCTS_SEGMENT}/${categoryId}`,
@@ -117,6 +120,13 @@ export const API_ROUTES = {
   PRODUCTS: '/products/',
   PRODUCT_AUTOCOMPLETE: '/products/autocomplete',
   PRODUCT_DETAIL: (productId: string | number) => `/products/${productId}`,
+  PICKUP_POINTS: '/pickup-points/',
+  CHECKOUT: {
+    PAYPAL_ORDERS: '/checkout/paypal/orders',
+    PAYPAL_ORDER_CAPTURE: (paypalOrderId: string | number) => `/checkout/paypal/orders/${paypalOrderId}/capture`,
+  },
+  ORDERS: '/orders/',
+  ORDER_DETAIL: (orderId: string | number) => `/orders/${orderId}`,
   CART: {
     DETAIL: '/cart/',
     GUEST: '/cart/guest',

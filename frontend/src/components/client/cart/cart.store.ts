@@ -21,6 +21,7 @@ import {
 
 export interface CartStoreState extends ApiDataStateType {
   isCartOpen: boolean;
+  keepNextCartSyncUnselected: boolean;
   selectedCartProductIds: CartProductId[];
   knownCartProductIds: CartProductId[];
   getCartReq: IAPIRequestState<ICart>;
@@ -32,6 +33,7 @@ export interface CartStoreState extends ApiDataStateType {
 
 const initialState: CartStoreState = {
   isCartOpen: false,
+  keepNextCartSyncUnselected: false,
   selectedCartProductIds: [],
   knownCartProductIds: [],
   getCartReq: APIRequestState.create<ICart>(),
@@ -46,6 +48,7 @@ export const closeCart = createAction('cart/closeCart');
 export const toggleCart = createAction('cart/toggleCart');
 export const toggleCartItemSelected = createAction<CartProductId>('cart/toggleCartItemSelected');
 export const setAllCartItemsSelected = createAction<boolean>('cart/setAllCartItemsSelected');
+export const keepNextCartSyncUnselected = createAction('cart/keepNextCartSyncUnselected');
 
 const syncCartState = (state: Draft<CartStoreState>, cart: ICart) => {
   state.getCartReq.data = cart;
@@ -54,10 +57,15 @@ const syncCartState = (state: Draft<CartStoreState>, cart: ICart) => {
   const previousSelectedIds = new Set(state.selectedCartProductIds.map(String));
   const cartItemIds = cart.items.map((item) => item.cart_product_id);
 
-  state.selectedCartProductIds = cartItemIds.filter((cartProductId) => {
-    const normalizedId = String(cartProductId);
-    return previousSelectedIds.has(normalizedId) || !previousKnownIds.has(normalizedId);
-  });
+  if (state.keepNextCartSyncUnselected) {
+    state.selectedCartProductIds = [];
+    state.keepNextCartSyncUnselected = false;
+  } else {
+    state.selectedCartProductIds = cartItemIds.filter((cartProductId) => {
+      const normalizedId = String(cartProductId);
+      return previousSelectedIds.has(normalizedId) || !previousKnownIds.has(normalizedId);
+    });
+  }
   state.knownCartProductIds = cartItemIds;
 };
 
@@ -180,5 +188,8 @@ export const cartStoreReducer = createReducer(initialState, (builder) => {
       state.selectedCartProductIds = action.payload
         ? state.getCartReq.data?.items.map((item) => item.cart_product_id) || []
         : [];
+    })
+    .addCase(keepNextCartSyncUnselected, (state) => {
+      state.keepNextCartSyncUnselected = true;
     });
 });

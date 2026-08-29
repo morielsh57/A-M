@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.permissions import IsCustomer
+from accounts.permissions import IsCustomerOrAdministrator
 from config.api.serializers import ErrorResponseSerializer
 from payments.serializers import CreatePayPalOrderSerializer, PayPalPaymentSerializer
 from payments.services import (
@@ -16,7 +16,7 @@ from payments.services import (
 
 
 class PayPalOrderCreateView(APIView):
-    permission_classes = [IsAuthenticated, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomerOrAdministrator]
 
     @extend_schema(
         summary="Create a PayPal order for the authenticated customer's cart",
@@ -28,7 +28,9 @@ class PayPalOrderCreateView(APIView):
         serializer = CreatePayPalOrderSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payment, created = create_paypal_order(
-            request.user, serializer.validated_data["idempotency_key"]
+            request.user,
+            serializer.validated_data["idempotency_key"],
+            serializer.validated_data["cart_product_ids"],
         )
         return Response(
             serialize_payment(payment),
@@ -37,7 +39,7 @@ class PayPalOrderCreateView(APIView):
 
 
 class PayPalOrderDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomerOrAdministrator]
 
     @extend_schema(
         summary="Get a PayPal checkout payment",
@@ -51,7 +53,7 @@ class PayPalOrderDetailView(APIView):
 
 
 class PayPalOrderCaptureView(APIView):
-    permission_classes = [IsAuthenticated, IsCustomer]
+    permission_classes = [IsAuthenticated, IsCustomerOrAdministrator]
 
     @extend_schema(
         summary="Capture an approved PayPal order",

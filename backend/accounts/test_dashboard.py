@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+from uuid import uuid4
 
 from django.test import TestCase
 from django.urls import reverse
@@ -11,6 +12,8 @@ from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supp
 from carts.models import Cart
 from catalogue.models import Category
 from orders.models import Order, OrderItem
+from payments.models import Payment
+from pickup_points.models import PickUpPoint
 from products.models import Product, ProductVariant
 
 
@@ -32,6 +35,11 @@ class DashboardOverviewApiTests(TestCase):
         self.category = Category.objects.create(
             short_id="dashboard-test",
             main_category_name="Dashboard Test",
+        )
+        self.pickup_point = PickUpPoint.objects.create(
+            name="Dashboard Pickup",
+            lat=Decimal("32.0000000"),
+            lng=Decimal("34.0000000"),
         )
 
     def create_user(self, email, role_name, created_at=None):
@@ -56,9 +64,20 @@ class DashboardOverviewApiTests(TestCase):
 
     def create_completed_order(self, amount, created_at):
         cart = Cart.objects.create(customer=self.customer, total_price=amount)
+        payment = Payment.objects.create(
+            customer=self.customer,
+            cart=cart,
+            provider_order_id=f"DASHBOARD-PAYPAL-{uuid4()}",
+            provider_capture_id=f"DASHBOARD-CAPTURE-{uuid4()}",
+            idempotency_key=uuid4(),
+            status=Payment.Status.COMPLETED,
+            amount=amount,
+            currency="USD",
+        )
         order = Order.objects.create(
             cart=cart,
-            payment_id=f"dashboard-payment-{Order.objects.count() + 1}",
+            payment=payment,
+            pickup_point=self.pickup_point,
             customer=self.customer,
             total_price=amount,
             order_status=Order.Status.COMPLETED,

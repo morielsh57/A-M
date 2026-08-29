@@ -1,4 +1,4 @@
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
@@ -6,15 +6,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.permissions import IsAdministrator
+from accounts.models import Supplier
+from accounts.permissions import IsAdministrator, IsSupplier
 from config.api.pagination import StandardPageNumberPagination
-from orders.models import Order
+from orders.models import Order, OrderItem, SupplierOrderFulfillment
 from orders.serializers import (
     AdminOrderSerializer,
     AdminOrderStatusSerializer,
     CustomerOrderCreateSerializer,
     CustomerOrderDetailSerializer,
     CustomerOrderListSerializer,
+    SupplierOrderSerializer,
+    SupplierOrderStatusSerializer,
 )
 from orders.services import (
     cancel_customer_order,
@@ -46,6 +49,99 @@ class AdminOrderListView(APIView):
         paginator = StandardPageNumberPagination()
         page = paginator.paginate_queryset(orders, request)
         return paginator.get_paginated_response(AdminOrderSerializer(page, many=True).data)
+
+
+def get_supplier_order_queryset(user):
+    try:
+        supplier = user.supplier_profile
+    except Supplier.DoesNotExist:
+        return Order.objects.none()
+
+    supplier_items = OrderItem.objects.filter(
+        product__supplier=supplier,
+    ).select_related("product", "variant").order_by("order_item_id")
+    supplier_fulfillments = SupplierOrderFulfillment.objects.filter(
+        supplier=supplier,
+    )
+    return (
+        Order.objects.filter(items__product__supplier=supplier)
+        .prefetch_related(
+            Prefetch("items", queryset=supplier_items, to_attr="supplier_items"),
+            Prefetch(
+                "supplier_fulfillments",
+                queryset=supplier_fulfillments,
+                to_attr="supplier_fulfillments_for_request",
+            ),
+        )
+        .distinct()
+    )
+
+
+class SupplierOrderListView(APIView):
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = SupplierOrderSerializer
+
+    @extend_schema(
+        summary="List orders relevant to the current supplier",
+        description=(
+            "Authenticated Supplier endpoint. Each order contains only items assigned "
+            "to the current supplier and excludes payment and customer details."
+        ),
+        responses={200: SupplierOrderSerializer(many=True)},
+        tags=["Supplier Orders"],
+    )
+    def get(self, request):
+        orders = get_supplier_order_queryset(request.user).order_by(
+            "-date_created", "-order_id"
+        )
+        paginator = StandardPageNumberPagination()
+        page = paginator.paginate_queryset(orders, request)
+        return paginator.get_paginated_response(SupplierOrderSerializer(page, many=True).data)
+
+
+class SupplierOrderDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = SupplierOrderSerializer
+
+    @extend_schema(
+        summary="View one order relevant to the current supplier",
+        responses={200: SupplierOrderSerializer},
+        tags=["Supplier Orders"],
+    )
+    def get(self, request, order_id):
+        order = get_supplier_order_queryset(request.user).filter(pk=order_id).first()
+        if order is None:
+            raise NotFound("Order was not found.")
+        return Response(SupplierOrderSerializer(order).data)
+
+
+class SupplierOrderStatusView(APIView):
+    permission_classes = [IsAuthenticated, IsSupplier]
+    serializer_class = SupplierOrderStatusSerializer
+
+    @extend_schema(
+        summary="Update the current supplier's fulfilment status",
+        description=(
+            "Authenticated Supplier endpoint. A supplier may complete only its own "
+            "pending portion of an order."
+        ),
+        request=SupplierOrderStatusSerializer,
+        responses={200: SupplierOrderSerializer},
+        tags=["Supplier Orders"],
+    )
+    def patch(self, request, order_id):
+        order = get_supplier_order_queryset(request.user).filter(pk=order_id).first()
+        if order is None:
+            raise NotFound("Order was not found.")
+        fulfillment = order.supplier_fulfillments_for_request[0]
+        serializer = SupplierOrderStatusSerializer(
+            fulfillment,
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        order = get_supplier_order_queryset(request.user).get(pk=order_id)
+        return Response(SupplierOrderSerializer(order).data)
 
 
 class AdminOrderDetailView(APIView):
@@ -113,6 +209,7 @@ class CustomerOrderListCreateView(APIView):
         order, created = create_order_from_cart(
             request.user,
             serializer.validated_data["payment_id"],
+            serializer.validated_data["pickup_point_id"],
         )
         order = Order.objects.prefetch_related("items").get(pk=order.pk)
         return Response(

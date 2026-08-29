@@ -25,6 +25,10 @@ class IsCustomer(HasAnyRole):
     allowed_roles = frozenset({CUSTOMER_ROLE})
 
 
+class IsCustomerOrAdministrator(HasAnyRole):
+    allowed_roles = frozenset({CUSTOMER_ROLE, ADMIN_ROLE})
+
+
 class IsSupplier(HasAnyRole):
     allowed_roles = frozenset({SUPPLIER_ROLE})
 

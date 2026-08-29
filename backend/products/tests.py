@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import uuid4
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, connection, transaction
@@ -11,6 +12,8 @@ from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supp
 from carts.models import Cart, CartProduct
 from catalogue.models import Category
 from orders.models import Order
+from payments.models import Payment
+from pickup_points.models import PickUpPoint
 from products.models import Product, ProductImage, ProductVariant
 from reviews.models import Review
 
@@ -394,9 +397,25 @@ class ProductVariantApiTests(TestCase):
 
     def test_public_catalogue_includes_and_sorts_ratings(self):
         cart = Cart.objects.create(customer=self.customer, total_price=Decimal("49.99"))
+        pickup_point = PickUpPoint.objects.create(
+            name="Product Review Pickup",
+            lat=Decimal("32.0000000"),
+            lng=Decimal("34.0000000"),
+        )
+        payment = Payment.objects.create(
+            customer=self.customer,
+            cart=cart,
+            provider_order_id=f"PRODUCT-PAYPAL-{uuid4()}",
+            provider_capture_id=f"PRODUCT-CAPTURE-{uuid4()}",
+            idempotency_key=uuid4(),
+            status=Payment.Status.COMPLETED,
+            amount=Decimal("49.99"),
+            currency="USD",
+        )
         order = Order.objects.create(
             cart=cart,
-            payment_id=1001,
+            payment=payment,
+            pickup_point=pickup_point,
             customer=self.customer,
             total_price=Decimal("49.99"),
             order_status=Order.Status.COMPLETED,
