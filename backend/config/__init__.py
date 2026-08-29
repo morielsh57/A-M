@@ -1,3 +1,6 @@
-import pymysql
+import platform
 
-pymysql.install_as_MySQLdb()
+if platform.system() == "Windows":
+    import pymysql
+
+    pymysql.install_as_MySQLdb()
