@@ -7,7 +7,6 @@ import { createAPIReducerCases, type ApiDataStateType } from '../../../shared/st
 import type { PickupPoint } from './checkout-delivery/CheckoutDelivery.types';
 import {
   getPickupPointsWithinRadius,
-  PICKUP_PAGE_SIZE,
   PICKUP_SEARCH_RADIUS_KM,
 } from './checkout-delivery/CheckoutDelivery.utils';
 
@@ -15,8 +14,6 @@ export interface IGetPickupPointsRequest {
   lat: number;
   lng: number;
   radius_km?: number;
-  page_size?: number;
-  is_active?: boolean;
 }
 
 export interface ICreatePayPalOrderRequest {
@@ -105,8 +102,6 @@ export const getPickupPoints = createApiThunk<PickupPoint[], IGetPickupPointsReq
         lat: params.lat,
         lng: params.lng,
         radius_km: params.radius_km ?? PICKUP_SEARCH_RADIUS_KM,
-        page_size: params.page_size ?? PICKUP_PAGE_SIZE,
-        is_active: params.is_active ?? true,
       },
     });
   },

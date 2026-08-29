@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, Role, User
+from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, User
 from pickup_points.models import PickUpPoint
 
 
@@ -12,6 +12,7 @@ class CustomerPickUpPointApiTests(TestCase):
         self.client = APIClient()
         customer_role, _ = Role.objects.get_or_create(role_name=CUSTOMER_ROLE)
         admin_role, _ = Role.objects.get_or_create(role_name=ADMIN_ROLE)
+        supplier_role, _ = Role.objects.get_or_create(role_name=SUPPLIER_ROLE)
         self.customer = User.objects.create_user(
             email="pickup-customer@example.com",
             name="Pickup Customer",
@@ -24,6 +25,13 @@ class CustomerPickUpPointApiTests(TestCase):
             name="Pickup Admin",
             password="A-Strong-Password-2026!",
             role=admin_role,
+            is_valid_email=True,
+        )
+        self.supplier = User.objects.create_user(
+            email="pickup-supplier@example.com",
+            name="Pickup Supplier",
+            password="A-Strong-Password-2026!",
+            role=supplier_role,
             is_valid_email=True,
         )
         self.center = self.create_point(
@@ -132,8 +140,16 @@ class CustomerPickUpPointApiTests(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json()["error"]["code"], "authentication_required")
 
-    def test_non_customer_request_is_forbidden(self):
+    def test_admin_can_use_customer_pickup_point_route(self):
         self.authorize(self.admin)
+
+        response = self.get_pickup_points(lat="31.777", lng="35.298")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertGreater(len(response.json()["data"]), 0)
+
+    def test_supplier_request_is_forbidden(self):
+        self.authorize(self.supplier)
 
         response = self.get_pickup_points(lat="31.777", lng="35.298")
 
