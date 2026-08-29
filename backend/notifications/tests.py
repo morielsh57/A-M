@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import uuid4
 
 from django.test import TestCase
 from django.urls import reverse
@@ -9,6 +10,8 @@ from carts.models import Cart, CartProduct
 from catalogue.models import Category
 from notifications.models import Notification
 from orders.models import Order, OrderItem, SupplierOrderFulfillment
+from payments.models import Payment, PaymentItem
+from pickup_points.models import PickUpPoint
 from products.models import Product, ProductVariant
 
 
@@ -46,6 +49,14 @@ class SupplierApiTests(TestCase):
             size="L",
             quantity=5,
         )
+        self.pickup_point = PickUpPoint.objects.create(
+            name="Supplier test pickup",
+            description="Supplier test pickup description",
+            address="1 Test Street",
+            lat=Decimal("32.0853000"),
+            lng=Decimal("34.7818000"),
+            is_active=True,
+        )
 
     @staticmethod
     def create_user(email, role):
@@ -71,24 +82,48 @@ class SupplierApiTests(TestCase):
 
     def checkout_multi_supplier_order(self):
         cart = Cart.objects.create(customer=self.customer, total_price=Decimal("40.00"))
-        CartProduct.objects.create(
+        cart_item = CartProduct.objects.create(
             cart=cart,
             variant=self.variant,
             quantity=1,
             unit_price=Decimal("20.00"),
             total_price=Decimal("20.00"),
         )
-        CartProduct.objects.create(
+        other_cart_item = CartProduct.objects.create(
             cart=cart,
             variant=self.other_variant,
             quantity=1,
             unit_price=Decimal("20.00"),
             total_price=Decimal("20.00"),
         )
+        payment = Payment.objects.create(
+            customer=self.customer,
+            cart=cart,
+            provider_order_id=f"SUPPLIER-ORDER-{uuid4()}",
+            idempotency_key=uuid4(),
+            status=Payment.Status.COMPLETED,
+            amount=Decimal("40.00"),
+            currency="USD",
+        )
+        for item in (cart_item, other_cart_item):
+            PaymentItem.objects.create(
+                payment=payment,
+                product=item.variant.product,
+                variant=item.variant,
+                product_name=item.variant.product.name,
+                color=item.variant.color,
+                size=item.variant.size,
+                quantity=item.quantity,
+                unit_price=item.unit_price,
+                total_price=item.total_price,
+            )
         self.authorize(self.customer)
         response = self.client.post(
             reverse("customer-order-list"),
-            {"payment_id": "SUPPLIER-ORDER-100", "payment_status": "COMPLETED"},
+            {
+                "payment_id": payment.payment_id,
+                "pickup_point_id": self.pickup_point.pick_up_point_id,
+            },
             format="json",
         )
         self.assertEqual(response.status_code, 201)
