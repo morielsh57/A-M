@@ -11,7 +11,7 @@ from carts.models import Cart, CartProduct
 from catalogue.models import Category
 from orders.models import Order, OrderItem
 from orders.services import create_order_from_cart
-from payments.models import Payment
+from payments.models import Payment, PaymentItem
 from pickup_points.models import PickUpPoint
 from products.models import Product, ProductVariant
 
@@ -77,17 +77,40 @@ class CustomerOrderApiTests(TestCase):
         )
         return cart
 
-    def create_payment(self, cart, customer=None, status=Payment.Status.COMPLETED):
-        return Payment.objects.create(
+    def create_payment(self, cart, customer=None, status=Payment.Status.COMPLETED, cart_products=None):
+        cart_products = list(
+            cart_products
+            if cart_products is not None
+            else cart.cart_products.select_related("variant__product").order_by("cart_product_id")
+        )
+        amount = sum((item.total_price for item in cart_products), Decimal("0"))
+        payment = Payment.objects.create(
             customer=customer or cart.customer,
             cart=cart,
             provider_order_id=f"PAYPAL-ORDER-{uuid4()}",
             provider_capture_id=f"CAPTURE-{uuid4()}" if status == Payment.Status.COMPLETED else None,
             idempotency_key=uuid4(),
             status=status,
-            amount=cart.total_price,
+            amount=amount,
             currency="USD",
         )
+        PaymentItem.objects.bulk_create(
+            [
+                PaymentItem(
+                    payment=payment,
+                    product=item.variant.product,
+                    variant=item.variant,
+                    product_name=item.variant.product.name,
+                    color=item.variant.color,
+                    size=item.variant.size,
+                    quantity=item.quantity,
+                    unit_price=item.unit_price,
+                    total_price=item.total_price,
+                )
+                for item in cart_products
+            ]
+        )
+        return payment
 
     def checkout(self, payment_id=None, pickup_point_id=None):
         if payment_id is None:
@@ -177,6 +200,44 @@ class CustomerOrderApiTests(TestCase):
         self.assertEqual(cart.total_price, Decimal("0"))
         self.variant.refresh_from_db()
         self.assertEqual(self.variant.quantity, 3)
+
+    def test_checkout_orders_selected_payment_items_and_keeps_remaining_cart(self):
+        self.authorize()
+        cart = self.create_cart(quantity=2)
+        selected_cart_product = cart.cart_products.get()
+        second_product = Product.objects.create(
+            catalog_number="ORDER-200",
+            name="Remaining Pants",
+            price=Decimal("15.00"),
+            category=self.category,
+        )
+        second_variant = ProductVariant.objects.create(
+            product=second_product,
+            color="Blue",
+            size="S",
+            quantity=5,
+        )
+        remaining_cart_product = CartProduct.objects.create(
+            cart=cart,
+            variant=second_variant,
+            quantity=1,
+            unit_price=Decimal("15.00"),
+            total_price=Decimal("15.00"),
+        )
+        payment = self.create_payment(cart, cart_products=[selected_cart_product])
+
+        response = self.checkout(payment_id=payment.payment_id)
+
+        self.assertEqual(response.status_code, 201)
+        data = response.json()["data"]
+        self.assertEqual(data["total_price"], "60.00")
+        self.assertEqual(len(data["items"]), 1)
+        self.assertEqual(data["items"][0]["variant_id"], self.variant.variant_id)
+        self.assertFalse(CartProduct.objects.filter(pk=selected_cart_product.pk).exists())
+        active_cart = Cart.objects.filter(customer=self.customer, orders__isnull=True).get()
+        remaining_item = active_cart.cart_products.get()
+        self.assertEqual(remaining_item.variant_id, remaining_cart_product.variant_id)
+        self.assertEqual(active_cart.total_price, Decimal("15.00"))
 
     def test_failed_order_creation_rolls_back_every_change(self):
         self.authorize()

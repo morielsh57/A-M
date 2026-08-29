@@ -22,6 +22,7 @@ import './CheckoutPayPalButtons.scss';
 
 const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
   disabled,
+  selectedCartProductIds,
   selectedPickupPointId,
 }) => {
   const dispatch = useAppDispatch();
@@ -39,14 +40,20 @@ const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
   ].some(isRequestPending);
 
   const createOrder = async () => {
+    const selectedIds = selectedCartProductIds.map(Number).filter(Number.isFinite);
+
     if (disabled || selectedPickupPointId === null) {
       throw new Error('Choose a pickup point before starting PayPal payment.');
+    }
+    if (selectedIds.length === 0) {
+      throw new Error('Select at least one cart item before starting PayPal payment.');
     }
 
     idempotencyKeyRef.current = idempotencyKeyRef.current || createCheckoutIdempotencyKey();
     dispatch(setPaymentStatusMessage('Creating PayPal payment...'));
     const payment = await dispatch(createPayPalOrder({
       idempotency_key: idempotencyKeyRef.current,
+      cart_product_ids: selectedIds,
     })).unwrap();
     paypalOrderIdRef.current = payment.paypal_order_id;
 
@@ -81,10 +88,14 @@ const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
   };
 
   const handleCancel = (_data: OnCancelDataOneTimePayments) => {
+    idempotencyKeyRef.current = undefined;
+    paypalOrderIdRef.current = undefined;
     dispatch(setPaymentStatusMessage('PayPal payment was cancelled. You can try again when ready.'));
   };
 
   const handleError = (error: OnErrorData) => {
+    idempotencyKeyRef.current = undefined;
+    paypalOrderIdRef.current = undefined;
     dispatch(setPaymentStatusMessage(error.message || 'PayPal payment failed. Please try again.'));
   };
 

@@ -21,6 +21,7 @@ export interface IGetPickupPointsRequest {
 
 export interface ICreatePayPalOrderRequest {
   idempotency_key: string;
+  cart_product_ids: number[];
 }
 
 export interface ICapturePayPalOrderRequest {

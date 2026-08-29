@@ -101,6 +101,7 @@ const CheckoutPage: React.FC = () => {
           <div className="checkout-summary__total"><span>Total</span><strong>{formatPrice(total)}</strong></div>
           <CheckoutPayment
             hasSelectedItems={checkoutItems.length > 0}
+            selectedCartProductIds={checkoutItems.map((item) => item.cart_product_id)}
             selectedItemCount={checkoutItems.length}
             total={formatPrice(total)}
           />
