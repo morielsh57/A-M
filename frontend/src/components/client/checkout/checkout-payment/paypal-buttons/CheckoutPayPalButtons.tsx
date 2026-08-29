@@ -1,12 +1,14 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   PayPalOneTimePaymentButton,
   type OnApproveDataOneTimePayments,
   type OnCancelDataOneTimePayments,
   type OnErrorData,
 } from '@paypal/react-paypal-js/sdk-v6';
+import { APP_ROUTING_PATHS } from '../../../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../../../app/store';
-import { getCart } from '../../../cart/cart.store';
+import { getCart, keepNextCartSyncUnselected } from '../../../cart/cart.store';
 import {
   capturePayPalOrder,
   createCheckoutOrder,
@@ -26,6 +28,7 @@ const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
   selectedPickupPointId,
 }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const {
     createPayPalOrderReq,
     capturePayPalOrderReq,
@@ -77,14 +80,16 @@ const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
     }
 
     dispatch(setPaymentStatusMessage('Creating your order...'));
-    await dispatch(createCheckoutOrder({
+    const order = await dispatch(createCheckoutOrder({
       payment_id: payment.payment_id,
       pickup_point_id: selectedPickupPointId,
     })).unwrap();
     idempotencyKeyRef.current = undefined;
     paypalOrderIdRef.current = undefined;
-    dispatch(setPaymentStatusMessage('Order created successfully.'));
+    dispatch(setPaymentStatusMessage(undefined));
+    dispatch(keepNextCartSyncUnselected());
     dispatch(getCart());
+    navigate(APP_ROUTING_PATHS.APP_ORDER_PAGE(order.order_id), { replace: true });
   };
 
   const handleCancel = (_data: OnCancelDataOneTimePayments) => {

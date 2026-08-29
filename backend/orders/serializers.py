@@ -52,6 +52,8 @@ class CustomerOrderDetailSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     payment_id = serializers.IntegerField(read_only=True)
     pickup_point_id = serializers.IntegerField(read_only=True)
+    pickup_point_name = serializers.CharField(source="pickup_point.name", read_only=True)
+    pickup_point_address = serializers.CharField(source="pickup_point.address", read_only=True)
 
     class Meta:
         model = Order
@@ -59,6 +61,8 @@ class CustomerOrderDetailSerializer(serializers.ModelSerializer):
             "order_id",
             "payment_id",
             "pickup_point_id",
+            "pickup_point_name",
+            "pickup_point_address",
             "total_price",
             "order_status",
             "date_created",
