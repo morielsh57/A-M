@@ -28,6 +28,7 @@ urlpatterns = [
     path("api/v1/admin/products/", include("products.admin_urls")),
     path("api/v1/admin/orders/", include("orders.urls")),
     path("api/v1/admin/pickup-points/", include("pickup_points.urls")),
+    path("api/v1/supplier/", include("config.supplier_urls")),
     path("api/v1/cart/", include("carts.urls")),
     path("api/v1/orders/", include("orders.customer_urls")),
     path("api/v1/checkout/paypal/", include("payments.urls")),
