@@ -46,6 +46,7 @@ from products.serializers import (
     ProductImageSerializer,
     ProductImageReplaceSerializer,
     ProductImageUploadSerializer,
+    SupplierProductWriteSerializer,
     get_user_supplier_profile,
 )
 
@@ -376,6 +377,76 @@ class ProductDetailView(APIView):
         if product is None:
             raise NotFound("Product was not found.")
         return Response(ProductDetailSerializer(product).data)
+
+
+class SupplierProductListView(APIView):
+    permission_classes = [IsAuthenticated, HasAnyRole]
+    allowed_roles = frozenset({SUPPLIER_ROLE})
+
+    @extend_schema(
+        summary="List the supplier's products",
+        description="Authenticated Supplier endpoint. Returns only products assigned to the current supplier.",
+        parameters=[
+            OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("page", int, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("page_size", int, OpenApiParameter.QUERY, required=False),
+        ],
+        responses={200: AdminProductListSerializer(many=True)},
+        tags=["Supplier Products"],
+    )
+    def get(self, request):
+        products = filter_products_by_category(
+            get_product_queryset()
+            .filter(supplier__user=request.user)
+            .order_by("-date_created", "product_id"),
+            request,
+        )
+        return paginate_queryset(request, products, AdminProductListSerializer)
+
+
+class SupplierProductDetailView(APIView):
+    permission_classes = [IsAuthenticated, HasAnyRole]
+    allowed_roles = frozenset({SUPPLIER_ROLE})
+
+    def get_product(self, request, product_id):
+        product = (
+            get_product_queryset()
+            .filter(product_id=product_id, supplier__user=request.user)
+            .first()
+        )
+        if product is None:
+            raise NotFound("Product was not found.")
+        return product
+
+    @extend_schema(
+        summary="View a supplier product",
+        responses={200: AdminProductDetailSerializer, 404: ErrorResponseSerializer},
+        tags=["Supplier Products"],
+    )
+    def get(self, request, product_id):
+        return Response(AdminProductDetailSerializer(self.get_product(request, product_id)).data)
+
+    @extend_schema(
+        summary="Update a supplier product",
+        description=(
+            "Updates editable catalogue fields for a product assigned to the current supplier. "
+            "Ownership and catalogue number cannot be changed."
+        ),
+        request=SupplierProductWriteSerializer,
+        responses={
+            200: AdminProductDetailSerializer,
+            400: ErrorResponseSerializer,
+            404: ErrorResponseSerializer,
+        },
+        tags=["Supplier Products"],
+    )
+    def patch(self, request, product_id):
+        product = self.get_product(request, product_id)
+        serializer = SupplierProductWriteSerializer(product, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        product = get_product_queryset().get(pk=product.pk)
+        return Response(AdminProductDetailSerializer(product).data)
 
 
 class AdminProductListCreateView(APIView):
