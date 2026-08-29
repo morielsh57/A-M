@@ -19,7 +19,6 @@ import {
   normalizePickupPoints,
   PICKUP_PAGE_SIZE,
   PICKUP_SEARCH_RADIUS_KM,
-  USE_MOCK_PICKUP_POINTS,
 } from './CheckoutDelivery.utils';
 import './CheckoutDelivery.scss';
 
@@ -29,6 +28,7 @@ const CheckoutDelivery: React.FC<CheckoutDeliveryProps> = ({
   onPickupPointSelect,
 }) => {
   const googleMapsApiKey = import.meta.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
+  const shouldUseMockPickupPoints = import.meta.env.REACT_APP_USE_MOCK_PICKUP_POINTS || false;
   const [pickupPoints, setPickupPoints] = useState<PickupPoint[]>([]);
   const [center, setCenter] = useState<LatLngLiteral>(DEFAULT_CENTER);
   const [pickupRequest, setPickupRequest] = useState<PickupPointRequestState>({ isLoading: false });
@@ -58,7 +58,7 @@ const CheckoutDelivery: React.FC<CheckoutDeliveryProps> = ({
     setPickupRequest({ isLoading: true, error: undefined });
 
     try {
-      const nextPickupPoints = USE_MOCK_PICKUP_POINTS
+      const nextPickupPoints = shouldUseMockPickupPoints
         ? getPickupPointsWithinRadius(location)
         : await loadPickupPointsFromApi(location);
 

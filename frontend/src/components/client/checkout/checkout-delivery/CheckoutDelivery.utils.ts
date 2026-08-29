@@ -3,7 +3,6 @@ import type { LatLngLiteral, PickupPoint } from './CheckoutDelivery.types';
 export const DEFAULT_CENTER: LatLngLiteral = { lat: 32.0853, lng: 34.7818 };
 export const PICKUP_MAP_ID = 'DEMO_MAP_ID';
 export const PICKUP_MAP_ZOOM = 16;
-export const USE_MOCK_PICKUP_POINTS = true;
 export const PICKUP_SEARCH_RADIUS_KM = 20;
 export const PICKUP_PAGE_SIZE = 50;
 
