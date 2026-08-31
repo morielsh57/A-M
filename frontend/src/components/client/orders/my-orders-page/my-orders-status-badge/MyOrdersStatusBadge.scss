@@ -1,0 +1,35 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.my-orders-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &--completed {
+    background: $green1;
+    color: $green8;
+  }
+
+  &--pending {
+    background: $gold1;
+    color: $gold9;
+  }
+
+  &--cancelled {
+    background: $red1;
+    color: $red7;
+  }
+
+  &--default {
+    background: $purple1;
+    color: $purple7;
+  }
+}

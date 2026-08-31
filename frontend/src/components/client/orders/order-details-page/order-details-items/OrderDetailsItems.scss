@@ -7,7 +7,7 @@
   background: $natural1;
   box-shadow: 0 14px 35px rgba($purple9, 0.06);
 
-  h2 {
+  &__title {
     margin: 0 0 18px;
     color: $purple9;
     font-size: 1.18rem;
@@ -41,38 +41,42 @@
     color: $natural7;
     font-size: 0.74rem;
     font-weight: 700;
+  }
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+  &__image-file {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__image-placeholder {
+    display: inline-flex;
   }
 
   &__details {
     min-width: 0;
-
-    h3 {
-      margin: 0 0 7px;
-      color: $purple9;
-      font-size: 1rem;
-      font-weight: 800;
-    }
-
-    p {
-      margin: 0 0 10px;
-      color: $natural7;
-    }
-
-    span {
-      display: block;
-      margin-top: 3px;
-      color: $purple8;
-      font-size: 0.9rem;
-    }
   }
 
-  >strong {
+  &__name {
+    margin: 0 0 7px;
+    color: $purple9;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  &__variant {
+    margin: 0 0 10px;
+    color: $natural7;
+  }
+
+  &__meta {
+    display: block;
+    margin-top: 3px;
+    color: $purple8;
+    font-size: 0.9rem;
+  }
+
+  &__total {
     color: $purple9;
     font-size: 1rem;
     white-space: nowrap;
@@ -88,7 +92,7 @@
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 12px;
 
-    >strong {
+    &__total {
       grid-column: 2;
     }
   }

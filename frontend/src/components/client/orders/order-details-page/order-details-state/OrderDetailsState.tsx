@@ -20,10 +20,10 @@ const OrderDetailsState: React.FC<OrderDetailsStateProps> = ({
     isError ? 'order-details-state--error' : '',
   ].filter(Boolean).join(' ')}
   >
-    <h2>{title}</h2>
-    <p>{message}</p>
+    <h2 className="order-details-state__title">{title}</h2>
+    <p className="order-details-state__message">{message}</p>
     {onContinueShopping && (
-      <AppButton onClick={onContinueShopping}>
+      <AppButton className="order-details-state__action" onClick={onContinueShopping}>
         Continue shopping
       </AppButton>
     )}

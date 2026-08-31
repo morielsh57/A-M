@@ -4,6 +4,7 @@ import { API_ROUTES } from '../../../app/routing';
 import { apiService, createApiThunk } from '../../../shared/api/axios';
 import { APIRequestState, type IAPIRequestState } from '../../../shared/api/models';
 import { createAPIReducerCases, type ApiDataStateType } from '../../../shared/store/utils';
+import type { IOrder, IOrderItem } from '../orders/orders.store';
 import type { PickupPoint } from './checkout-delivery/CheckoutDelivery.types';
 import {
   getPickupPointsWithinRadius,
@@ -30,17 +31,7 @@ export interface ICreateCheckoutOrderRequest {
   pickup_point_id: number;
 }
 
-export interface ICheckoutPaymentItem {
-  order_item_id?: number;
-  variant_id: number;
-  product_id: number;
-  product_name: string;
-  color?: string | null;
-  size?: string | null;
-  quantity: number;
-  unit_price: string | number;
-  total_price: string | number;
-}
+export type ICheckoutPaymentItem = IOrderItem;
 
 export interface IPayPalPayment {
   payment_id: number;
@@ -53,24 +44,7 @@ export interface IPayPalPayment {
   items: ICheckoutPaymentItem[];
 }
 
-export enum EOrderStatus {
-  PENDING = "Pending",
-  COMPLETED = "Completed",
-  CANCELLED = "Cancelled",
-}
-
-export interface ICheckoutOrder {
-  order_id: number;
-  payment_id: number;
-  pickup_point_id: number;
-  pickup_point_name?: string | null;
-  pickup_point_address?: string | null;
-  total_price: string | number;
-  order_status: EOrderStatus;
-  date_created: string;
-  date_updated: string;
-  items: ICheckoutPaymentItem[];
-}
+export type ICheckoutOrder = IOrder;
 
 export interface CheckoutStoreState extends ApiDataStateType {
   selectedPickupPointId: number | null;
@@ -78,7 +52,6 @@ export interface CheckoutStoreState extends ApiDataStateType {
   createPayPalOrderReq: IAPIRequestState<IPayPalPayment>;
   capturePayPalOrderReq: IAPIRequestState<IPayPalPayment>;
   createCheckoutOrderReq: IAPIRequestState<ICheckoutOrder>;
-  getCheckoutOrderReq: IAPIRequestState<ICheckoutOrder>;
   checkoutSuccessOrder?: ICheckoutOrder;
   paymentStatusMessage?: string;
 }
@@ -89,7 +62,6 @@ const initialState: CheckoutStoreState = {
   createPayPalOrderReq: APIRequestState.create<IPayPalPayment>(),
   capturePayPalOrderReq: APIRequestState.create<IPayPalPayment>(),
   createCheckoutOrderReq: APIRequestState.create<ICheckoutOrder>(),
-  getCheckoutOrderReq: APIRequestState.create<ICheckoutOrder>(),
 };
 
 const shouldUseMockPickupPoints = () => (
@@ -141,11 +113,6 @@ export const createCheckoutOrder = createApiThunk<ICheckoutOrder, ICreateCheckou
   ),
 );
 
-export const getCheckoutOrder = createApiThunk<ICheckoutOrder, number | string>(
-  'checkout/getCheckoutOrder',
-  (orderId) => apiService.get<ICheckoutOrder>(API_ROUTES.ORDER_DETAIL(orderId)),
-);
-
 export const checkoutStoreReducer = createReducer(initialState, (builder) => {
   const apiBuilder = builder as unknown as ActionReducerMapBuilder<ApiDataStateType>;
 
@@ -157,11 +124,6 @@ export const checkoutStoreReducer = createReducer(initialState, (builder) => {
   createAPIReducerCases(createPayPalOrder, 'createPayPalOrderReq', apiBuilder);
   createAPIReducerCases(capturePayPalOrder, 'capturePayPalOrderReq', apiBuilder);
   createAPIReducerCases(createCheckoutOrder, 'createCheckoutOrderReq', apiBuilder, {
-    onFulfilled: (state, order) => {
-      state.checkoutSuccessOrder = order;
-    },
-  });
-  createAPIReducerCases(getCheckoutOrder, 'getCheckoutOrderReq', apiBuilder, {
     onFulfilled: (state, order) => {
       state.checkoutSuccessOrder = order;
     },
@@ -181,7 +143,6 @@ export const checkoutStoreReducer = createReducer(initialState, (builder) => {
       state.createPayPalOrderReq = APIRequestState.create<IPayPalPayment>();
       state.capturePayPalOrderReq = APIRequestState.create<IPayPalPayment>();
       state.createCheckoutOrderReq = APIRequestState.create<ICheckoutOrder>();
-      state.getCheckoutOrderReq = APIRequestState.create<ICheckoutOrder>();
       state.checkoutSuccessOrder = undefined;
       state.paymentStatusMessage = undefined;
     });

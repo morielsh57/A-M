@@ -1,0 +1,8 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.my-orders-list {
+  display: grid;
+  gap: 14px;
+  width: min(900px, 90%);
+  margin: 0 auto 24px;
+}

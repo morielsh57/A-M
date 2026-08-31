@@ -9,18 +9,18 @@
   color: $purple9;
   text-align: center;
 
-  h2 {
+  &__title {
     margin-bottom: 8px;
     color: $purple9;
   }
 
-  p {
+  &__message {
     max-width: 520px;
     margin-bottom: 22px;
     color: $natural7;
   }
 
-  &--error h2 {
+  &--error &__title {
     color: $red7;
   }
 }

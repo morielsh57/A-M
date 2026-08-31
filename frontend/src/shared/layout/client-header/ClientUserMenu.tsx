@@ -1,6 +1,6 @@
 import React from 'react';
 import Avatar from '@material-ui/core/Avatar';
-import { LogoutOutlined, UserOutlined } from '@ant-design/icons';
+import { LogoutOutlined, ShoppingOutlined, UserOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Dropdown } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +18,11 @@ const ClientUserMenu: React.FC = () => {
       icon: <UserOutlined />,
     },
     {
+      key: 'orders',
+      label: 'My orders',
+      icon: <ShoppingOutlined />,
+    },
+    {
       key: 'logout',
       label: 'Logout',
       icon: <LogoutOutlined />,
@@ -27,6 +32,11 @@ const ClientUserMenu: React.FC = () => {
   const handleUserMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key === 'profile') {
       navigate(APP_ROUTING_PATHS.APP_PROFILE_PAGE);
+      return;
+    }
+
+    if (key === 'orders') {
+      navigate(APP_ROUTING_PATHS.APP_ORDERS_PAGE());
       return;
     }
 
