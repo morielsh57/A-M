@@ -5,8 +5,8 @@ import { cartIcon } from '../../../components/util/iconsFunc';
 
 const CartButton: React.FC = () => {
   const dispatch = useAppDispatch();
-  const cartItems = useAppSelector((store) => store.cartStoreReducer.getCartReq.data?.items || []);
-  const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartItems = useAppSelector((store) => store.cartStoreReducer.getCartReq.data?.items);
+  const cartItemsCount = (cartItems || []).reduce((total, item) => total + item.quantity, 0);
 
   const handleOpenCart = () => {
     dispatch(openCart());

@@ -101,7 +101,7 @@ class MainCategoryListView(APIView):
                     to_attr="active_subcategories",
                 )
             )
-            .order_by("main_category_name", "category_id")
+            .order_by("date_created", "category_id")
         )
         return Response(MainCategorySerializer(main_categories, many=True).data)
 

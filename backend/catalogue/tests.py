@@ -70,6 +70,20 @@ class CategoryApiTests(TestCase):
             [self.category.category_id],
         )
 
+    def test_public_main_categories_are_returned_from_oldest_to_newest(self):
+        women_category = Category.objects.create(
+            short_id="women",
+            main_category_name="Women",
+        )
+
+        response = self.client.get(reverse("main-category-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [category["category_id"] for category in response.json()["data"]],
+            [self.parent_category.category_id, women_category.category_id],
+        )
+
     def test_public_main_categories_exclude_inactive_subcategories(self):
         self.category.is_active = False
         self.category.save(update_fields=["is_active"])
