@@ -335,6 +335,10 @@ class ProductVariantApiTests(TestCase):
             reverse("product-list"),
             {"main_category": self.category.category_id},
         )
+        category_products = self.client.get(
+            reverse("product-list"),
+            {"category": self.category.category_id},
+        )
         subcategory_products = self.client.get(
             reverse("product-list"),
             {"main_category": self.category.category_id, "sub_category": subcategory.category_id},
@@ -342,6 +346,10 @@ class ProductVariantApiTests(TestCase):
         main_count = self.client.get(
             reverse("product-count"),
             {"main_category": self.category.category_id},
+        )
+        category_count = self.client.get(
+            reverse("product-count"),
+            {"category": self.category.category_id},
         )
         subcategory_count = self.client.get(
             reverse("product-count"),
@@ -353,11 +361,18 @@ class ProductVariantApiTests(TestCase):
             {item["product_id"] for item in main_products.json()["data"]},
             {self.product.product_id, subcategory_product.product_id},
         )
+        self.assertEqual(category_products.status_code, 200)
+        self.assertEqual(
+            {item["product_id"] for item in category_products.json()["data"]},
+            {self.product.product_id, subcategory_product.product_id},
+        )
         self.assertEqual(subcategory_products.status_code, 200)
         self.assertEqual(
             [item["product_id"] for item in subcategory_products.json()["data"]],
             [subcategory_product.product_id],
         )
+        self.assertEqual(category_count.status_code, 200)
+        self.assertEqual(category_count.json()["data"]["count"], 2)
         self.assertEqual(main_count.json()["data"], {"count": 2})
         self.assertEqual(subcategory_count.json()["data"], {"count": 1})
 
