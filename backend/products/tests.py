@@ -479,6 +479,47 @@ class ProductVariantApiTests(TestCase):
         self.assertEqual(product["variant_count"], 3)
         self.assertEqual(product["total_quantity"], 8)
 
+    def test_admin_product_list_main_category_includes_subcategory_products(self):
+        self.authorize(self.admin)
+        subcategory = Category.objects.create(
+            short_id="admin-casual-shirts",
+            main_category_name="Shirts",
+            sub_category_name="Casual",
+            parent_category=self.category,
+        )
+        subcategory_product = Product.objects.create(
+            catalog_number="ADMIN-CASUAL-100",
+            name="Admin Casual Shirt",
+            price=Decimal("39.99"),
+            category=subcategory,
+            supplier=self.supplier,
+        )
+
+        response = self.client.get(
+            reverse("admin-product-list"),
+            {
+                "category": self.category.category_id,
+                "page": 1,
+                "page_size": 1,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["meta"]["pagination"]["total_items"], 2)
+        self.assertEqual(
+            {
+                item["product_id"]
+                for item in self.client.get(
+                    reverse("admin-product-list"),
+                    {
+                        "category": self.category.category_id,
+                        "page_size": 20,
+                    },
+                ).json()["data"]
+            },
+            {self.product.product_id, subcategory_product.product_id},
+        )
+
     def test_admin_can_create_product_and_manage_variants(self):
         self.authorize(self.admin)
         create_response = self.client.post(
