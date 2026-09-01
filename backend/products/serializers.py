@@ -428,6 +428,8 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 
 class AdminProductListSerializer(serializers.ModelSerializer):
     category_id = serializers.IntegerField(source="category.category_id")
+    supplier_id = serializers.SerializerMethodField()
+    supplier_name = serializers.SerializerMethodField()
     colors = serializers.SerializerMethodField()
     sizes = serializers.SerializerMethodField()
     variant_count = serializers.SerializerMethodField()
@@ -440,6 +442,8 @@ class AdminProductListSerializer(serializers.ModelSerializer):
             "catalog_number",
             "name",
             "category_id",
+            "supplier_id",
+            "supplier_name",
             "price",
             "fabric",
             "colors",
@@ -447,6 +451,14 @@ class AdminProductListSerializer(serializers.ModelSerializer):
             "variant_count",
             "total_quantity",
         )
+
+    @extend_schema_field(OpenApiTypes.INT)
+    def get_supplier_id(self, product):
+        return product.supplier_id
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_supplier_name(self, product):
+        return product.supplier.user.name if product.supplier_id else None
 
     def get_colors(self, product):
         return list(

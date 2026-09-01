@@ -1,4 +1,9 @@
-import type { CategoryId, ProductId, ProductVariantId } from '../../../product-page/product.types';
+import type {
+  CategoryId,
+  ProductId,
+  ProductVariantId,
+  SupplierId,
+} from '../../../product-page/product.types';
 import type { IAdminProductImage } from '../adminProducts.types';
 import { ADMIN_PRODUCT_NEW_OPTION_VALUE } from './adminProductForm.constants';
 
@@ -15,6 +20,7 @@ export interface AdminProductBaseFormValues {
   fabric: string;
   main_category_id: CategoryId | null;
   sub_category_id: CategoryId | null;
+  supplier_id: SupplierId | null;
   is_active: boolean;
 }
 

@@ -17,6 +17,8 @@ export interface IAdminProductListItem {
   catalog_number: string;
   name: string;
   category_id: CategoryId;
+  supplier_id?: SupplierId | null;
+  supplier_name?: string | null;
   price: string | number;
   fabric?: string | null;
   colors: string[];

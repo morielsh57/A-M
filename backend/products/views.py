@@ -64,7 +64,7 @@ def get_product_queryset(active_only=False):
         images = images.filter(is_active=True)
 
     products = (
-        Product.objects.select_related("category", "supplier")
+        Product.objects.select_related("category", "supplier", "supplier__user")
         .prefetch_related(
             Prefetch("variants", queryset=variants),
             Prefetch("images", queryset=images),

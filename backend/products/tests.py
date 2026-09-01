@@ -472,6 +472,8 @@ class ProductVariantApiTests(TestCase):
         data = response.json()["data"]
         self.assertEqual(len(data), 1)
         product = data[0]
+        self.assertEqual(product["supplier_id"], self.supplier.supplier_id)
+        self.assertEqual(product["supplier_name"], self.supplier_user.name)
         self.assertEqual(product["colors"], ["Black", "White"])
         self.assertEqual(product["sizes"], ["S", "M"])
         self.assertEqual(product["variant_count"], 3)
