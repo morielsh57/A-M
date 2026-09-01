@@ -8,6 +8,7 @@ from orders.services import transition_order_status, transition_supplier_fulfill
 class OrderItemSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField(read_only=True)
     variant_id = serializers.IntegerField(read_only=True)
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
@@ -15,12 +16,43 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "order_item_id",
             "product_id",
             "variant_id",
+            "image_url",
             "product_name",
             "color",
             "size",
             "quantity",
             "unit_price",
             "total_price",
+        )
+
+    @extend_schema_field(serializers.URLField(allow_null=True))
+    def get_image_url(self, item):
+        variant_images = [
+            image.secure_url
+            for image in item.variant.product_images.all()
+            if image.is_active
+        ]
+        if variant_images:
+            return variant_images[0]
+
+        primary_image = next(
+            (
+                image.secure_url
+                for image in item.product.images.all()
+                if image.is_active and image.is_primary and image.variant_id is None
+            ),
+            None,
+        )
+        if primary_image:
+            return primary_image
+
+        return next(
+            (
+                image.secure_url
+                for image in item.product.images.all()
+                if image.is_active and image.variant_id is None
+            ),
+            None,
         )
 
 
@@ -73,9 +105,13 @@ class CustomerOrderDetailSerializer(serializers.ModelSerializer):
 
 class AdminOrderSerializer(serializers.ModelSerializer):
     customer_email = serializers.EmailField(source="customer.email", read_only=True)
+    customer_name = serializers.CharField(source="customer.name", read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
+    item_count = serializers.SerializerMethodField()
     payment_id = serializers.IntegerField(read_only=True)
     pickup_point_id = serializers.IntegerField(read_only=True)
+    pickup_point_name = serializers.CharField(source="pickup_point.name", read_only=True)
+    pickup_point_address = serializers.CharField(source="pickup_point.address", read_only=True)
 
     class Meta:
         model = Order
@@ -84,46 +120,48 @@ class AdminOrderSerializer(serializers.ModelSerializer):
             "cart_id",
             "payment_id",
             "pickup_point_id",
+            "pickup_point_name",
+            "pickup_point_address",
             "customer_id",
+            "customer_name",
             "customer_email",
             "total_price",
             "order_status",
+            "item_count",
             "date_created",
             "date_updated",
             "is_review",
             "items",
         )
 
+    @extend_schema_field(serializers.IntegerField)
+    def get_item_count(self, order):
+        if hasattr(order, "items"):
+            try:
+                return len(order.items.all())
+            except TypeError:
+                pass
+        return order.items.count()
+
 
 class AdminOrderStatusSerializer(serializers.Serializer):
     order_status = serializers.ChoiceField(choices=Order.Status.choices)
 
     def update(self, instance, validated_data):
-        return transition_order_status(instance, validated_data["order_status"])
-
-
-class SupplierOrderItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.IntegerField(read_only=True)
-    variant_id = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        model = OrderItem
-        fields = (
-            "order_item_id",
-            "product_id",
-            "variant_id",
-            "product_name",
-            "color",
-            "size",
-            "quantity",
-            "unit_price",
-            "total_price",
+        return transition_order_status(
+            instance,
+            validated_data["order_status"],
+            allow_any_transition=True,
         )
 
 
 class SupplierOrderSerializer(serializers.ModelSerializer):
     order_status = serializers.SerializerMethodField()
-    items = SupplierOrderItemSerializer(source="supplier_items", many=True, read_only=True)
+    items = OrderItemSerializer(source="supplier_items", many=True, read_only=True)
+    item_count = serializers.SerializerMethodField()
+    pickup_point_id = serializers.IntegerField(read_only=True)
+    pickup_point_name = serializers.CharField(source="pickup_point.name", read_only=True)
+    pickup_point_address = serializers.CharField(source="pickup_point.address", read_only=True)
     supplier_total_price = serializers.SerializerMethodField()
 
     class Meta:
@@ -132,10 +170,18 @@ class SupplierOrderSerializer(serializers.ModelSerializer):
             "order_id",
             "order_status",
             "supplier_total_price",
+            "item_count",
+            "pickup_point_id",
+            "pickup_point_name",
+            "pickup_point_address",
             "date_created",
             "date_updated",
             "items",
         )
+
+    @extend_schema_field(serializers.IntegerField)
+    def get_item_count(self, order):
+        return len(getattr(order, "supplier_items", []))
 
     @extend_schema_field(serializers.DecimalField(max_digits=10, decimal_places=2))
     def get_supplier_total_price(self, order):

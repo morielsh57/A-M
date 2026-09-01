@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.models import Supplier
-from accounts.permissions import IsAdministrator, IsSupplier
+from accounts.models import ADMIN_ROLE, SUPPLIER_ROLE, Supplier
+from accounts.permissions import HasAnyRole, IsSupplier
 from config.api.pagination import StandardPageNumberPagination
 from orders.models import Order, OrderItem, SupplierOrderFulfillment
 from orders.serializers import (
@@ -27,28 +27,72 @@ from orders.services import (
 )
 
 
+ORDER_ITEMS_WITH_IMAGES = (
+    OrderItem.objects.select_related("product", "variant")
+    .prefetch_related("variant__product_images", "product__images")
+    .order_by("order_item_id")
+)
+
+
 class AdminOrderListView(APIView):
-    permission_classes = [IsAuthenticated, IsAdministrator]
+    permission_classes = [IsAuthenticated, HasAnyRole]
+    allowed_roles = frozenset({ADMIN_ROLE, SUPPLIER_ROLE})
     serializer_class = AdminOrderSerializer
 
     def get(self, request):
-        orders = Order.objects.select_related("customer", "cart").order_by(
-            "-date_created", "order_id"
-        )
+        orders = self.get_scoped_queryset(request).order_by("-date_created", "order_id")
         order_status = request.query_params.get("status")
         if order_status:
             if order_status not in Order.Status.values:
                 raise ValidationError({"status": ["Unsupported order status."]})
-            orders = orders.filter(order_status=order_status)
+            orders = self.filter_by_status(request, orders, order_status)
+        search = request.query_params.get("search", "").strip()
         customer = request.query_params.get("customer", "").strip()
-        if customer:
-            orders = orders.filter(
-                Q(customer__email__icontains=customer)
-                | Q(customer__name__icontains=customer)
-            )
+        if search or customer:
+            orders = self.filter_by_search(request, orders, search or customer)
         paginator = StandardPageNumberPagination()
         page = paginator.paginate_queryset(orders, request)
-        return paginator.get_paginated_response(AdminOrderSerializer(page, many=True).data)
+        serializer_class = self.get_serializer_class(request)
+        return paginator.get_paginated_response(serializer_class(page, many=True).data)
+
+    def get_serializer_class(self, request=None):
+        if request is None:
+            return AdminOrderSerializer
+        if request.user.role.role_name == SUPPLIER_ROLE:
+            return SupplierOrderSerializer
+        return AdminOrderSerializer
+
+    def get_scoped_queryset(self, request):
+        if request.user.role.role_name == SUPPLIER_ROLE:
+            return get_supplier_order_queryset(request.user)
+        return (
+            Order.objects.select_related("customer", "cart", "pickup_point")
+            .prefetch_related(Prefetch("items", queryset=ORDER_ITEMS_WITH_IMAGES))
+        )
+
+    def filter_by_status(self, request, orders, order_status):
+        if request.user.role.role_name == SUPPLIER_ROLE:
+            return orders.filter(
+                supplier_fulfillments__supplier__user=request.user,
+                supplier_fulfillments__status=order_status,
+            )
+        return orders.filter(order_status=order_status)
+
+    def filter_by_search(self, request, orders, search):
+        filters = Q()
+        if search.isdigit():
+            filters |= Q(order_id=int(search))
+        if request.user.role.role_name == SUPPLIER_ROLE:
+            filters |= Q(
+                items__product__supplier__user=request.user,
+                items__product_name__icontains=search,
+            )
+        else:
+            filters |= (
+                Q(customer__email__icontains=search)
+                | Q(customer__name__icontains=search)
+            )
+        return orders.filter(filters).distinct()
 
 
 def get_supplier_order_queryset(user):
@@ -57,14 +101,13 @@ def get_supplier_order_queryset(user):
     except Supplier.DoesNotExist:
         return Order.objects.none()
 
-    supplier_items = OrderItem.objects.filter(
-        product__supplier=supplier,
-    ).select_related("product", "variant").order_by("order_item_id")
+    supplier_items = ORDER_ITEMS_WITH_IMAGES.filter(product__supplier=supplier)
     supplier_fulfillments = SupplierOrderFulfillment.objects.filter(
         supplier=supplier,
     )
     return (
         Order.objects.filter(items__product__supplier=supplier)
+        .select_related("pickup_point")
         .prefetch_related(
             Prefetch("items", queryset=supplier_items, to_attr="supplier_items"),
             Prefetch(
@@ -145,31 +188,55 @@ class SupplierOrderStatusView(APIView):
 
 
 class AdminOrderDetailView(APIView):
-    permission_classes = [IsAuthenticated, IsAdministrator]
+    permission_classes = [IsAuthenticated, HasAnyRole]
+    allowed_roles = frozenset({ADMIN_ROLE, SUPPLIER_ROLE})
     serializer_class = AdminOrderSerializer
 
     def get(self, request, order_id):
-        return Response(AdminOrderSerializer(self.get_order(order_id)).data)
+        order = self.get_order(request, order_id)
+        return Response(self.get_serializer_class(request)(order).data)
 
     def patch(self, request, order_id):
-        order = self.get_order(order_id)
-        serializer = AdminOrderStatusSerializer(order, data=request.data)
+        order = self.get_order(request, order_id)
+        serializer_class = (
+            SupplierOrderStatusSerializer
+            if request.user.role.role_name == SUPPLIER_ROLE
+            else AdminOrderStatusSerializer
+        )
+        instance = (
+            order.supplier_fulfillments_for_request[0]
+            if request.user.role.role_name == SUPPLIER_ROLE
+            else order
+        )
+        serializer = serializer_class(instance, data=request.data)
         serializer.is_valid(raise_exception=True)
-        return Response(AdminOrderSerializer(serializer.save()).data)
+        serializer.save()
+        order = self.get_order(request, order_id)
+        return Response(self.get_serializer_class(request)(order).data)
 
     def delete(self, request, order_id):
-        self.get_order(order_id)
+        self.get_order(request, order_id)
         raise ValidationError(
             {"order_id": ["Orders are historical business records and cannot be deleted."]}
         )
 
-    def get_order(self, order_id):
-        order = (
-            Order.objects.select_related("customer", "cart")
-            .prefetch_related("items")
-            .filter(pk=order_id)
-            .first()
-        )
+    def get_serializer_class(self, request=None):
+        if request is None:
+            return AdminOrderSerializer
+        if request.user.role.role_name == SUPPLIER_ROLE:
+            return SupplierOrderSerializer
+        return AdminOrderSerializer
+
+    def get_order(self, request, order_id):
+        if request.user.role.role_name == SUPPLIER_ROLE:
+            order = get_supplier_order_queryset(request.user).filter(pk=order_id).first()
+        else:
+            order = (
+                Order.objects.select_related("customer", "cart", "pickup_point")
+                .prefetch_related(Prefetch("items", queryset=ORDER_ITEMS_WITH_IMAGES))
+                .filter(pk=order_id)
+                .first()
+            )
         if order is None:
             raise NotFound("Order was not found.")
         return order

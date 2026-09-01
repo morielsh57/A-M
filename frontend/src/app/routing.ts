@@ -113,6 +113,8 @@ export const API_ROUTES = {
     ) => `/admin/products/${productId}/images/${imageId}`,
     USERS: '/admin/users/',
     USER_DETAIL: (userId: string | number) => `/admin/users/${userId}`,
+    ORDERS: '/admin/orders/',
+    ORDER_DETAIL: (orderId: string | number) => `/admin/orders/${orderId}`,
   },
   USERS: '/users',
   USERS_ME: '/users/me',

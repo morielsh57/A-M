@@ -6,10 +6,10 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, Role, User
+from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supplier, User
 from carts.models import Cart, CartProduct
 from catalogue.models import Category
-from orders.models import Order, OrderItem
+from orders.models import Order, OrderItem, SupplierOrderFulfillment
 from orders.services import create_order_from_cart
 from payments.models import Payment, PaymentItem
 from pickup_points.models import PickUpPoint
@@ -359,18 +359,244 @@ class CustomerOrderApiTests(TestCase):
         self.variant.refresh_from_db()
         self.assertEqual(self.variant.quantity, 3)
 
-    def test_admin_cancellation_uses_transition_rules_and_restores_inventory(self):
+    def test_admin_can_change_order_status_anytime_and_inventory_stays_consistent(self):
         self.authorize()
         self.create_cart(quantity=2)
         order_id = self.checkout().json()["data"]["order_id"]
         self.authorize(self.admin)
 
-        response = self.client.patch(
+        cancel_response = self.client.patch(
             reverse("admin-order-detail", kwargs={"order_id": order_id}),
             {"order_status": Order.Status.CANCELLED},
             format="json",
         )
+        self.variant.refresh_from_db()
+        stock_after_cancel = self.variant.quantity
+        complete_response = self.client.patch(
+            reverse("admin-order-detail", kwargs={"order_id": order_id}),
+            {"order_status": Order.Status.COMPLETED},
+            format="json",
+        )
+        self.variant.refresh_from_db()
+        stock_after_complete = self.variant.quantity
+        pending_response = self.client.patch(
+            reverse("admin-order-detail", kwargs={"order_id": order_id}),
+            {"order_status": Order.Status.PENDING},
+            format="json",
+        )
+
+        self.assertEqual(cancel_response.status_code, 200)
+        self.assertEqual(complete_response.status_code, 200)
+        self.assertEqual(pending_response.status_code, 200)
+        self.assertEqual(cancel_response.json()["data"]["order_status"], Order.Status.CANCELLED)
+        self.assertEqual(complete_response.json()["data"]["order_status"], Order.Status.COMPLETED)
+        self.assertEqual(pending_response.json()["data"]["order_status"], Order.Status.PENDING)
+        self.assertEqual(stock_after_cancel, 5)
+        self.assertEqual(stock_after_complete, 3)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.quantity, 3)
+
+
+class AdminSupplierOrderApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.roles = {
+            name: Role.objects.get_or_create(role_name=name)[0]
+            for name in (CUSTOMER_ROLE, ADMIN_ROLE, SUPPLIER_ROLE)
+        }
+        self.admin = self.create_user("admin-orders@example.com", ADMIN_ROLE)
+        self.customer = self.create_user("customer-orders@example.com", CUSTOMER_ROLE)
+        self.supplier_user = self.create_user("supplier-orders@example.com", SUPPLIER_ROLE)
+        self.other_supplier_user = self.create_user("other-supplier-orders@example.com", SUPPLIER_ROLE)
+        self.supplier = Supplier.objects.create(user=self.supplier_user)
+        self.other_supplier = Supplier.objects.create(user=self.other_supplier_user)
+        self.category = Category.objects.create(
+            short_id="admin-orders",
+            main_category_name="Admin Orders",
+        )
+        self.pickup_point = PickUpPoint.objects.create(
+            name="Admin Orders Pickup",
+            lat=Decimal("32.0000000"),
+            lng=Decimal("34.0000000"),
+            address="Orders street",
+        )
+        self.product = self.create_product("ADMIN-ORDER-100", "Supplier Coat", self.supplier)
+        self.other_product = self.create_product(
+            "ADMIN-ORDER-200",
+            "Other Supplier Hat",
+            self.other_supplier,
+        )
+        self.variant = ProductVariant.objects.create(
+            product=self.product,
+            color="Black",
+            size="M",
+            quantity=5,
+        )
+        self.other_variant = ProductVariant.objects.create(
+            product=self.other_product,
+            color="Blue",
+            size="S",
+            quantity=5,
+        )
+
+    def create_user(self, email, role):
+        return User.objects.create_user(
+            email=email,
+            name=email.split("@")[0],
+            password="A-Strong-Password-2026!",
+            role=self.roles[role],
+            is_active=True,
+            is_valid_email=True,
+        )
+
+    def create_product(self, catalog_number, name, supplier):
+        return Product.objects.create(
+            catalog_number=catalog_number,
+            name=name,
+            price=Decimal("20.00"),
+            category=self.category,
+            supplier=supplier,
+        )
+
+    def create_order(self, variant, *, customer=None, status=Order.Status.PENDING):
+        customer = customer or self.customer
+        cart = Cart.objects.create(customer=customer, total_price=Decimal("20.00"))
+        order = Order.objects.create(
+            cart=cart,
+            customer=customer,
+            pickup_point=self.pickup_point,
+            total_price=Decimal("20.00"),
+            order_status=status,
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=variant.product,
+            variant=variant,
+            product_name=variant.product.name,
+            color=variant.color,
+            size=variant.size,
+            quantity=1,
+            unit_price=Decimal("20.00"),
+            total_price=Decimal("20.00"),
+        )
+        SupplierOrderFulfillment.objects.create(
+            order=order,
+            supplier=variant.product.supplier,
+            status=status,
+        )
+        return order
+
+    def authorize(self, user):
+        self.client.force_authenticate(user=user)
+
+    def test_admin_orders_endpoint_returns_all_orders(self):
+        first_order = self.create_order(self.variant)
+        second_order = self.create_order(self.other_variant)
+        self.authorize(self.admin)
+
+        response = self.client.get(reverse("admin-order-list"))
 
         self.assertEqual(response.status_code, 200)
-        self.variant.refresh_from_db()
-        self.assertEqual(self.variant.quantity, 5)
+        self.assertEqual(response.json()["meta"]["pagination"]["total_items"], 2)
+        self.assertEqual(
+            {order["order_id"] for order in response.json()["data"]},
+            {first_order.pk, second_order.pk},
+        )
+        self.assertIn("customer_email", response.json()["data"][0])
+
+    def test_supplier_uses_admin_orders_endpoint_but_only_sees_related_orders(self):
+        own_order = self.create_order(self.variant)
+        other_order = self.create_order(self.other_variant)
+        self.authorize(self.supplier_user)
+
+        listing = self.client.get(reverse("admin-order-list"))
+        own_detail = self.client.get(
+            reverse("admin-order-detail", kwargs={"order_id": own_order.pk})
+        )
+        other_detail = self.client.get(
+            reverse("admin-order-detail", kwargs={"order_id": other_order.pk})
+        )
+
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(listing.json()["meta"]["pagination"]["total_items"], 1)
+        data = listing.json()["data"][0]
+        self.assertEqual(data["order_id"], own_order.pk)
+        self.assertEqual(data["item_count"], 1)
+        self.assertEqual(data["supplier_total_price"], 20.0)
+        self.assertNotIn("customer_email", data)
+        self.assertNotIn("payment_id", data)
+        self.assertEqual(own_detail.status_code, 200)
+        self.assertEqual(other_detail.status_code, 404)
+
+    def test_admin_orders_search_and_status_filter_work(self):
+        pending_order = self.create_order(self.variant)
+        self.create_order(self.other_variant, status=Order.Status.COMPLETED)
+        self.authorize(self.admin)
+
+        status_response = self.client.get(
+            reverse("admin-order-list"),
+            {"status": Order.Status.PENDING},
+        )
+        search_response = self.client.get(
+            reverse("admin-order-list"),
+            {"search": "customer-orders"},
+        )
+        id_response = self.client.get(
+            reverse("admin-order-list"),
+            {"search": str(pending_order.pk)},
+        )
+
+        self.assertEqual(status_response.status_code, 200)
+        self.assertEqual(status_response.json()["meta"]["pagination"]["total_items"], 1)
+        self.assertEqual(status_response.json()["data"][0]["order_id"], pending_order.pk)
+        self.assertEqual(search_response.json()["meta"]["pagination"]["total_items"], 2)
+        self.assertEqual(id_response.json()["meta"]["pagination"]["total_items"], 1)
+
+    def test_supplier_orders_search_and_status_filter_work_on_related_data(self):
+        own_order = self.create_order(self.variant)
+        self.create_order(self.other_variant)
+        self.authorize(self.supplier_user)
+
+        status_response = self.client.get(
+            reverse("admin-order-list"),
+            {"status": SupplierOrderFulfillment.Status.PENDING},
+        )
+        search_response = self.client.get(
+            reverse("admin-order-list"),
+            {"search": "Supplier Coat"},
+        )
+        unrelated_search_response = self.client.get(
+            reverse("admin-order-list"),
+            {"search": "Other Supplier Hat"},
+        )
+
+        self.assertEqual(status_response.status_code, 200)
+        self.assertEqual(status_response.json()["meta"]["pagination"]["total_items"], 1)
+        self.assertEqual(status_response.json()["data"][0]["order_id"], own_order.pk)
+        self.assertEqual(search_response.json()["meta"]["pagination"]["total_items"], 1)
+        self.assertEqual(unrelated_search_response.json()["meta"]["pagination"]["total_items"], 0)
+
+    def test_admin_and_supplier_can_update_permitted_statuses_from_admin_order_endpoint(self):
+        admin_order = self.create_order(self.variant)
+        supplier_order = self.create_order(self.other_variant)
+
+        self.authorize(self.admin)
+        admin_response = self.client.patch(
+            reverse("admin-order-detail", kwargs={"order_id": admin_order.pk}),
+            {"order_status": Order.Status.CANCELLED},
+            format="json",
+        )
+        self.authorize(self.other_supplier_user)
+        supplier_response = self.client.patch(
+            reverse("admin-order-detail", kwargs={"order_id": supplier_order.pk}),
+            {"order_status": SupplierOrderFulfillment.Status.COMPLETED},
+            format="json",
+        )
+
+        self.assertEqual(admin_response.status_code, 200)
+        self.assertEqual(admin_response.json()["data"]["order_status"], Order.Status.CANCELLED)
+        self.assertEqual(supplier_response.status_code, 200)
+        self.assertEqual(
+            supplier_response.json()["data"]["order_status"],
+            SupplierOrderFulfillment.Status.COMPLETED,
+        )

@@ -210,19 +210,63 @@ def create_order_from_cart(customer, payment_id, pickup_point_id):
         raise
 
 
+def _lock_order_item_variants(items):
+    variant_ids = [item.variant_id for item in items]
+    return {
+        variant.variant_id: variant
+        for variant in ProductVariant.objects.select_for_update()
+        .filter(variant_id__in=variant_ids)
+    }
+
+
+def _restore_order_inventory(items):
+    _lock_order_item_variants(items)
+    for item in items:
+        ProductVariant.objects.filter(pk=item.variant_id).update(
+            quantity=F("quantity") + item.quantity
+        )
+
+
+def _reserve_order_inventory(items):
+    variants = _lock_order_item_variants(items)
+    for item in items:
+        variant = variants.get(item.variant_id)
+        if variant is None or item.quantity > variant.quantity:
+            raise ValidationError(
+                {
+                    "order_status": [
+                        f"Variant {item.variant_id} does not have enough stock "
+                        "to reactivate this order."
+                    ]
+                }
+            )
+    for item in items:
+        ProductVariant.objects.filter(pk=item.variant_id).update(
+            quantity=F("quantity") - item.quantity
+        )
+
+
 @transaction.atomic
-def transition_order_status(order, next_status):
+def transition_order_status(order, next_status, *, allow_any_transition=False):
     order = Order.objects.select_for_update().get(pk=order.pk)
     current_status = order.order_status
     if next_status == current_status:
         return order
 
-    allowed = {
-        Order.Status.PENDING: {Order.Status.COMPLETED, Order.Status.CANCELLED},
-        Order.Status.COMPLETED: set(),
-        Order.Status.CANCELLED: set(),
-    }
-    if next_status not in allowed[current_status]:
+    if allow_any_transition:
+        is_allowed = next_status in {
+            Order.Status.PENDING,
+            Order.Status.COMPLETED,
+            Order.Status.CANCELLED,
+        }
+    else:
+        allowed = {
+            Order.Status.PENDING: {Order.Status.COMPLETED, Order.Status.CANCELLED},
+            Order.Status.COMPLETED: set(),
+            Order.Status.CANCELLED: set(),
+        }
+        is_allowed = next_status in allowed[current_status]
+    if not is_allowed:
         raise ValidationError(
             {
                 "order_status": [
@@ -231,17 +275,11 @@ def transition_order_status(order, next_status):
             }
         )
 
-    if next_status == Order.Status.CANCELLED:
-        items = list(order.items.select_related("variant").order_by("order_item_id"))
-        list(
-            ProductVariant.objects.select_for_update()
-            .filter(variant_id__in=[item.variant_id for item in items])
-            .values_list("variant_id", flat=True)
-        )
-        for item in items:
-            ProductVariant.objects.filter(pk=item.variant_id).update(
-                quantity=F("quantity") + item.quantity
-            )
+    items = list(order.items.order_by("order_item_id"))
+    if current_status != Order.Status.CANCELLED and next_status == Order.Status.CANCELLED:
+        _restore_order_inventory(items)
+    elif current_status == Order.Status.CANCELLED and next_status != Order.Status.CANCELLED:
+        _reserve_order_inventory(items)
 
     order.order_status = next_status
     order.save(update_fields=("order_status", "date_updated"))
@@ -259,6 +297,11 @@ def transition_order_status(order, next_status):
         from notifications.services import create_order_notifications
 
         create_order_notifications(order, Notification.Type.CANCELLED_ORDER)
+    elif next_status == Order.Status.PENDING:
+        SupplierOrderFulfillment.objects.filter(order=order).update(
+            status=SupplierOrderFulfillment.Status.PENDING,
+            date_updated=timezone.now(),
+        )
     return order
 
 

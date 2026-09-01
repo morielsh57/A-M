@@ -1,0 +1,38 @@
+@import '../../../../shared/styles/colors.scss';
+
+.admin-order-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-width: 94px;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &--pending {
+    border-color: $gold4;
+    background-color: $gold1;
+    color: $gold9;
+  }
+
+  &--completed {
+    border-color: $green4;
+    background-color: $green1;
+    color: $green8;
+  }
+
+  &--cancelled {
+    border-color: $red4;
+    background-color: $red1;
+    color: $red8;
+  }
+}
