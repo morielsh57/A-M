@@ -9,14 +9,14 @@
   background: $natural1;
   box-shadow: 0 14px 35px rgba($purple9, 0.06);
 
-  h2 {
+  &__title {
     margin: 0 0 18px;
     color: $purple9;
     font-size: 1.18rem;
     font-weight: 800;
   }
 
-  >div {
+  &__line {
     display: flex;
     justify-content: space-between;
     gap: 18px;
@@ -24,7 +24,7 @@
     color: $natural7;
   }
 
-  strong {
+  &__value {
     color: $purple9;
     text-align: right;
   }

@@ -6,7 +6,7 @@ import { EAPIStatus } from '../../../../shared/api/models';
 import AppTitle from '../../../../shared/components/app-title/AppTitle';
 import Breadcrumbs from '../../../../shared/components/breadcrumbs/Breadcrumbs';
 import { getProductDetail, getProductDetailCacheKey } from '../../../product-page/product.store';
-import { EOrderStatus, getCheckoutOrder } from '../../checkout/checkout.store';
+import { EOrderStatus, getOrderById, getOrderByIdCacheKey } from '../orders.store';
 import OrderDetailsItems from './order-details-items/OrderDetailsItems';
 import OrderDetailsOverview from './order-details-overview/OrderDetailsOverview';
 import OrderDetailsPayment from './order-details-payment/OrderDetailsPayment';
@@ -17,19 +17,13 @@ const OrderDetailsPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { orderId } = useParams<{ orderId: string }>();
-  const { checkoutSuccessOrder, getCheckoutOrderReq } = useAppSelector((store) => (
-    store.checkoutStoreReducer
-  ));
+  const { orderByIdReq } = useAppSelector((store) => store.ordersStoreReducer);
   const { productDetailByProductReq } = useAppSelector((store) => (
     store.productPageStoreReducer
   ));
-  const fetchedOrder = getCheckoutOrderReq.data;
-  const order = checkoutSuccessOrder && String(checkoutSuccessOrder.order_id) === String(orderId)
-    ? checkoutSuccessOrder
-    : fetchedOrder && String(fetchedOrder.order_id) === String(orderId)
-      ? fetchedOrder
-      : undefined;
-  const isLoading = getCheckoutOrderReq.status === EAPIStatus.PENDING;
+  const orderRequest = orderId ? orderByIdReq[getOrderByIdCacheKey(orderId)] : undefined;
+  const order = orderRequest?.data;
+  const isLoading = !orderRequest || orderRequest.status === EAPIStatus.PENDING;
 
   useEffect(() => {
     if (!orderId) {
@@ -37,10 +31,10 @@ const OrderDetailsPage: React.FC = () => {
       return;
     }
 
-    if (!order || String(order.order_id) !== String(orderId)) {
-      dispatch(getCheckoutOrder(orderId));
+    if (!orderRequest) {
+      dispatch(getOrderById(orderId));
     }
-  }, [dispatch, navigate, order, orderId]);
+  }, [dispatch, navigate, orderId, orderRequest]);
 
   useEffect(() => {
     order?.items.forEach((item) => {
@@ -77,26 +71,25 @@ const OrderDetailsPage: React.FC = () => {
     navigate(APP_ROUTING_PATHS.APP_HOME_PAGE);
   };
 
-  if (isLoading || (!order && !getCheckoutOrderReq.error)) {
+  if (isLoading) {
     return (
       <OrderDetailsState
         title="Loading order..."
-        message="Preparing your order summary."
+        message="Preparing your order details."
       />
     );
   }
 
-  if (!order || getCheckoutOrderReq.error) {
+  if (!order || orderRequest?.error) {
     return (
       <OrderDetailsState
         isError
-        title="Order summary could not be loaded"
-        message={getCheckoutOrderReq.error?.message || 'Please continue shopping and try again later.'}
+        title="Order details could not be loaded"
+        message={orderRequest?.error?.message || 'Please continue shopping and try again later.'}
         onContinueShopping={handleContinueShopping}
       />
     );
   }
-
 
   const getOrderDetailsSubTitle = () => {
     switch (order.order_status) {
@@ -109,16 +102,22 @@ const OrderDetailsPage: React.FC = () => {
       default:
         return '';
     }
-  }
+  };
 
   return (
     <div className="order-details-page">
       <Breadcrumbs
+        linkAr={[
+          {
+            to: APP_ROUTING_PATHS.APP_ORDERS_PAGE(),
+            name: 'My Orders',
+          },
+        ]}
         pageName={`Order #${order.order_id}`}
       />
       <div className="order-details-page__title">
-        <AppTitle title="Order Confirmed" />
-        <p>{getOrderDetailsSubTitle()}</p>
+        <AppTitle title="Order Details" />
+        <p className="order-details-page__subtitle">{getOrderDetailsSubTitle()}</p>
       </div>
 
       <div className="order-details-page__layout">

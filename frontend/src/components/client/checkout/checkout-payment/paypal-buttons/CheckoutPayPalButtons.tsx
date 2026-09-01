@@ -10,6 +10,12 @@ import { APP_ROUTING_PATHS } from '../../../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../../../app/store';
 import { getCart, keepNextCartSyncUnselected } from '../../../cart/cart.store';
 import {
+  clearMyOrdersCache,
+  getMyOrders,
+  MY_ORDERS_PAGE_SIZE,
+  setOrderById,
+} from '../../../orders/orders.store';
+import {
   capturePayPalOrder,
   createCheckoutOrder,
   createPayPalOrder,
@@ -87,6 +93,9 @@ const CheckoutPayPalButtons: React.FC<CheckoutPayPalButtonsProps> = ({
     idempotencyKeyRef.current = undefined;
     paypalOrderIdRef.current = undefined;
     dispatch(setPaymentStatusMessage(undefined));
+    dispatch(setOrderById(order));
+    dispatch(clearMyOrdersCache());
+    dispatch(getMyOrders({ page: 1, page_size: MY_ORDERS_PAGE_SIZE }));
     dispatch(keepNextCartSyncUnselected());
     dispatch(getCart());
     navigate(APP_ROUTING_PATHS.APP_ORDER_PAGE(order.order_id), { replace: true });

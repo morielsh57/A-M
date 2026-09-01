@@ -13,23 +13,20 @@
     gap: 18px;
     align-items: center;
     margin-bottom: 20px;
+  }
 
-    span {
-      color: $purple9;
-      font-size: 1.25rem;
-      font-weight: 800;
-    }
-
-    strong {
-      font-size: 0.78rem;
-      letter-spacing: 0;
-      text-transform: uppercase;
-    }
+  &__order-number {
+    color: $purple9;
+    font-size: 1.25rem;
+    font-weight: 800;
   }
 
   &__status {
     padding: 7px 10px;
     border-radius: 999px;
+    font-size: 0.78rem;
+    letter-spacing: 0;
+    text-transform: uppercase;
 
     &--completed {
       background: $green1;
@@ -51,31 +48,31 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
+  }
 
-    div {
-      display: grid;
-      gap: 6px;
-      padding: 16px;
-      border-radius: 8px;
-      background: $pink1;
-    }
+  &__meta-item {
+    display: grid;
+    gap: 6px;
+    padding: 16px;
+    border-radius: 8px;
+    background: $pink1;
+  }
 
-    span {
-      color: $natural7;
-      font-size: 0.86rem;
-      font-weight: 700;
-    }
+  &__meta-label {
+    color: $natural7;
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
 
-    strong {
-      color: $purple9;
-      font-size: 0.95rem;
-    }
+  &__meta-value {
+    color: $purple9;
+    font-size: 0.95rem;
+  }
 
-    small {
-      color: $natural7;
-      font-size: 0.82rem;
-      line-height: 1.35;
-    }
+  &__meta-note {
+    color: $natural7;
+    font-size: 0.82rem;
+    line-height: 1.35;
   }
 }
 

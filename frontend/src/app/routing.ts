@@ -6,6 +6,7 @@ const CATEGORY_SEGMENT = 'category';
 const SEARCH_SEGMENT = 'search';
 const CHECKOUT_SEGMENT = 'checkout';
 const PROFILE_SEGMENT = 'profile';
+const ORDERS_SEGMENT = 'orders';
 const ORDER_SEGMENT = 'order';
 const ADMIN_ROOT_PATH = '/admin';
 
@@ -38,6 +39,7 @@ export const APP_ROUTING_PATHS = {
   SEARCH: SEARCH_SEGMENT,
   CHECKOUT: CHECKOUT_SEGMENT,
   PROFILE: PROFILE_SEGMENT,
+  ORDERS: ORDERS_SEGMENT,
   ORDER: ORDER_SEGMENT,
   LOGIN: LOGIN_SEGMENT,
   SIGNUP: SIGNUP_SEGMENT,
@@ -77,6 +79,7 @@ export const APP_ROUTING_PATHS = {
   ) => `${APP_PATH}/${SEARCH_SEGMENT}?q=${encodeURIComponent(searchQuery)}&page=${page}`,
   APP_CHECKOUT_PAGE: `${APP_PATH}/${CHECKOUT_SEGMENT}`,
   APP_PROFILE_PAGE: `${APP_PATH}/${PROFILE_SEGMENT}`,
+  APP_ORDERS_PAGE: (page: string | number = 1) => `${APP_PATH}/${ORDERS_SEGMENT}?page=${page}`,
   APP_ORDER_PAGE: (orderId: string | number) => `${APP_PATH}/${ORDER_SEGMENT}/${orderId}`,
   ADMIN_LOGIN_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_AUTH_SEGMENT}/${ADMIN_LOGIN_SEGMENT}`,
   ADMIN_HOME_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_HOME_SEGMENT}`,

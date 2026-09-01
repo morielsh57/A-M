@@ -9,11 +9,11 @@
   &__title {
     margin-bottom: 30px;
     text-align: center;
+  }
 
-    p {
-      margin: -10px 0 0;
-      color: $natural7;
-    }
+  &__subtitle {
+    margin: -10px 0 0;
+    color: $natural7;
   }
 
   &__layout {

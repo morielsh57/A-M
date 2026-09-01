@@ -23,6 +23,7 @@ import CheckoutPage from './client/checkout/CheckoutPage';
 import { ProtectedClientRoute } from '../app/guards/client/ProtectedClientRoute';
 import ProfilePage from './client/profile/ProfilePage';
 import OrderDetailsPage from './client/orders/order-details-page/OrderDetailsPage';
+import MyOrdersPage from './client/orders/my-orders-page/MyOrdersPage';
 
 const AppAMFashion: React.FC = (props) => {
   const theme = createTheme(
@@ -89,6 +90,11 @@ const AppAMFashion: React.FC = (props) => {
                     <Route path={APP_ROUTING_PATHS.PROFILE} element={(
                       <ProtectedClientRoute>
                         <ProfilePage />
+                      </ProtectedClientRoute>
+                    )} />
+                    <Route path={APP_ROUTING_PATHS.ORDERS} element={(
+                      <ProtectedClientRoute>
+                        <MyOrdersPage />
                       </ProtectedClientRoute>
                     )} />
                     <Route path={`${APP_ROUTING_PATHS.ORDER}/:orderId`} element={(
