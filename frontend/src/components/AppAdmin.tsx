@@ -12,6 +12,7 @@ import AdminCustomersTablePage from './admin/users/customers/AdminCustomersTable
 import AdminAdministratorsTablePage from './admin/users/administrators/AdminAdministratorsTablePage';
 import AdminSuppliersTablePage from './admin/users/suppliers/AdminSuppliersTablePage';
 import AdminOrdersTablePage from './admin/orders/AdminOrdersTablePage';
+import AdminPickupPointsTablePage from './admin/pickup-points/AdminPickupPointsTablePage';
 
 function AppAdmin() {
   return (
@@ -61,6 +62,14 @@ function AppAdmin() {
           )}
         />
         <Route path={APP_ROUTING_PATHS.ADMIN.ORDERS} element={<AdminOrdersTablePage />} />
+        <Route
+          path={APP_ROUTING_PATHS.ADMIN.PICKUP_POINTS}
+          element={(
+            <ProtectedAdministratorRoute>
+              <AdminPickupPointsTablePage />
+            </ProtectedAdministratorRoute>
+          )}
+        />
       </Route>
       <Route path="*" element={<Navigate to={APP_ROUTING_PATHS.ADMIN_HOME_PAGE} replace />} />
     </Routes>

@@ -210,6 +210,13 @@ class AdministratorManagementApiTests(TestCase):
 
     def test_admin_can_manage_pickup_locations(self):
         self.authorize(self.admin)
+        unmatched_pickup = PickUpPoint.objects.create(
+            name="North Point",
+            description="Different pickup description",
+            address="Different address",
+            lat=Decimal("33.0000000"),
+            lng=Decimal("35.0000000"),
+        )
         create_response = self.client.post(
             reverse("admin-pickup-list"),
             {"name": "Central", "lat": "31.5000000", "lng": "34.5000000"},
@@ -217,8 +224,13 @@ class AdministratorManagementApiTests(TestCase):
         )
         point_id = create_response.json()["data"]["pick_up_point_id"]
         detail_url = reverse("admin-pickup-detail", kwargs={"pick_up_point_id": point_id})
+        search_response = self.client.get(reverse("admin-pickup-list"), {"search": "Central"})
 
         self.assertEqual(create_response.status_code, 201)
+        self.assertEqual(search_response.status_code, 200)
+        self.assertEqual(search_response.json()["meta"]["pagination"]["total_items"], 1)
+        self.assertEqual(search_response.json()["data"][0]["pick_up_point_id"], point_id)
+        self.assertNotEqual(unmatched_pickup.pk, point_id)
         self.assertEqual(
             self.client.patch(detail_url, {"is_active": False}, format="json").status_code,
             200,

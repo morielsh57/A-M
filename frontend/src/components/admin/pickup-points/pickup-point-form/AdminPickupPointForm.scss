@@ -1,0 +1,12 @@
+@import '../../../../shared/styles/colors.scss';
+
+.admin-pickup-point-form {
+  &__loading {
+    align-items: center;
+    color: $purple8;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    min-height: 180px;
+  }
+}

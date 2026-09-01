@@ -1,0 +1,19 @@
+@import '../../../shared/styles/colors.scss';
+
+.admin-pickup-points-page {
+  &__error {
+    margin: 0 auto 18px;
+    border-radius: 8px;
+  }
+
+  &__id {
+    color: $purple7;
+    font-weight: 800;
+  }
+
+  &__coordinate {
+    color: $purple8;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 0.88rem;
+  }
+}
