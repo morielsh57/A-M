@@ -24,6 +24,7 @@ import { ProtectedClientRoute } from '../app/guards/client/ProtectedClientRoute'
 import ProfilePage from './client/profile/ProfilePage';
 import OrderDetailsPage from './client/orders/order-details-page/OrderDetailsPage';
 import MyOrdersPage from './client/orders/my-orders-page/MyOrdersPage';
+import ReviewPage from './client/reviews/review-page/ReviewPage';
 
 const AppAMFashion: React.FC = (props) => {
   const theme = createTheme(
@@ -95,6 +96,11 @@ const AppAMFashion: React.FC = (props) => {
                     <Route path={APP_ROUTING_PATHS.ORDERS} element={(
                       <ProtectedClientRoute>
                         <MyOrdersPage />
+                      </ProtectedClientRoute>
+                    )} />
+                    <Route path={`${APP_ROUTING_PATHS.ORDERS}/:orderId/${APP_ROUTING_PATHS.ITEM}/:orderItemId/${APP_ROUTING_PATHS.REVIEW}`} element={(
+                      <ProtectedClientRoute>
+                        <ReviewPage />
                       </ProtectedClientRoute>
                     )} />
                     <Route path={`${APP_ROUTING_PATHS.ORDER}/:orderId`} element={(

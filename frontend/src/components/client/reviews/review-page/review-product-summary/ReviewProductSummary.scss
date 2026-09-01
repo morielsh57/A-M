@@ -1,0 +1,58 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.review-product-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  &__image {
+    display: grid;
+    aspect-ratio: 3 / 4;
+    place-items: center;
+    max-height: 460px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: $pink1;
+    color: $natural7;
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  &__image-file {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__image-placeholder {
+    display: inline-flex;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__name {
+    margin: 0;
+    color: $purple9;
+    font-size: 1.18rem;
+    font-weight: 800;
+  }
+
+  &__variant {
+    margin: 0;
+    color: $natural7;
+  }
+
+  &__meta {
+    color: $purple8;
+    font-size: 0.92rem;
+  }
+
+  @media (max-width: 860px) {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+}
