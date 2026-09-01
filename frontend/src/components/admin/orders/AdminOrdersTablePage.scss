@@ -1,0 +1,63 @@
+@import '../../../shared/styles/colors.scss';
+
+.admin-orders-page {
+  &__error {
+    margin-bottom: 18px;
+    border-radius: 8px;
+  }
+
+  &__order-id {
+    color: $purple7;
+    font-weight: 800;
+  }
+
+  &__status-filter {
+    width: 180px;
+  }
+
+  &__status-select {
+    width: 150px;
+
+    &.ant-select {
+      .ant-select-selection-item {
+        display: flex;
+        align-items: center;
+      }
+    }
+  }
+
+  &__customer {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__customer-name {
+    overflow-wrap: anywhere;
+    color: $purple9;
+    font-weight: 700;
+  }
+
+  &__customer-email {
+    overflow-wrap: anywhere;
+    color: $natural7;
+    font-size: 0.86rem;
+  }
+
+  &__details-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 108px;
+  }
+}
+
+@media (max-width: 620px) {
+  .admin-orders-page {
+    &__status-filter,
+    &__status-select,
+    &__details-button {
+      width: 100%;
+    }
+  }
+}

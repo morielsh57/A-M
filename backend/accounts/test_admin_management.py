@@ -82,7 +82,6 @@ class AdministratorManagementApiTests(TestCase):
     def test_non_administrators_are_rejected_by_management_endpoints(self):
         endpoints = (
             ("get", reverse("admin-user-list"), None),
-            ("get", reverse("admin-order-list"), None),
             ("get", reverse("admin-pickup-list"), None),
             ("post", reverse("category-list"), {"short_id": "blocked", "main_category_name": "Blocked"}),
             ("get", reverse("admin-product-image-list", kwargs={"product_id": self.product.pk}), None),
@@ -93,6 +92,11 @@ class AdministratorManagementApiTests(TestCase):
                 with self.subTest(role=user.role.role_name, url=url):
                     response = getattr(self.client, method)(url, body or {}, format="json")
                     self.assertEqual(response.status_code, 403)
+
+        self.authorize(self.customer)
+        self.assertEqual(self.client.get(reverse("admin-order-list")).status_code, 403)
+        self.authorize(self.supplier_user)
+        self.assertEqual(self.client.get(reverse("admin-order-list")).status_code, 200)
 
     def test_admin_can_create_customer_supplier_and_administrator_accounts(self):
         self.authorize(self.admin)
@@ -182,7 +186,7 @@ class AdministratorManagementApiTests(TestCase):
             {SUPPLIER_ROLE},
         )
 
-    def test_admin_can_filter_and_update_orders_but_cannot_delete_them(self):
+    def test_admin_can_filter_and_update_orders_anytime_but_cannot_delete_them(self):
         self.authorize(self.admin)
         list_response = self.client.get(reverse("admin-order-list"), {"status": Order.Status.PENDING})
         detail_url = reverse("admin-order-detail", kwargs={"order_id": self.order.pk})
@@ -191,7 +195,7 @@ class AdministratorManagementApiTests(TestCase):
             {"order_status": Order.Status.COMPLETED},
             format="json",
         )
-        invalid_response = self.client.patch(
+        pending_response = self.client.patch(
             detail_url,
             {"order_status": Order.Status.PENDING},
             format="json",
@@ -200,7 +204,8 @@ class AdministratorManagementApiTests(TestCase):
         self.assertEqual(list_response.status_code, 200)
         self.assertEqual(list_response.json()["meta"]["pagination"]["total_items"], 1)
         self.assertEqual(update_response.status_code, 200)
-        self.assertEqual(invalid_response.status_code, 400)
+        self.assertEqual(pending_response.status_code, 200)
+        self.assertEqual(pending_response.json()["data"]["order_status"], Order.Status.PENDING)
         self.assertEqual(self.client.delete(detail_url).status_code, 400)
 
     def test_admin_can_manage_pickup_locations(self):

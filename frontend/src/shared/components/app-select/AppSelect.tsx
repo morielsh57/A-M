@@ -1,9 +1,11 @@
 import { Select } from 'antd';
+import type React from 'react';
 import './AppSelect.scss';
 
 export interface IAppSelectOption {
   value: string | number;
   label: string;
+  selectedLabel?: React.ReactNode;
   subtitle?: string;
   searchLabel?: string;
   disabled?: boolean;
@@ -40,7 +42,7 @@ const AppSelect = ({
     value: option.value,
     disabled: option.disabled,
     searchLabel: option.searchLabel ?? `${option.label}`,
-    selectLabel: option.label,
+    selectLabel: option.selectedLabel ?? option.label,
     label: (
       <div className="app-select-option">
         <span className="app-select-option-title">{option.label}</span>

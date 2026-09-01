@@ -15,6 +15,7 @@ import { cartStoreReducer } from '../components/client/cart/cart.store';
 import { adminUsersStoreReducer } from '../components/admin/users/adminUsers.store';
 import { checkoutStoreReducer } from '../components/client/checkout/checkout.store';
 import { ordersStoreReducer } from '../components/client/orders/orders.store';
+import { adminOrdersStoreReducer } from '../components/admin/orders/adminOrders.store';
 
 export const rootReducer = {
   sharedStoreReducer,
@@ -24,6 +25,7 @@ export const rootReducer = {
   adminHomeStoreReducer,
   adminProductsStoreReducer,
   adminUsersStoreReducer,
+  adminOrdersStoreReducer,
   productPageStoreReducer,
   cartStoreReducer,
   checkoutStoreReducer,
