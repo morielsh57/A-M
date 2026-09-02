@@ -8,6 +8,7 @@ from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, SUPPLIER_ROLE, Role, Supp
 
 class AdminUserSerializer(serializers.ModelSerializer):
     role = serializers.CharField(source="role.role_name", read_only=True)
+    supplier_id = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -18,10 +19,15 @@ class AdminUserSerializer(serializers.ModelSerializer):
             "phone",
             "address",
             "role",
+            "supplier_id",
             "is_active",
             "is_valid_email",
             "date_created",
         )
+
+    def get_supplier_id(self, user):
+        supplier_profile = getattr(user, "supplier_profile", None)
+        return supplier_profile.supplier_id if supplier_profile else None
 
 
 class AdminUserCreateSerializer(serializers.Serializer):

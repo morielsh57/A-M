@@ -31,7 +31,7 @@ class AdminUserListCreateView(APIView):
         tags=["Admin Users"],
     )
     def get(self, request):
-        users = User.objects.select_related("role").order_by("user_id")
+        users = User.objects.select_related("role", "supplier_profile").order_by("user_id")
         search = request.query_params.get("search", "").strip()
         if search:
             users = users.filter(Q(name__icontains=search) | Q(email__icontains=search))

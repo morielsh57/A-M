@@ -32,6 +32,7 @@ const getProductSearchText = (product: IAdminProductListItem) => [
   product.name,
   product.catalog_number,
   product.fabric,
+  product.supplier_name,
   ...product.colors,
   ...product.sizes,
 ].filter(Boolean).join(' ').toLowerCase();
@@ -279,7 +280,7 @@ const AdminProductsTablePage: React.FC = () => {
           onChange: (page) => updateUrlParams({ page }),
         }}
         rowKey="product_id"
-        scroll={{ x: 1590 }}
+        scroll={{ x: 1770 }}
         searchPlaceholder="Search products on this page..."
         searchValue={searchValue}
         subtitle="Search and sorting apply to the currently loaded page."

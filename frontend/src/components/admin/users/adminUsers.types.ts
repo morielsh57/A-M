@@ -1,6 +1,8 @@
 import type { EUserRole, IUser } from '../../../shared/store/user/user.types';
+import type { SupplierId } from '../../product-page/product.types';
 
 export interface IAdminUser extends Omit<IUser, 'date_created'> {
+  supplier_id?: SupplierId | null;
   is_active: boolean;
   is_valid_email: boolean;
   date_created: string;

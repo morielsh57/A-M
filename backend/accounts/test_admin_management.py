@@ -185,6 +185,7 @@ class AdministratorManagementApiTests(TestCase):
             {user["role"] for user in response.json()["data"]},
             {SUPPLIER_ROLE},
         )
+        self.assertEqual(response.json()["data"][0]["supplier_id"], self.supplier_user.supplier_profile.supplier_id)
 
     def test_admin_can_filter_and_update_orders_anytime_but_cannot_delete_them(self):
         self.authorize(self.admin)

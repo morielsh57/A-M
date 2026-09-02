@@ -5,8 +5,13 @@ import AdminForm from '../../../../shared/components/admin-form/AdminForm';
 import AdminFormActions from '../../../../shared/components/admin-form/AdminFormActions';
 import AdminFormError from '../../../../shared/components/admin-form/AdminFormError';
 import type { IMainCategory } from '../../../../shared/store/category/category.types';
+import { EUserRole } from '../../../../shared/store/user/user.types';
 import { useAppDispatch, useAppSelector } from '../../../../app/store';
 import type { CategoryId, ProductId } from '../../../product-page/product.types';
+import {
+  getAdminUsers,
+  getAdminUsersCacheKey,
+} from '../../users/adminUsers.store';
 import type { IAdminProductListItem } from '../adminProducts.types';
 import {
   createAdminProduct,
@@ -69,6 +74,26 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
   const dispatch = useAppDispatch();
   const { addToast } = useToasts();
   const { adminProductDetailByProductReq } = useAppSelector((store) => store.adminProductsStoreReducer);
+  const { adminOrSupplierUser } = useAppSelector((store) => store.userStoreReducer);
+  const { usersByQueryReq } = useAppSelector((store) => store.adminUsersStoreReducer);
+  const canManageProductSupplier = adminOrSupplierUser?.role === EUserRole.ADMIN;
+  const supplierRequestParams = useMemo(() => ({
+    role: EUserRole.SUPPLIER,
+    page: 1,
+    page_size: 100,
+  }), []);
+  const supplierCacheKey = getAdminUsersCacheKey(supplierRequestParams);
+  const suppliersReq = usersByQueryReq[supplierCacheKey];
+  const supplierOptions = useMemo(() => (
+    (suppliersReq?.data || [])
+      .filter((supplier) => supplier.supplier_id != null)
+      .map((supplier) => ({
+        value: supplier.supplier_id!,
+        label: supplier.name,
+        subtitle: supplier.email,
+        searchLabel: `${supplier.name} ${supplier.email}`,
+      }))
+  ), [suppliersReq?.data]);
   const [selectedProductValue, setSelectedProductValue] = useState<AdminProductSelectorValue>(
     initialProductId || ADMIN_PRODUCT_NEW_OPTION_VALUE,
   );
@@ -88,6 +113,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
       initialProductId || ADMIN_PRODUCT_NEW_OPTION_VALUE,
       createEmptyProductBaseValues(defaultMainCategoryId),
       [createEmptyVariantRow()],
+      canManageProductSupplier,
     ),
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,6 +130,12 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
   const isExistingProductLoading = isExistingProduct && (
     !selectedProductDetailReq || selectedProductDetailReq.status === EAPIStatus.PENDING
   );
+
+  useEffect(() => {
+    if (canManageProductSupplier && !suppliersReq) {
+      dispatch(getAdminUsers(supplierRequestParams));
+    }
+  }, [canManageProductSupplier, dispatch, supplierRequestParams, suppliersReq]);
 
   useEffect(() => {
     if (selectedProductId && !selectedProductDetailReq) {
@@ -127,9 +159,10 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
         nextProductValue,
         nextBaseValues,
         nextVariantRows,
+        canManageProductSupplier,
       ));
     }
-  }, [defaultMainCategoryId, initialProductId]);
+  }, [canManageProductSupplier, defaultMainCategoryId, initialProductId]);
 
   useEffect(() => {
     if (!selectedProductDetail) {
@@ -145,14 +178,16 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
       selectedProductValue,
       nextBaseValues,
       nextVariantRows,
+      canManageProductSupplier,
     ));
-  }, [mainCategories, selectedProductDetail, selectedProductValue]);
+  }, [canManageProductSupplier, mainCategories, selectedProductDetail, selectedProductValue]);
 
   const currentFormSnapshot = useMemo(() => getProductFormDirtySnapshot(
     selectedProductValue,
     baseValues,
     variantRows,
-  ), [baseValues, selectedProductValue, variantRows]);
+    canManageProductSupplier,
+  ), [baseValues, canManageProductSupplier, selectedProductValue, variantRows]);
 
   useEffect(() => {
     onDirtyChange?.(currentFormSnapshot !== originalFormSnapshot);
@@ -173,6 +208,7 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
         value,
         nextBaseValues,
         nextVariantRows,
+        canManageProductSupplier,
       ));
     }
   };
@@ -250,13 +286,13 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
 
       if (!productId) {
         const createdProduct = await dispatch(createAdminProduct(
-          getBaseProductPayload(baseValues),
+          getBaseProductPayload(baseValues, canManageProductSupplier),
         )).unwrap();
         productId = createdProduct.product_id;
-      } else if (hasBaseProductChanges(originalBaseValues, baseValues)) {
+      } else if (hasBaseProductChanges(originalBaseValues, baseValues, canManageProductSupplier)) {
         await dispatch(updateAdminProduct({
           product_id: productId,
-          payload: getBaseProductPayload(baseValues),
+          payload: getBaseProductPayload(baseValues, canManageProductSupplier),
         })).unwrap();
       }
 
@@ -294,6 +330,8 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
           <AdminProductBaseFields
             disableMainCategorySelect={disableMainCategorySelect}
             mainCategories={mainCategories}
+            showSupplierSelect={canManageProductSupplier}
+            supplierOptions={supplierOptions}
             values={baseValues}
             onChange={setBaseValues}
           />

@@ -29,6 +29,7 @@ export const createEmptyProductBaseValues = (
   fabric: '',
   main_category_id: defaultMainCategoryId || null,
   sub_category_id: null,
+  supplier_id: null,
   is_active: true,
 });
 
@@ -93,6 +94,7 @@ export const mapProductToBaseValues = (
     fabric: product.fabric || '',
     main_category_id: mainCategoryId,
     sub_category_id: subCategoryId,
+    supplier_id: product.supplier_id || null,
     is_active: product.is_active !== false,
   };
 };
@@ -161,6 +163,7 @@ export const getSubCategoryOptions = (
 
 export const getBaseProductPayload = (
   values: AdminProductBaseFormValues,
+  includeSupplier = false,
 ): IAdminProductWriteRequest => ({
   catalog_number: values.catalog_number.trim(),
   name: values.name.trim(),
@@ -170,6 +173,7 @@ export const getBaseProductPayload = (
   tags: values.tags.trim() || null,
   fabric: values.fabric.trim() || null,
   category_id: values.main_category_id || '',
+  ...(includeSupplier ? { supplier_id: values.supplier_id || null } : {}),
   is_active: values.is_active,
 });
 
@@ -191,18 +195,20 @@ export const getExistingImageIds = (row: AdminProductVariantFormRow) => (
 export const hasBaseProductChanges = (
   original: AdminProductBaseFormValues,
   current: AdminProductBaseFormValues,
+  includeSupplier = false,
 ) => (
-  JSON.stringify(getBaseProductPayload(original))
-  !== JSON.stringify(getBaseProductPayload(current))
+  JSON.stringify(getBaseProductPayload(original, includeSupplier))
+  !== JSON.stringify(getBaseProductPayload(current, includeSupplier))
 );
 
 export const getProductFormDirtySnapshot = (
   selectedProductValue: AdminProductSelectorValue,
   baseValues: AdminProductBaseFormValues,
   variantRows: AdminProductVariantFormRow[],
+  includeSupplier = false,
 ) => JSON.stringify({
   selectedProductValue,
-  base: getBaseProductPayload(baseValues),
+  base: getBaseProductPayload(baseValues, includeSupplier),
   variants: variantRows.map((row) => ({
     color: row.color.trim(),
     existingImageIds: getExistingImageIds(row).map(String).sort(),

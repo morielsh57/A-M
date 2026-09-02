@@ -4,14 +4,19 @@ import AdminFormField from '../../../../shared/components/admin-form/AdminFormFi
 import AdminFormInput from '../../../../shared/components/admin-form/AdminFormInput';
 import AdminFormSelect from '../../../../shared/components/admin-form/AdminFormSelect';
 import AdminFormTextarea from '../../../../shared/components/admin-form/AdminFormTextarea';
+import type { IAppSelectOption } from '../../../../shared/components/app-select/AppSelect';
 import type { IMainCategory } from '../../../../shared/store/category/category.types';
-import type { CategoryId } from '../../../product-page/product.types';
+import type { CategoryId, SupplierId } from '../../../product-page/product.types';
 import type { AdminProductBaseFormValues } from './adminProductForm.types';
 import { getMainCategoryOptions, getSubCategoryOptions } from './adminProductForm.utils';
+
+const UNASSIGNED_SUPPLIER_VALUE = 'unassigned';
 
 interface AdminProductBaseFieldsProps {
   disableMainCategorySelect?: boolean;
   mainCategories: IMainCategory[];
+  showSupplierSelect?: boolean;
+  supplierOptions?: IAppSelectOption[];
   values: AdminProductBaseFormValues;
   onChange: (values: AdminProductBaseFormValues) => void;
 }
@@ -20,6 +25,8 @@ const AdminProductBaseFields: React.FC<AdminProductBaseFieldsProps> = ({
   disableMainCategorySelect = false,
   mainCategories,
   onChange,
+  showSupplierSelect = false,
+  supplierOptions = [],
   values,
 }) => {
   const updateField = <K extends keyof AdminProductBaseFormValues>(
@@ -91,6 +98,24 @@ const AdminProductBaseFields: React.FC<AdminProductBaseFieldsProps> = ({
             onChange={(value) => updateField('sub_category_id', value as CategoryId)}
           />
         </AdminFormField>
+
+        {showSupplierSelect && (
+          <AdminFormField label="Supplier">
+            <AdminFormSelect
+              options={[
+                { value: UNASSIGNED_SUPPLIER_VALUE, label: 'Unassigned' },
+                ...supplierOptions,
+              ]}
+              placeholder="Select supplier"
+              searchSelect
+              value={values.supplier_id || UNASSIGNED_SUPPLIER_VALUE}
+              onChange={(value) => updateField(
+                'supplier_id',
+                value === UNASSIGNED_SUPPLIER_VALUE ? null : value as SupplierId,
+              )}
+            />
+          </AdminFormField>
+        )}
 
         <AdminFormField label="Tags">
           <AdminFormInput

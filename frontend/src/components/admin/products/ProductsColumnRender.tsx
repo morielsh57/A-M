@@ -81,6 +81,12 @@ const ProductsColumnRender = ({
     dataIndex: 'price',
     width: 120,
   }),
+  createRenderColumn<IAdminProductListItem>({
+    title: 'Supplier',
+    key: 'supplier_name',
+    width: 180,
+    render: (_, product) => product.supplier_name || 'Unassigned',
+  }),
   createTextColumn<IAdminProductListItem, 'fabric'>({
     title: 'Fabric',
     dataIndex: 'fabric',
