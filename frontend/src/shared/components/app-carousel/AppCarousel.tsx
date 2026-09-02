@@ -97,7 +97,7 @@ export const AppCarousel = ({
         draggable
         autoplay={autoplay && isAutoplayEnabled}
         autoplaySpeed={autoplaySpeedMs}
-        dotPosition="bottom"
+        dotPlacement="bottom"
         className="carousel-container"
         afterChange={handleAfterChange}
         arrows={true}
