@@ -31,6 +31,7 @@ const ADMIN_ADMINS_SEGMENT = 'users/admins';
 const ADMIN_SUPPLIERS_SEGMENT = 'users/suppliers';
 const ADMIN_CATEGORIES_SEGMENT = 'categories';
 const ADMIN_ORDERS_SEGMENT = 'orders';
+const ADMIN_PICKUP_POINTS_SEGMENT = 'pickup-points';
 
 export const APP_ROUTING_PATHS = {
   ROOT: ROOT_PATH,
@@ -65,6 +66,7 @@ export const APP_ROUTING_PATHS = {
     SUPPLIERS: ADMIN_SUPPLIERS_SEGMENT,
     CATEGORIES: ADMIN_CATEGORIES_SEGMENT,
     ORDERS: ADMIN_ORDERS_SEGMENT,
+    PICKUP_POINTS: ADMIN_PICKUP_POINTS_SEGMENT,
   },
   AUTH_LOGIN_PAGE: `${AUTH_PATH}/${LOGIN_SEGMENT}`,
   AUTH_SIGNUP_PAGE: `${AUTH_PATH}/${SIGNUP_SEGMENT}`,
@@ -123,6 +125,8 @@ export const API_ROUTES = {
     USER_DETAIL: (userId: string | number) => `/admin/users/${userId}`,
     ORDERS: '/admin/orders/',
     ORDER_DETAIL: (orderId: string | number) => `/admin/orders/${orderId}`,
+    PICKUP_POINTS: '/admin/pickup-points/',
+    PICKUP_POINT_DETAIL: (pickupPointId: string | number) => `/admin/pickup-points/${pickupPointId}`,
   },
   USERS: '/users',
   USERS_ME: '/users/me',

@@ -2,6 +2,7 @@ from math import asin, cos, radians, sin, sqrt
 
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
+from django.db.models import Q
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -88,6 +89,16 @@ class AdminPickUpPointListCreateView(APIView):
         active = request.query_params.get("is_active")
         if active in {"true", "false"}:
             points = points.filter(is_active=active == "true")
+        search = request.query_params.get("search", "").strip()
+        if search:
+            filters = (
+                Q(name__icontains=search)
+                | Q(description__icontains=search)
+                | Q(address__icontains=search)
+            )
+            if search.isdigit():
+                filters |= Q(pick_up_point_id=int(search))
+            points = points.filter(filters)
         paginator = StandardPageNumberPagination()
         page = paginator.paginate_queryset(points, request)
         return paginator.get_paginated_response(PickUpPointSerializer(page, many=True).data)

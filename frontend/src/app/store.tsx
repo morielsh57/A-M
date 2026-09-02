@@ -16,6 +16,7 @@ import { adminUsersStoreReducer } from '../components/admin/users/adminUsers.sto
 import { checkoutStoreReducer } from '../components/client/checkout/checkout.store';
 import { ordersStoreReducer } from '../components/client/orders/orders.store';
 import { adminOrdersStoreReducer } from '../components/admin/orders/adminOrders.store';
+import { adminPickupPointsStoreReducer } from '../components/admin/pickup-points/adminPickupPoints.store';
 import { reviewsStoreReducer } from '../components/client/reviews/reviews.store';
 
 export const rootReducer = {
@@ -27,6 +28,7 @@ export const rootReducer = {
   adminProductsStoreReducer,
   adminUsersStoreReducer,
   adminOrdersStoreReducer,
+  adminPickupPointsStoreReducer,
   productPageStoreReducer,
   cartStoreReducer,
   checkoutStoreReducer,

@@ -3,6 +3,7 @@ import {
   AppstoreOutlined,
   DashboardOutlined,
   DownOutlined,
+  EnvironmentOutlined,
   LeftOutlined,
   RightOutlined,
   ShoppingCartOutlined,
@@ -82,6 +83,13 @@ const adminNavbarSections: AdminNavbarSection[] = [
     label: 'Users orders',
     icon: <ShoppingCartOutlined />,
     path: createAdminPath(APP_ROUTING_PATHS.ADMIN.ORDERS),
+  },
+  {
+    id: 'pickup-points',
+    label: 'Pickup points',
+    icon: <EnvironmentOutlined />,
+    path: createAdminPath(APP_ROUTING_PATHS.ADMIN.PICKUP_POINTS),
+    roles: [EUserRole.ADMIN],
   },
 ];
 
