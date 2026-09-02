@@ -87,7 +87,15 @@ def filter_products_by_category(queryset, request):
     category_id = request.query_params.get("category")
     if not category_id:
         return queryset
-    return queryset.filter(category_id=category_id)
+    category = Category.objects.filter(category_id=category_id).first()
+    if category is None:
+        raise ValidationError({"category": ["Category was not found."]})
+    if category.parent_category_id is None:
+        return queryset.filter(
+            Q(category=category)
+            | Q(category__parent_category=category)
+        )
+    return queryset.filter(category=category)
 
 
 def filter_public_products(queryset, filters):
