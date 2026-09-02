@@ -56,6 +56,15 @@ export const isValidLocation = (location: LatLngLiteral) => (
   && Math.abs(location.lng) <= 180
 );
 
+export const normalizePickupCoordinate = (coordinate: number) => (
+  Number(coordinate.toFixed(7))
+);
+
+export const normalizePickupLocation = (location: LatLngLiteral): LatLngLiteral => ({
+  lat: normalizePickupCoordinate(location.lat),
+  lng: normalizePickupCoordinate(location.lng),
+});
+
 export const getDistanceKm = (pointA: LatLngLiteral, pointB: LatLngLiteral) => {
   const earthRadiusKm = 6371;
   const toRadians = (degree: number) => degree * (Math.PI / 180);

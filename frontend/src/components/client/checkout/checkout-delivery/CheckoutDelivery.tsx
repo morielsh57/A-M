@@ -17,6 +17,7 @@ import type {
 } from './CheckoutDelivery.types';
 import {
   DEFAULT_CENTER,
+  normalizePickupLocation,
   PICKUP_SEARCH_RADIUS_KM,
 } from './CheckoutDelivery.utils';
 import './CheckoutDelivery.scss';
@@ -35,10 +36,11 @@ const CheckoutDelivery: React.FC<CheckoutDeliveryProps> = ({ userAddress }) => {
   const isPickupPointsLoading = getPickupPointsReq.status === EAPIStatus.PENDING;
 
   const loadPickupPoints = useCallback((location: LatLngLiteral) => {
-    setCenter(location);
+    const normalizedLocation = normalizePickupLocation(location);
+    setCenter(normalizedLocation);
     dispatch(getPickupPoints({
-      lat: location.lat,
-      lng: location.lng,
+      lat: normalizedLocation.lat,
+      lng: normalizedLocation.lng,
       radius_km: PICKUP_SEARCH_RADIUS_KM,
     }));
   }, [dispatch]);
