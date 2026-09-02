@@ -1,0 +1,51 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.product-review-card {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba($natural7, 0.16);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__avatar {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 999px;
+    background: $pink2;
+    color: $purple7;
+    font-size: 0.74rem;
+    font-weight: 900;
+  }
+
+  &__content {
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0 0 4px;
+    color: $purple9;
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  &__text {
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+    color: $purple8;
+    font-size: 0.72rem;
+  }
+
+  .product-page__rating {
+    margin: 0;
+  }
+
+  .product-page__stars {
+    font-size: 0.82rem;
+  }
+}

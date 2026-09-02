@@ -15,6 +15,13 @@ export interface IOrderItem {
   order_item_id?: number;
   variant_id: number;
   product_id: number;
+  image_url?: string | null;
+  review?: {
+    review_id: number;
+    stars: number;
+    review_text: string;
+    date_created?: string;
+  } | null;
   product_name: string;
   color?: string | null;
   size?: string | null;
