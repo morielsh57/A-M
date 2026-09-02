@@ -2,6 +2,7 @@ import { IProductCardProduct, IProductColorOption } from '../../../components/pr
 import mockProductImage from '../../../assets/images/shirt.webp';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 
+// Mock product data for demonstration purposes and testing
 export const mockProductItem: IProductCardProduct = {
   product_id: 1,
   catalog_number: 'AM-CL-001',
@@ -34,7 +35,7 @@ export const mockProductItem: IProductCardProduct = {
       color: 'Sage',
       variant_id: 104,
       in_stock: true,
-      images: [mockProductImage],
+      images: [],
     },
   ],
 };
@@ -46,15 +47,23 @@ export const colorHexMap: Record<string, string> = {
   brown: '#76543f',
   cream: '#efe6d4',
   green: '#6e7f5f',
+  gold: '#d4af37',
   grey: '#8b8d91',
   gray: '#8b8d91',
   ivory: '#f8f1e4',
+  khaki: '#b7a77a',
   navy: '#20283f',
+  olive: '#6f7a45',
+  orange: '#d9772f',
   pink: '#d88fa9',
+  purple: '#7a4f8f',
   red: '#b4373f',
   rose: '#c9838c',
   sage: '#9aaa85',
+  silver: '#c8c8c8',
+  teal: '#2f7d78',
   white: '#ffffff',
+  yellow: '#f4d35e',
 };
 
 export const getColorValue = (color: string): string => {
