@@ -77,9 +77,47 @@
   }
 
   &__total {
+    display: block;
+    margin-top: 8px;
     color: $purple9;
     font-size: 1rem;
     white-space: nowrap;
+  }
+
+  &__review-button {
+    border: 1px solid $purple6;
+    justify-self: end;
+    min-width: 124px;
+    min-height: 38px;
+    padding: 8px 14px;
+    color: $natural1;
+    font-weight: 500;
+
+    &.app-button--secondary:hover:not(:disabled),
+    &.app-button--secondary:focus-visible:not(:disabled) {
+      color: $natural1;
+    }
+
+    &--add {
+      background: $purple6;
+
+      &.app-button--secondary:hover:not(:disabled),
+      &.app-button--secondary:focus-visible:not(:disabled) {
+        border-color: $purple7;
+        background: $purple7;
+      }
+    }
+
+    &--edit {
+      border-color: rgba($purple9, 0.9);
+      background: rgba($purple9, 0.9);
+
+      &.app-button--secondary:hover:not(:disabled),
+      &.app-button--secondary:focus-visible:not(:disabled) {
+        border-color: rgba($purple8, 0.9);
+        background: rgba($purple8, 0.9);
+      }
+    }
   }
 }
 
@@ -92,8 +130,9 @@
     grid-template-columns: 72px minmax(0, 1fr);
     gap: 12px;
 
-    &__total {
+    &__review-button {
       grid-column: 2;
+      justify-self: start;
     }
   }
 }

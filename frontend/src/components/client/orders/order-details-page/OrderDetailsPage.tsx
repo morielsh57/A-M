@@ -58,7 +58,7 @@ const OrderDetailsPage: React.FC = () => {
       const primaryImage = product?.images?.find((image) => image.is_primary && image.secure_url)
         ?.secure_url;
       const fallbackImage = product?.images?.find((image) => image.secure_url)?.secure_url;
-      const image = variantImage || primaryImage || fallbackImage;
+      const image = item.image_url || variantImage || primaryImage || fallbackImage;
 
       if (image) {
         imagesByVariantId.set(String(item.variant_id), image);
@@ -69,6 +69,11 @@ const OrderDetailsPage: React.FC = () => {
 
   const handleContinueShopping = () => {
     navigate(APP_ROUTING_PATHS.APP_HOME_PAGE);
+  };
+
+  const handleReviewItem = (orderItemId: string | number) => {
+    if (!orderId) return;
+    navigate(APP_ROUTING_PATHS.APP_ORDER_ITEM_REVIEW_PAGE(orderId, orderItemId));
   };
 
   if (isLoading) {
@@ -123,7 +128,11 @@ const OrderDetailsPage: React.FC = () => {
       <div className="order-details-page__layout">
         <main className="order-details-page__main">
           <OrderDetailsOverview order={order} />
-          <OrderDetailsItems order={order} itemImages={itemImages} />
+          <OrderDetailsItems
+            order={order}
+            itemImages={itemImages}
+            onReviewItem={handleReviewItem}
+          />
         </main>
 
         <OrderDetailsPayment

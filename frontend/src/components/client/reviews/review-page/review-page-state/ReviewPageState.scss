@@ -1,0 +1,35 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.review-page-state {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  width: min(640px, calc(100% - 40px));
+  margin: 70px auto;
+  padding: 34px;
+  border: 1px solid rgba($purple6, 0.16);
+  border-radius: 8px;
+  background: $natural1;
+  color: $purple9;
+  text-align: center;
+  box-shadow: 0 14px 35px rgba($purple9, 0.06);
+
+  &--error {
+    border-color: rgba($red7, 0.24);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 800;
+  }
+
+  &__message {
+    margin: 0;
+    color: $natural7;
+  }
+
+  &__action {
+    margin-top: 8px;
+  }
+}

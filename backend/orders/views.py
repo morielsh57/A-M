@@ -25,6 +25,7 @@ from orders.services import (
     get_customer_order,
     require_customer,
 )
+from reviews.models import Review
 
 
 ORDER_ITEMS_WITH_IMAGES = (
@@ -32,6 +33,17 @@ ORDER_ITEMS_WITH_IMAGES = (
     .prefetch_related("variant__product_images", "product__images")
     .order_by("order_item_id")
 )
+ORDER_REVIEWS_WITH_CUSTOMER = Review.objects.select_related("customer").order_by(
+    "-date_created",
+    "-review_id",
+)
+
+
+def get_order_detail_prefetches(items_queryset=ORDER_ITEMS_WITH_IMAGES):
+    return (
+        Prefetch("items", queryset=items_queryset),
+        Prefetch("reviews", queryset=ORDER_REVIEWS_WITH_CUSTOMER),
+    )
 
 
 class AdminOrderListView(APIView):
@@ -67,7 +79,7 @@ class AdminOrderListView(APIView):
             return get_supplier_order_queryset(request.user)
         return (
             Order.objects.select_related("customer", "cart", "pickup_point")
-            .prefetch_related(Prefetch("items", queryset=ORDER_ITEMS_WITH_IMAGES))
+            .prefetch_related(*get_order_detail_prefetches())
         )
 
     def filter_by_status(self, request, orders, order_status):
@@ -110,6 +122,7 @@ def get_supplier_order_queryset(user):
         .select_related("pickup_point")
         .prefetch_related(
             Prefetch("items", queryset=supplier_items, to_attr="supplier_items"),
+            Prefetch("reviews", queryset=ORDER_REVIEWS_WITH_CUSTOMER),
             Prefetch(
                 "supplier_fulfillments",
                 queryset=supplier_fulfillments,
@@ -233,7 +246,7 @@ class AdminOrderDetailView(APIView):
         else:
             order = (
                 Order.objects.select_related("customer", "cart", "pickup_point")
-                .prefetch_related(Prefetch("items", queryset=ORDER_ITEMS_WITH_IMAGES))
+                .prefetch_related(*get_order_detail_prefetches())
                 .filter(pk=order_id)
                 .first()
             )
@@ -278,7 +291,9 @@ class CustomerOrderListCreateView(APIView):
             serializer.validated_data["payment_id"],
             serializer.validated_data["pickup_point_id"],
         )
-        order = Order.objects.prefetch_related("items").get(pk=order.pk)
+        order = Order.objects.prefetch_related(*get_order_detail_prefetches()).get(
+            pk=order.pk
+        )
         return Response(
             CustomerOrderDetailSerializer(order).data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
@@ -296,7 +311,9 @@ class CustomerOrderDetailView(APIView):
     )
     def get(self, request, order_id):
         order = get_customer_order(request.user, order_id)
-        order = Order.objects.prefetch_related("items").get(pk=order.pk)
+        order = Order.objects.prefetch_related(*get_order_detail_prefetches()).get(
+            pk=order.pk
+        )
         return Response(CustomerOrderDetailSerializer(order).data)
 
 
@@ -311,5 +328,7 @@ class CustomerOrderCancelView(APIView):
     )
     def post(self, request, order_id):
         order = cancel_customer_order(request.user, order_id)
-        order = Order.objects.prefetch_related("items").get(pk=order.pk)
+        order = Order.objects.prefetch_related(*get_order_detail_prefetches()).get(
+            pk=order.pk
+        )
         return Response(CustomerOrderDetailSerializer(order).data)

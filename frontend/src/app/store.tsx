@@ -17,6 +17,7 @@ import { checkoutStoreReducer } from '../components/client/checkout/checkout.sto
 import { ordersStoreReducer } from '../components/client/orders/orders.store';
 import { adminOrdersStoreReducer } from '../components/admin/orders/adminOrders.store';
 import { adminPickupPointsStoreReducer } from '../components/admin/pickup-points/adminPickupPoints.store';
+import { reviewsStoreReducer } from '../components/client/reviews/reviews.store';
 
 export const rootReducer = {
   sharedStoreReducer,
@@ -32,6 +33,7 @@ export const rootReducer = {
   cartStoreReducer,
   checkoutStoreReducer,
   ordersStoreReducer,
+  reviewsStoreReducer,
 };
 
 enableMapSet();
