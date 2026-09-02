@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
-import { ToastProvider } from "react-toast-notifications";
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import { Provider } from 'react-redux';
 import { store } from "../app/store";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -64,62 +65,61 @@ const AppAMFashion: React.FC = (props) => {
     <ThemeProvider theme={theme}>
       <StylesThemeProvider theme={theme}>
         <Provider store={store}>
-          <ToastProvider>
-            <Router>
-              <Auth>
-                <ScrollRestoration />
-                <Routes>
-                  <Route path={APP_ROUTING_PATHS.AUTH} element={<RouteOutlet />}>
-                    <Route path={APP_ROUTING_PATHS.LOGIN} element={
-                      <ProtectedLoginRoute>
-                        <ClientLogin />
-                      </ProtectedLoginRoute>} />
-                    <Route path={APP_ROUTING_PATHS.SIGNUP} element={
-                      <ProtectedLoginRoute>
-                        <ClientSignup />
-                      </ProtectedLoginRoute>} />
-                    <Route index element={<Navigate to={APP_ROUTING_PATHS.AUTH_LOGIN_PAGE} replace />} />
-                  </Route>
-                  <Route path={APP_ROUTING_PATHS.APP} element={<Main />}>
-                    <Route index element={<Home />} />
-                    <Route path={`${APP_ROUTING_PATHS.PRODUCT}/:productId`} element={<ProductPage />} />
-                    <Route path={`${APP_ROUTING_PATHS.CATEGORY}/:categoryType/:categoryId`} element={<CategoryPage />} />
-                    <Route path={APP_ROUTING_PATHS.SEARCH} element={<SearchPage />} />
-                    <Route path={APP_ROUTING_PATHS.ABOUT_US} element={<AboutUsPage />} />
-                    <Route path={APP_ROUTING_PATHS.SHIPPING_POLICY} element={<ShippingPolicyPage />} />
-                    <Route path={APP_ROUTING_PATHS.CHECKOUT} element={(
-                      <ProtectedClientRoute>
-                        <CheckoutPage />
-                      </ProtectedClientRoute>
-                    )} />
-                    <Route path={APP_ROUTING_PATHS.PROFILE} element={(
-                      <ProtectedClientRoute>
-                        <ProfilePage />
-                      </ProtectedClientRoute>
-                    )} />
-                    <Route path={APP_ROUTING_PATHS.ORDERS} element={(
-                      <ProtectedClientRoute>
-                        <MyOrdersPage />
-                      </ProtectedClientRoute>
-                    )} />
-                    <Route path={`${APP_ROUTING_PATHS.ORDERS}/:orderId/${APP_ROUTING_PATHS.ITEM}/:orderItemId/${APP_ROUTING_PATHS.REVIEW}`} element={(
-                      <ProtectedClientRoute>
-                        <ReviewPage />
-                      </ProtectedClientRoute>
-                    )} />
-                    <Route path={`${APP_ROUTING_PATHS.ORDER}/:orderId`} element={(
-                      <ProtectedClientRoute>
-                        <OrderDetailsPage />
-                      </ProtectedClientRoute>
-                    )} />
-                  </Route>
-                  <Route path={`${APP_ROUTING_PATHS.ADMIN.ROOT}/*`} element={<AppAdmin />} />
-                  <Route path={APP_ROUTING_PATHS.ROOT} element={<Navigate to={APP_ROUTING_PATHS.APP_HOME_PAGE} replace />} />
-                  <Route path="*" element={<Navigate to={APP_ROUTING_PATHS.APP_HOME_PAGE} replace />} />
-                </Routes>
-              </Auth>
-            </Router>
-          </ToastProvider>
+          <Router>
+            <Auth>
+              <ScrollRestoration />
+              <Routes>
+                <Route path={APP_ROUTING_PATHS.AUTH} element={<RouteOutlet />}>
+                  <Route path={APP_ROUTING_PATHS.LOGIN} element={
+                    <ProtectedLoginRoute>
+                      <ClientLogin />
+                    </ProtectedLoginRoute>} />
+                  <Route path={APP_ROUTING_PATHS.SIGNUP} element={
+                    <ProtectedLoginRoute>
+                      <ClientSignup />
+                    </ProtectedLoginRoute>} />
+                  <Route index element={<Navigate to={APP_ROUTING_PATHS.AUTH_LOGIN_PAGE} replace />} />
+                </Route>
+                <Route path={APP_ROUTING_PATHS.APP} element={<Main />}>
+                  <Route index element={<Home />} />
+                  <Route path={`${APP_ROUTING_PATHS.PRODUCT}/:productId`} element={<ProductPage />} />
+                  <Route path={`${APP_ROUTING_PATHS.CATEGORY}/:categoryType/:categoryId`} element={<CategoryPage />} />
+                  <Route path={APP_ROUTING_PATHS.SEARCH} element={<SearchPage />} />
+                  <Route path={APP_ROUTING_PATHS.ABOUT_US} element={<AboutUsPage />} />
+                  <Route path={APP_ROUTING_PATHS.SHIPPING_POLICY} element={<ShippingPolicyPage />} />
+                  <Route path={APP_ROUTING_PATHS.CHECKOUT} element={(
+                    <ProtectedClientRoute>
+                      <CheckoutPage />
+                    </ProtectedClientRoute>
+                  )} />
+                  <Route path={APP_ROUTING_PATHS.PROFILE} element={(
+                    <ProtectedClientRoute>
+                      <ProfilePage />
+                    </ProtectedClientRoute>
+                  )} />
+                  <Route path={APP_ROUTING_PATHS.ORDERS} element={(
+                    <ProtectedClientRoute>
+                      <MyOrdersPage />
+                    </ProtectedClientRoute>
+                  )} />
+                  <Route path={`${APP_ROUTING_PATHS.ORDERS}/:orderId/${APP_ROUTING_PATHS.ITEM}/:orderItemId/${APP_ROUTING_PATHS.REVIEW}`} element={(
+                    <ProtectedClientRoute>
+                      <ReviewPage />
+                    </ProtectedClientRoute>
+                  )} />
+                  <Route path={`${APP_ROUTING_PATHS.ORDER}/:orderId`} element={(
+                    <ProtectedClientRoute>
+                      <OrderDetailsPage />
+                    </ProtectedClientRoute>
+                  )} />
+                </Route>
+                <Route path={`${APP_ROUTING_PATHS.ADMIN.ROOT}/*`} element={<AppAdmin />} />
+                <Route path={APP_ROUTING_PATHS.ROOT} element={<Navigate to={APP_ROUTING_PATHS.APP_HOME_PAGE} replace />} />
+                <Route path="*" element={<Navigate to={APP_ROUTING_PATHS.APP_HOME_PAGE} replace />} />
+              </Routes>
+            </Auth>
+          </Router>
+          <ToastContainer />
         </Provider>
       </StylesThemeProvider>
     </ThemeProvider>

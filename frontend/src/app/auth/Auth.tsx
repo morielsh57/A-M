@@ -12,7 +12,7 @@ import {
   getCurrentUser,
 } from '../../shared/store/user/user.store';
 import { APP_ROUTING_PATHS } from '../routing';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../shared/utils/toast.utils';
 import { getCart } from '../../components/client/cart/cart.store';
 
 export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
@@ -20,7 +20,6 @@ export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const { addToast } = useToasts();
 
   const clearSavedAuth = () => {
     removeItemFromLocalStorage(AUTH_LOCAL_STORAGE_KEYS.ACCESS_TOKEN);

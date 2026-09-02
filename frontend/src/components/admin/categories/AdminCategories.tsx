@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ReloadOutlined } from '@ant-design/icons';
 import { Modal } from 'antd';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../shared/utils/toast.utils';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { ADMIN_TABLE_PAGE_SIZE } from '../../../app/constants';
 import { EAPIStatus, type IAPIError } from '../../../shared/api/models';
@@ -56,7 +56,6 @@ const getApiErrorMessage = (error: unknown) => {
 
 const AdminCategories: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { addToast } = useToasts();
   const [searchValue, setSearchValue] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);

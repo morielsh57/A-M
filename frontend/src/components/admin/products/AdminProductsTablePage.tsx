@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Modal } from 'antd';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../shared/utils/toast.utils';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus, type IAPIError } from '../../../shared/api/models';
@@ -64,7 +64,6 @@ const AdminProductsTablePage: React.FC = () => {
   const [isProductFormDirty, setIsProductFormDirty] = React.useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { addToast } = useToasts();
   const { getMainCategoriesReq } = useAppSelector((store) => store.categoryStoreReducer);
   const {
     adminProductImagePreviewByProductReq,

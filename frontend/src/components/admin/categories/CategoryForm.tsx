@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../shared/utils/toast.utils';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus, type IAPIError } from '../../../shared/api/models';
 import AdminForm from '../../../shared/components/admin-form/AdminForm';
@@ -104,7 +104,6 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   onSaved,
 }) => {
   const dispatch = useAppDispatch();
-  const { addToast } = useToasts();
   const { getCategoryByIdReq } = useAppSelector((store) => store.categoryStoreReducer);
   const [values, setValues] = useState<CategoryFormValues>(EMPTY_VALUES);
   const [originalSnapshot, setOriginalSnapshot] = useState(JSON.stringify(EMPTY_VALUES));

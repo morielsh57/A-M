@@ -1,7 +1,7 @@
 import React from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useForm } from 'react-hook-form';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../../shared/utils/toast.utils';
 import { useAppDispatch, useAppSelector } from '../../../../app/store';
 import { EAPIStatus } from '../../../../shared/api/models';
 import AppButton from '../../../../shared/components/app-button/AppButton';
@@ -29,7 +29,6 @@ const getDefaultValues = (user?: IUser): ProfileDetailsFormValues => ({
 
 const ProfileDetailsForm: React.FC<ProfileDetailsFormProps> = ({ user }) => {
   const dispatch = useAppDispatch();
-  const { addToast } = useToasts();
   const { updateCurrentUserProfileRequest } = useAppSelector((store) => store.userStoreReducer);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const {

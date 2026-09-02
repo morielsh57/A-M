@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { DownOutlined } from '@ant-design/icons';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../shared/utils/toast.utils';
 import './ProductCartQuantityDropdown.scss';
 
 interface ProductCartQuantityDropdownProps {
@@ -37,7 +37,6 @@ const ProductCartQuantityDropdown: React.FC<ProductCartQuantityDropdownProps> = 
   quantity,
   onQuantityChange,
 }) => {
-  const { addToast } = useToasts();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const optionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);

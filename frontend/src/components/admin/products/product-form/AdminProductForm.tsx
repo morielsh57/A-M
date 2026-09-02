@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../../shared/utils/toast.utils';
 import { EAPIStatus } from '../../../../shared/api/models';
 import AdminForm from '../../../../shared/components/admin-form/AdminForm';
 import AdminFormActions from '../../../../shared/components/admin-form/AdminFormActions';
@@ -72,7 +72,6 @@ const AdminProductForm: React.FC<AdminProductFormProps> = ({
   products,
 }) => {
   const dispatch = useAppDispatch();
-  const { addToast } = useToasts();
   const { adminProductDetailByProductReq } = useAppSelector((store) => store.adminProductsStoreReducer);
   const { adminOrSupplierUser } = useAppSelector((store) => store.userStoreReducer);
   const { usersByQueryReq } = useAppSelector((store) => store.adminUsersStoreReducer);

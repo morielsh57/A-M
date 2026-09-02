@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import { Alert, Modal } from 'antd';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../shared/utils/toast.utils';
 import { ADMIN_TABLE_PAGE_SIZE } from '../../../app/constants';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
@@ -32,7 +32,6 @@ const getPositivePage = (value: string | null) => {
 const AdminPickupPointsTablePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { addToast } = useToasts();
   const [searchParams] = useSearchParams();
   const [editingPickupPointId, setEditingPickupPointId] = React.useState<number>();
   const [editingPickupPointName, setEditingPickupPointName] = React.useState<string>();

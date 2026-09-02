@@ -2,7 +2,6 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { fileURLToPath } from 'url';
-import { resolve } from 'node:path';
 
 export default defineConfig(({ mode, command }) => {
   const envDir = fileURLToPath(new URL('.', import.meta.url));
@@ -45,17 +44,6 @@ export default defineConfig(({ mode, command }) => {
       host: true,
       port: 3001,
       strictPort: true,
-    },
-    resolve: {
-      alias: [
-        { find: '@material-ui/core', replacement: resolve(__dirname, 'src/compat/material-ui/core') },
-        { find: '@material-ui/icons', replacement: resolve(__dirname, 'src/compat/material-ui/icons') },
-        { find: '@material-ui/lab', replacement: resolve(__dirname, 'src/compat/material-ui/lab') },
-        { find: 'react-google-maps', replacement: resolve(__dirname, 'src/compat/react-google-maps.tsx') },
-        { find: 'react-paypal-button-v2', replacement: resolve(__dirname, 'src/compat/react-paypal-button-v2.tsx') },
-        { find: 'react-toast-notifications', replacement: resolve(__dirname, 'src/compat/react-toast-notifications.tsx') },
-        { find: 'redux-devtools-extension', replacement: resolve(__dirname, 'src/compat/redux-devtools-extension.ts') },
-      ],
     },
   };
 });

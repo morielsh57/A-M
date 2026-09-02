@@ -1,7 +1,7 @@
 import React from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useForm } from 'react-hook-form';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../shared/utils/toast.utils';
 import { changePasswordRequest } from '../../../app/auth/auth.store';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
@@ -23,7 +23,6 @@ const defaultValues: AdminChangePasswordFormValues = {
 
 const AdminChangePasswordForm: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { addToast } = useToasts();
   const { changePasswordRes } = useAppSelector((store) => store.authStoreReducer);
   const {
     register,
