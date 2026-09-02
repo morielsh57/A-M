@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Spin } from 'antd';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../../shared/utils/toast.utils';
 import { useAppDispatch, useAppSelector } from '../../../../app/store';
 import { EAPIStatus } from '../../../../shared/api/models';
 import AdminForm from '../../../../shared/components/admin-form/AdminForm';
@@ -40,7 +40,6 @@ const AdminUsersForm: React.FC<AdminUsersFormProps> = ({
   userId,
 }) => {
   const dispatch = useAppDispatch();
-  const { addToast } = useToasts();
   const { userByIdReq } = useAppSelector(
     (store) => store.adminUsersStoreReducer,
   );

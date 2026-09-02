@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../../shared/utils/toast.utils';
 import { APP_ROUTING_PATHS } from '../../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../../app/store';
 import { EAPIStatus } from '../../../../shared/api/models';
@@ -27,7 +27,6 @@ import './ReviewPage.scss';
 const ReviewPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { addToast } = useToasts();
   const { orderId, orderItemId } = useParams<{
     orderId: string;
     orderItemId: string;

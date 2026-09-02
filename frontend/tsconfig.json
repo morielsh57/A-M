@@ -7,21 +7,6 @@
       "dom.iterable",
       "esnext"
     ],
-    ///
-    // "typeRoots": [
-    //   "./types",
-    //   "node_modules/@types"
-    // ],
-    // "noImplicitAny": false,
-    // "sourceMap": true,
-    // "strictNullChecks": false,
-    // "strictPropertyInitialization": false,
-    // "experimentalDecorators": true,
-    // "declaration": false,
-    // "removeComments": true,
-    // // "noImplicitReturns": true,
-    // "noUnusedLocals": false,
-    ///
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -34,29 +19,6 @@
     "types": [
       "node"
     ],
-    "paths": {
-      "@material-ui/core/*": [
-        "./src/compat/material-ui/core/*"
-      ],
-      "@material-ui/icons/*": [
-        "./src/compat/material-ui/icons/*"
-      ],
-      "@material-ui/lab/*": [
-        "./src/compat/material-ui/lab/*"
-      ],
-      "react-google-maps": [
-        "./src/compat/react-google-maps.tsx"
-      ],
-      "react-paypal-button-v2": [
-        "./src/compat/react-paypal-button-v2.tsx"
-      ],
-      "react-toast-notifications": [
-        "./src/compat/react-toast-notifications.tsx"
-      ],
-      "redux-devtools-extension": [
-        "./src/compat/redux-devtools-extension.ts"
-      ]
-    },
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,

@@ -3,7 +3,7 @@ import { BellFilled, DownOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Badge, Dropdown } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { useToasts } from 'react-toast-notifications';
+import { addToast } from '../../../../shared/utils/toast.utils';
 import { APP_ROUTING_PATHS } from '../../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../../app/store';
 import { markSupplierNotificationRead } from '../supplierNotifications.store';
@@ -24,7 +24,6 @@ const getNotificationItemClassName = (notification: ISupplierNotification) => [
 const SupplierNotificationsDropdown: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { addToast } = useToasts();
   const { supplierNotificationsReq } = useAppSelector(
     (store) => store.supplierNotificationsStoreReducer,
   );
