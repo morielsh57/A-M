@@ -1,16 +1,19 @@
 import React from 'react';
+import AppButton from '../../../../../shared/components/app-button/AppButton';
 import { formatPrice } from '../../../../../shared/components/product-card/productCard.utils';
-import type { IOrder } from '../../orders.store';
+import { EOrderStatus, type IOrder } from '../../orders.store';
 import './OrderDetailsItems.scss';
 
 interface OrderDetailsItemsProps {
   order: IOrder;
   itemImages: Map<string, string>;
+  onReviewItem: (orderItemId: string | number) => void;
 }
 
 const OrderDetailsItems: React.FC<OrderDetailsItemsProps> = ({
   order,
   itemImages,
+  onReviewItem,
 }) => (
   <section className="order-details-items">
     <h2 className="order-details-items__title">Items in this order</h2>
@@ -35,8 +38,22 @@ const OrderDetailsItems: React.FC<OrderDetailsItemsProps> = ({
               </p>
               <span className="order-details-item__meta">Quantity: {item.quantity}</span>
               <span className="order-details-item__meta">{formatPrice(item.unit_price)} each</span>
+              <strong className="order-details-item__total">{formatPrice(item.total_price)}</strong>
             </div>
-            <strong className="order-details-item__total">{formatPrice(item.total_price)}</strong>
+            {order.order_status === EOrderStatus.COMPLETED && item.order_item_id && (
+              <AppButton
+                className={[
+                  'order-details-item__review-button',
+                  item.review
+                    ? 'order-details-item__review-button--edit'
+                    : 'order-details-item__review-button--add',
+                ].join(' ')}
+                variant="secondary"
+                onClick={() => onReviewItem(item.order_item_id as number)}
+              >
+                {item.review ? 'Edit Review' : 'Add Review'}
+              </AppButton>
+            )}
           </article>
         );
       })}

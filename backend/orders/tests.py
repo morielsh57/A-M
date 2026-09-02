@@ -14,6 +14,7 @@ from orders.services import create_order_from_cart
 from payments.models import Payment, PaymentItem
 from pickup_points.models import PickUpPoint
 from products.models import Product, ProductVariant
+from reviews.models import Review
 
 
 class CustomerOrderApiTests(TestCase):
@@ -306,6 +307,31 @@ class CustomerOrderApiTests(TestCase):
         self.assertEqual(history.json()["data"][0]["item_count"], 1)
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(detail.json()["data"]["items"][0]["product_name"], "Order Shirt")
+
+    def test_customer_order_detail_includes_existing_item_review(self):
+        self.authorize()
+        self.create_cart(quantity=1)
+        order_id = self.checkout().json()["data"]["order_id"]
+        order = Order.objects.get(pk=order_id)
+        order.order_status = Order.Status.COMPLETED
+        order.save(update_fields=("order_status",))
+        review = Review.objects.create(
+            order=order,
+            product=self.product,
+            customer=self.customer,
+            stars=4,
+            review_text="Great order item",
+        )
+
+        response = self.client.get(
+            reverse("customer-order-detail", kwargs={"order_id": order_id})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        item_review = response.json()["data"]["items"][0]["review"]
+        self.assertEqual(item_review["review_id"], review.pk)
+        self.assertEqual(item_review["stars"], 4)
+        self.assertEqual(item_review["review_text"], "Great order item")
 
     def test_customer_cannot_view_or_cancel_another_customers_order(self):
         self.authorize(self.other_customer)

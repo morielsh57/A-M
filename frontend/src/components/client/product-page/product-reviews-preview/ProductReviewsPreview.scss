@@ -8,48 +8,26 @@
     overflow-y: auto;
   }
 
-  &__review {
-    display: grid;
-    grid-template-columns: 34px 1fr;
-    gap: 8px;
-    padding: 10px 12px;
+  &__reviews-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 10px 12px 8px;
     border-bottom: 1px solid rgba($natural7, 0.16);
-
-    &:last-child {
-      border-bottom: 0;
-    }
-
-    h3 {
-      margin: 0 0 4px;
-      color: $purple9;
-      font-size: 0.78rem;
-      font-weight: 800;
-    }
-
-    p {
-      margin: 4px 0 0;
-      color: $purple8;
-      font-size: 0.72rem;
-    }
-
-    .product-page__rating {
-      margin: 0;
-    }
-
-    .product-page__stars {
-      font-size: 0.82rem;
-    }
+    background: $natural1;
   }
 
-  &__review-avatar {
-    display: grid;
-    width: 28px;
-    height: 28px;
-    place-items: center;
-    border-radius: 999px;
-    background: $pink2;
-    color: $purple7;
-    font-size: 0.74rem;
-    font-weight: 900;
+  &__reviews-title {
+    margin: 0;
+    color: $purple9;
+    font-size: 0.92rem;
+    font-weight: 800;
+  }
+
+  &__reviews-state {
+    margin: 0;
+    padding: 12px;
+    color: $natural7;
+    font-size: 0.82rem;
   }
 }

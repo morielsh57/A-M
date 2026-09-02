@@ -138,7 +138,7 @@ const ProductPage: React.FC = () => {
           </section>
 
           <ProductDetailsCare information={product.information} />
-          <ProductReviewsPreview />
+          <ProductReviewsPreview productId={product.product_id} />
         </div>
 
         <ProductRecommendations

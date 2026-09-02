@@ -8,6 +8,8 @@ const CHECKOUT_SEGMENT = 'checkout';
 const PROFILE_SEGMENT = 'profile';
 const ORDERS_SEGMENT = 'orders';
 const ORDER_SEGMENT = 'order';
+const ITEM_SEGMENT = 'item';
+const REVIEW_SEGMENT = 'review';
 const ADMIN_ROOT_PATH = '/admin';
 
 const LOGIN_SEGMENT = 'login';
@@ -43,6 +45,8 @@ export const APP_ROUTING_PATHS = {
   PROFILE: PROFILE_SEGMENT,
   ORDERS: ORDERS_SEGMENT,
   ORDER: ORDER_SEGMENT,
+  ITEM: ITEM_SEGMENT,
+  REVIEW: REVIEW_SEGMENT,
   LOGIN: LOGIN_SEGMENT,
   SIGNUP: SIGNUP_SEGMENT,
   ADMIN: {
@@ -85,6 +89,10 @@ export const APP_ROUTING_PATHS = {
   APP_PROFILE_PAGE: `${APP_PATH}/${PROFILE_SEGMENT}`,
   APP_ORDERS_PAGE: (page: string | number = 1) => `${APP_PATH}/${ORDERS_SEGMENT}?page=${page}`,
   APP_ORDER_PAGE: (orderId: string | number) => `${APP_PATH}/${ORDER_SEGMENT}/${orderId}`,
+  APP_ORDER_ITEM_REVIEW_PAGE: (
+    orderId: string | number,
+    orderItemId: string | number,
+  ) => `${APP_PATH}/${ORDERS_SEGMENT}/${orderId}/${ITEM_SEGMENT}/${orderItemId}/${REVIEW_SEGMENT}`,
   ADMIN_LOGIN_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_AUTH_SEGMENT}/${ADMIN_LOGIN_SEGMENT}`,
   ADMIN_HOME_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_HOME_SEGMENT}`,
   ADMIN_PRODUCTS_PAGE: (categoryId: string | number) => `${ADMIN_ROOT_PATH}/${ADMIN_PRODUCTS_SEGMENT}/${categoryId}`,
@@ -138,6 +146,8 @@ export const API_ROUTES = {
   PRODUCTS: '/products/',
   PRODUCT_AUTOCOMPLETE: '/products/autocomplete',
   PRODUCT_DETAIL: (productId: string | number) => `/products/${productId}`,
+  PRODUCT_REVIEWS: (productId: string | number) => `/products/${productId}/reviews`,
+  REVIEW_DETAIL: (reviewId: string | number) => `/reviews/${reviewId}`,
   PICKUP_POINTS: '/pickup-points/',
   CHECKOUT: {
     PAYPAL_ORDERS: '/checkout/paypal/orders',

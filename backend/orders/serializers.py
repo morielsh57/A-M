@@ -7,12 +7,14 @@ from orders.services import (
     transition_order_status,
     transition_supplier_fulfillment,
 )
+from reviews.serializers import ReviewSerializer
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product_id = serializers.IntegerField(read_only=True)
     variant_id = serializers.IntegerField(read_only=True)
     image_url = serializers.SerializerMethodField()
+    review = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
@@ -21,6 +23,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "product_id",
             "variant_id",
             "image_url",
+            "review",
             "product_name",
             "color",
             "size",
@@ -58,6 +61,23 @@ class OrderItemSerializer(serializers.ModelSerializer):
             ),
             None,
         )
+
+    @extend_schema_field(ReviewSerializer(allow_null=True))
+    def get_review(self, item):
+        reviews = getattr(item.order, "_prefetched_objects_cache", {}).get("reviews")
+        if reviews is None:
+            reviews = item.order.reviews.select_related("customer")
+
+        review = next(
+            (
+                order_review
+                for order_review in reviews
+                if order_review.product_id == item.product_id
+                and order_review.customer_id == item.order.customer_id
+            ),
+            None,
+        )
+        return ReviewSerializer(review).data if review else None
 
 
 class CustomerOrderCreateSerializer(serializers.Serializer):

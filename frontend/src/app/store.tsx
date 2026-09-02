@@ -18,6 +18,7 @@ import { ordersStoreReducer } from '../components/client/orders/orders.store';
 import { adminOrdersStoreReducer } from '../components/admin/orders/adminOrders.store';
 import { adminPickupPointsStoreReducer } from '../components/admin/pickup-points/adminPickupPoints.store';
 import { supplierNotificationsStoreReducer } from '../components/admin/notifications/supplierNotifications.store';
+import { reviewsStoreReducer } from '../components/client/reviews/reviews.store';
 
 export const rootReducer = {
   sharedStoreReducer,
@@ -34,6 +35,7 @@ export const rootReducer = {
   cartStoreReducer,
   checkoutStoreReducer,
   ordersStoreReducer,
+  reviewsStoreReducer,
 };
 
 enableMapSet();

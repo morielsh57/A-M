@@ -1,0 +1,116 @@
+@import '../../../../../shared/styles/colors.scss';
+
+.review-form {
+  flex: 1;
+  display: grid;
+  gap: 16px;
+  padding: 26px;
+  border: 1px solid rgba($purple6, 0.16);
+  border-radius: 8px;
+  background: $natural1;
+  box-shadow: 0 14px 35px rgba($purple9, 0.06);
+
+  &__header {
+    display: grid;
+    gap: 4px;
+  }
+
+  &__eyebrow {
+    color: $purple6;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    color: $purple9;
+    font-size: 1.35rem;
+    font-weight: 800;
+  }
+
+  &__rating {
+    display: flex;
+    gap: 3px;
+  }
+
+  &__star {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: $natural5;
+    font-size: 1.65rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &--filled {
+      color: $gold6;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $purple6;
+      outline-offset: 3px;
+    }
+  }
+
+  &__field {
+    display: grid;
+    gap: 8px;
+  }
+
+  &__label {
+    color: $purple9;
+    font-weight: 800;
+  }
+
+  &__textarea {
+    min-height: 170px;
+    padding: 12px;
+    border: 1px solid rgba($purple6, 0.34);
+    border-radius: 8px;
+    color: $purple9;
+    font: inherit;
+    resize: vertical;
+
+    &:focus {
+      border-color: $purple6;
+      outline: 3px solid rgba($purple6, 0.12);
+    }
+  }
+
+  &__error {
+    color: $red7;
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  &__submit,
+  &__cancel {
+    min-width: 132px;
+  }
+}
+
+
+@media (max-width: 860px) {
+  .review-form {
+    width: 100%;
+
+    &__actions,
+    &__submit,
+    &__cancel {
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 520px) {
+  .review-form {
+    padding: 20px 16px;
+  }
+}
