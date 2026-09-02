@@ -484,7 +484,14 @@ class AdminSupplierOrderApiTests(TestCase):
             supplier=supplier,
         )
 
-    def create_order(self, variant, *, customer=None, status=Order.Status.PENDING):
+    def create_order(
+        self,
+        variant,
+        *,
+        customer=None,
+        status=Order.Status.PENDING,
+        create_fulfillment=True,
+    ):
         customer = customer or self.customer
         cart = Cart.objects.create(customer=customer, total_price=Decimal("20.00"))
         order = Order.objects.create(
@@ -505,11 +512,12 @@ class AdminSupplierOrderApiTests(TestCase):
             unit_price=Decimal("20.00"),
             total_price=Decimal("20.00"),
         )
-        SupplierOrderFulfillment.objects.create(
-            order=order,
-            supplier=variant.product.supplier,
-            status=status,
-        )
+        if create_fulfillment:
+            SupplierOrderFulfillment.objects.create(
+                order=order,
+                supplier=variant.product.supplier,
+                status=status,
+            )
         return order
 
     def authorize(self, user):
@@ -553,6 +561,21 @@ class AdminSupplierOrderApiTests(TestCase):
         self.assertNotIn("payment_id", data)
         self.assertEqual(own_detail.status_code, 200)
         self.assertEqual(other_detail.status_code, 404)
+
+    def test_supplier_orders_endpoint_handles_related_orders_without_fulfillment(self):
+        order = self.create_order(self.variant, create_fulfillment=False)
+        self.authorize(self.supplier_user)
+
+        listing = self.client.get(reverse("admin-order-list"))
+        detail = self.client.get(
+            reverse("admin-order-detail", kwargs={"order_id": order.pk})
+        )
+
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(listing.json()["meta"]["pagination"]["total_items"], 1)
+        self.assertEqual(listing.json()["data"][0]["order_status"], Order.Status.PENDING)
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.json()["data"]["order_status"], Order.Status.PENDING)
 
     def test_admin_orders_search_and_status_filter_work(self):
         pending_order = self.create_order(self.variant)

@@ -82,6 +82,20 @@ def create_supplier_fulfillments(order):
         )
 
 
+def get_supplier_order_fulfillment(order, supplier=None, *, create=False):
+    fulfillments = getattr(order, "supplier_fulfillments_for_request", None)
+    if fulfillments:
+        return fulfillments[0]
+    if not create:
+        return None
+    fulfillment, _ = SupplierOrderFulfillment.objects.get_or_create(
+        order=order,
+        supplier=supplier,
+        defaults={"status": order.order_status},
+    )
+    return fulfillment
+
+
 def create_order_from_cart(customer, payment_id, pickup_point_id):
     require_customer(customer)
     existing = _get_existing_payment_order(customer, payment_id)

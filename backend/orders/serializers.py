@@ -2,7 +2,11 @@ from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 
 from orders.models import Order, OrderItem, SupplierOrderFulfillment
-from orders.services import transition_order_status, transition_supplier_fulfillment
+from orders.services import (
+    get_supplier_order_fulfillment,
+    transition_order_status,
+    transition_supplier_fulfillment,
+)
 from reviews.serializers import ReviewSerializer
 
 
@@ -46,6 +50,17 @@ class OrderItemSerializer(serializers.ModelSerializer):
             ),
             None,
         )
+        if primary_image:
+            return primary_image
+
+        return next(
+            (
+                image.secure_url
+                for image in item.product.images.all()
+                if image.is_active and image.variant_id is None
+            ),
+            None,
+        )
 
     @extend_schema_field(ReviewSerializer(allow_null=True))
     def get_review(self, item):
@@ -63,17 +78,6 @@ class OrderItemSerializer(serializers.ModelSerializer):
             None,
         )
         return ReviewSerializer(review).data if review else None
-        if primary_image:
-            return primary_image
-
-        return next(
-            (
-                image.secure_url
-                for image in item.product.images.all()
-                if image.is_active and image.variant_id is None
-            ),
-            None,
-        )
 
 
 class CustomerOrderCreateSerializer(serializers.Serializer):
@@ -205,11 +209,14 @@ class SupplierOrderSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.DecimalField(max_digits=10, decimal_places=2))
     def get_supplier_total_price(self, order):
-        return sum(item.total_price for item in order.supplier_items)
+        return sum(item.total_price for item in getattr(order, "supplier_items", []))
 
     @extend_schema_field(serializers.ChoiceField(choices=SupplierOrderFulfillment.Status.choices))
     def get_order_status(self, order):
-        return order.supplier_fulfillments_for_request[0].status
+        fulfillment = get_supplier_order_fulfillment(order)
+        if fulfillment is None:
+            return order.order_status
+        return fulfillment.status
 
 
 class SupplierOrderStatusSerializer(serializers.Serializer):

@@ -32,6 +32,7 @@ const ADMIN_SUPPLIERS_SEGMENT = 'users/suppliers';
 const ADMIN_CATEGORIES_SEGMENT = 'categories';
 const ADMIN_ORDERS_SEGMENT = 'orders';
 const ADMIN_PICKUP_POINTS_SEGMENT = 'pickup-points';
+const ADMIN_NOTIFICATIONS_SEGMENT = 'notifications';
 
 export const APP_ROUTING_PATHS = {
   ROOT: ROOT_PATH,
@@ -67,6 +68,7 @@ export const APP_ROUTING_PATHS = {
     CATEGORIES: ADMIN_CATEGORIES_SEGMENT,
     ORDERS: ADMIN_ORDERS_SEGMENT,
     PICKUP_POINTS: ADMIN_PICKUP_POINTS_SEGMENT,
+    NOTIFICATIONS: ADMIN_NOTIFICATIONS_SEGMENT,
   },
   AUTH_LOGIN_PAGE: `${AUTH_PATH}/${LOGIN_SEGMENT}`,
   AUTH_SIGNUP_PAGE: `${AUTH_PATH}/${SIGNUP_SEGMENT}`,
@@ -94,6 +96,9 @@ export const APP_ROUTING_PATHS = {
   ADMIN_LOGIN_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_AUTH_SEGMENT}/${ADMIN_LOGIN_SEGMENT}`,
   ADMIN_HOME_PAGE: `${ADMIN_ROOT_PATH}/${ADMIN_HOME_SEGMENT}`,
   ADMIN_PRODUCTS_PAGE: (categoryId: string | number) => `${ADMIN_ROOT_PATH}/${ADMIN_PRODUCTS_SEGMENT}/${categoryId}`,
+  ADMIN_NOTIFICATION_PAGE: (notificationId: string | number) => (
+    `${ADMIN_ROOT_PATH}/${ADMIN_NOTIFICATIONS_SEGMENT}/${notificationId}`
+  ),
   ADMIN_PAGE: (segment: string) => `${ADMIN_ROOT_PATH}/${segment}`,
   ADMIN_PAGE_WITH_PAGE: (segment: string, page: string | number) => `${ADMIN_ROOT_PATH}/${segment}/${page}`,
 } as const;
@@ -127,6 +132,10 @@ export const API_ROUTES = {
     ORDER_DETAIL: (orderId: string | number) => `/admin/orders/${orderId}`,
     PICKUP_POINTS: '/admin/pickup-points/',
     PICKUP_POINT_DETAIL: (pickupPointId: string | number) => `/admin/pickup-points/${pickupPointId}`,
+  },
+  SUPPLIER: {
+    NOTIFICATIONS: '/supplier/notifications',
+    NOTIFICATION_READ: (notificationId: string | number) => `/supplier/notifications/${notificationId}/read`,
   },
   USERS: '/users',
   USERS_ME: '/users/me',
