@@ -1,0 +1,30 @@
+@import '../../../../shared/styles/colors.scss';
+
+.supplier-notification-details-page {
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    max-width: 1120px;
+    margin: 0 auto 18px;
+  }
+
+  &__back-button {
+    min-width: 132px;
+  }
+
+  &__state,
+  &__error {
+    max-width: 1120px;
+    margin: 0 auto;
+    border-radius: 8px;
+  }
+
+  &__state {
+    display: grid;
+    gap: 6px;
+    padding: 28px;
+    background: $pink1;
+    color: $purple9;
+    text-align: center;
+  }
+}

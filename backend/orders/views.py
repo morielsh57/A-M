@@ -23,6 +23,7 @@ from orders.services import (
     cancel_customer_order,
     create_order_from_cart,
     get_customer_order,
+    get_supplier_order_fulfillment,
     require_customer,
 )
 
@@ -176,7 +177,11 @@ class SupplierOrderStatusView(APIView):
         order = get_supplier_order_queryset(request.user).filter(pk=order_id).first()
         if order is None:
             raise NotFound("Order was not found.")
-        fulfillment = order.supplier_fulfillments_for_request[0]
+        fulfillment = get_supplier_order_fulfillment(
+            order,
+            request.user.supplier_profile,
+            create=True,
+        )
         serializer = SupplierOrderStatusSerializer(
             fulfillment,
             data=request.data,
@@ -204,7 +209,11 @@ class AdminOrderDetailView(APIView):
             else AdminOrderStatusSerializer
         )
         instance = (
-            order.supplier_fulfillments_for_request[0]
+            get_supplier_order_fulfillment(
+                order,
+                request.user.supplier_profile,
+                create=True,
+            )
             if request.user.role.role_name == SUPPLIER_ROLE
             else order
         )

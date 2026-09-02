@@ -7,6 +7,7 @@ import { getCurrentAdminOrSupplier } from '../../../shared/store/user/user.store
 import { getItemFromLocalStorage } from '../../../shared/utils/localStorage.utils';
 import AdminHeader from '../../../shared/layout/admin-header/AdminHeader';
 import AdminNavbar from '../../../shared/layout/admin-navbar/AdminNavbar';
+import NotificationPollingHandler from '../notifications/notification-polling-handler/NotificationPollingHandler';
 import './AdminMain.scss';
 
 const AdminMain: React.FC = () => {
@@ -65,6 +66,7 @@ const AdminMain: React.FC = () => {
       <div ref={adminHeaderRef} className="admin-main-container__header">
         <AdminHeader />
       </div>
+      <NotificationPollingHandler />
       <AdminNavbar isOpen={isNavbarOpen} onToggle={() => setIsNavbarOpen((isOpen) => !isOpen)} />
       <div className="admin-main-scrollable-content-container">
         <Outlet />

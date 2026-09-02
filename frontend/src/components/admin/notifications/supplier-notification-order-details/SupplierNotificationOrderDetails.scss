@@ -1,0 +1,144 @@
+@import '../../../../shared/styles/colors.scss';
+
+.supplier-notification-order-details {
+  display: grid;
+  gap: 18px;
+  max-width: 1120px;
+  margin: 0 auto;
+
+  &__state {
+    display: grid;
+    gap: 6px;
+    padding: 28px;
+    border-radius: 8px;
+    background: $pink1;
+    color: $purple9;
+    text-align: center;
+  }
+
+  &__error {
+    border-radius: 8px;
+  }
+
+  &__section {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid rgba($purple6, 0.14);
+    border-radius: 8px;
+    background: $natural1;
+  }
+
+  &__section-title {
+    margin: 0;
+    color: $purple9;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  &__summary,
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  &__field {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  &__label {
+    color: $natural7;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  &__value {
+    overflow-wrap: anywhere;
+    color: $purple9;
+    font-size: 0.94rem;
+    font-weight: 800;
+  }
+
+  &__items {
+    display: grid;
+    gap: 10px;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border-radius: 8px;
+    background: $pink1;
+  }
+
+  &__item-image {
+    display: grid;
+    aspect-ratio: 3 / 4;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 8px;
+    background: $natural1;
+    color: $natural7;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  &__item-image-file {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__item-main {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__item-name {
+    overflow-wrap: anywhere;
+    color: $purple9;
+    font-weight: 900;
+  }
+
+  &__item-variant,
+  &__item-detail {
+    color: $natural7;
+    font-size: 0.86rem;
+  }
+
+  &__item-meta {
+    display: grid;
+    gap: 4px;
+    justify-items: end;
+    white-space: nowrap;
+  }
+
+  &__item-total {
+    color: $purple8;
+    font-weight: 900;
+  }
+}
+
+@media (max-width: 680px) {
+  .supplier-notification-order-details {
+    &__summary,
+    &__grid,
+    &__item {
+      grid-template-columns: 1fr;
+    }
+
+    &__item-meta {
+      justify-items: start;
+      white-space: normal;
+    }
+  }
+}

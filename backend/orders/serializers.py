@@ -2,7 +2,11 @@ from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 
 from orders.models import Order, OrderItem, SupplierOrderFulfillment
-from orders.services import transition_order_status, transition_supplier_fulfillment
+from orders.services import (
+    get_supplier_order_fulfillment,
+    transition_order_status,
+    transition_supplier_fulfillment,
+)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -185,11 +189,14 @@ class SupplierOrderSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.DecimalField(max_digits=10, decimal_places=2))
     def get_supplier_total_price(self, order):
-        return sum(item.total_price for item in order.supplier_items)
+        return sum(item.total_price for item in getattr(order, "supplier_items", []))
 
     @extend_schema_field(serializers.ChoiceField(choices=SupplierOrderFulfillment.Status.choices))
     def get_order_status(self, order):
-        return order.supplier_fulfillments_for_request[0].status
+        fulfillment = get_supplier_order_fulfillment(order)
+        if fulfillment is None:
+            return order.order_status
+        return fulfillment.status
 
 
 class SupplierOrderStatusSerializer(serializers.Serializer):

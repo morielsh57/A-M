@@ -15,57 +15,9 @@
     gap: 0.85rem;
   }
 
-  &__bell {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    border: 0;
-    background: transparent;
-    color: $gold8;
-    cursor: pointer;
-    transition: color 0.2s ease;
-
-    &:hover {
-      color: $gold9;
-    }
-  }
-
-  &__bell {
-    padding: 0;
-    padding-right: 11px;
-    font-size: 1.1rem;
-  }
-
-  &__bell-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    line-height: 1;
-    color: inherit;
-
-    .anticon {
-      display: inline-flex;
-      align-items: center;
-      color: inherit;
-      line-height: 1;
-    }
-  }
-
-  &__bell .ant-badge {
-    display: inline-flex;
-    align-items: center;
-    color: inherit;
-    line-height: 1;
-  }
-
   &__name {
     font-size: 0.98rem;
     font-weight: 500;
-  }
-
-  &-bell-menu-item {
-    max-width: 260px;
   }
 
   @media (max-width: 768px) {

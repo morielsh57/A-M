@@ -17,6 +17,7 @@ import { checkoutStoreReducer } from '../components/client/checkout/checkout.sto
 import { ordersStoreReducer } from '../components/client/orders/orders.store';
 import { adminOrdersStoreReducer } from '../components/admin/orders/adminOrders.store';
 import { adminPickupPointsStoreReducer } from '../components/admin/pickup-points/adminPickupPoints.store';
+import { supplierNotificationsStoreReducer } from '../components/admin/notifications/supplierNotifications.store';
 
 export const rootReducer = {
   sharedStoreReducer,
@@ -28,6 +29,7 @@ export const rootReducer = {
   adminUsersStoreReducer,
   adminOrdersStoreReducer,
   adminPickupPointsStoreReducer,
+  supplierNotificationsStoreReducer,
   productPageStoreReducer,
   cartStoreReducer,
   checkoutStoreReducer,

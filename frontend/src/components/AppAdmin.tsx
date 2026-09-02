@@ -13,6 +13,7 @@ import AdminAdministratorsTablePage from './admin/users/administrators/AdminAdmi
 import AdminSuppliersTablePage from './admin/users/suppliers/AdminSuppliersTablePage';
 import AdminOrdersTablePage from './admin/orders/AdminOrdersTablePage';
 import AdminPickupPointsTablePage from './admin/pickup-points/AdminPickupPointsTablePage';
+import SupplierNotificationDetailsPage from './admin/notifications/supplier-notification-details-page/SupplierNotificationDetailsPage';
 
 function AppAdmin() {
   return (
@@ -62,6 +63,10 @@ function AppAdmin() {
           )}
         />
         <Route path={APP_ROUTING_PATHS.ADMIN.ORDERS} element={<AdminOrdersTablePage />} />
+        <Route
+          path={`${APP_ROUTING_PATHS.ADMIN.NOTIFICATIONS}/:notificationId`}
+          element={<SupplierNotificationDetailsPage />}
+        />
         <Route
           path={APP_ROUTING_PATHS.ADMIN.PICKUP_POINTS}
           element={(
