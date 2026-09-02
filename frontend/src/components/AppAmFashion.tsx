@@ -25,6 +25,8 @@ import ProfilePage from './client/profile/ProfilePage';
 import OrderDetailsPage from './client/orders/order-details-page/OrderDetailsPage';
 import MyOrdersPage from './client/orders/my-orders-page/MyOrdersPage';
 import ReviewPage from './client/reviews/review-page/ReviewPage';
+import AboutUsPage from './client/about-us-page/AboutUsPage';
+import ShippingPolicyPage from './client/shipping-policy-page/ShippingPolicyPage';
 
 const AppAMFashion: React.FC = (props) => {
   const theme = createTheme(
@@ -83,6 +85,8 @@ const AppAMFashion: React.FC = (props) => {
                     <Route path={`${APP_ROUTING_PATHS.PRODUCT}/:productId`} element={<ProductPage />} />
                     <Route path={`${APP_ROUTING_PATHS.CATEGORY}/:categoryType/:categoryId`} element={<CategoryPage />} />
                     <Route path={APP_ROUTING_PATHS.SEARCH} element={<SearchPage />} />
+                    <Route path={APP_ROUTING_PATHS.ABOUT_US} element={<AboutUsPage />} />
+                    <Route path={APP_ROUTING_PATHS.SHIPPING_POLICY} element={<ShippingPolicyPage />} />
                     <Route path={APP_ROUTING_PATHS.CHECKOUT} element={(
                       <ProtectedClientRoute>
                         <CheckoutPage />

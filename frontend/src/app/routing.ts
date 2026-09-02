@@ -10,6 +10,8 @@ const ORDERS_SEGMENT = 'orders';
 const ORDER_SEGMENT = 'order';
 const ITEM_SEGMENT = 'item';
 const REVIEW_SEGMENT = 'review';
+const ABOUT_US_SEGMENT = 'about-us';
+const SHIPPING_POLICY_SEGMENT = 'shipping-policy';
 const ADMIN_ROOT_PATH = '/admin';
 
 const LOGIN_SEGMENT = 'login';
@@ -47,6 +49,8 @@ export const APP_ROUTING_PATHS = {
   ORDER: ORDER_SEGMENT,
   ITEM: ITEM_SEGMENT,
   REVIEW: REVIEW_SEGMENT,
+  ABOUT_US: ABOUT_US_SEGMENT,
+  SHIPPING_POLICY: SHIPPING_POLICY_SEGMENT,
   LOGIN: LOGIN_SEGMENT,
   SIGNUP: SIGNUP_SEGMENT,
   ADMIN: {
@@ -89,6 +93,8 @@ export const APP_ROUTING_PATHS = {
   APP_PROFILE_PAGE: `${APP_PATH}/${PROFILE_SEGMENT}`,
   APP_ORDERS_PAGE: (page: string | number = 1) => `${APP_PATH}/${ORDERS_SEGMENT}?page=${page}`,
   APP_ORDER_PAGE: (orderId: string | number) => `${APP_PATH}/${ORDER_SEGMENT}/${orderId}`,
+  APP_ABOUT_US_PAGE: `${APP_PATH}/${ABOUT_US_SEGMENT}`,
+  APP_SHIPPING_POLICY_PAGE: `${APP_PATH}/${SHIPPING_POLICY_SEGMENT}`,
   APP_ORDER_ITEM_REVIEW_PAGE: (
     orderId: string | number,
     orderItemId: string | number,

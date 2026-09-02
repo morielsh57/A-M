@@ -1,0 +1,64 @@
+@import '../../../shared/styles/colors.scss';
+
+.shipping-policy-page {
+  margin: 0 auto;
+  padding: 54px 0px 86px;
+  color: $purple9;
+
+  &__header {
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  &__intro {
+    width: 90%;
+    max-width: 780px;
+    margin: -4px auto 0;
+    color: $natural7;
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  &__content {
+    max-width: 1040px;
+    padding: 0 30px;
+    margin: 0 auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  &__section {
+    padding: 24px 26px;
+    border: 1px solid $purple2;
+    border-radius: 8px;
+    background: $pink0;
+  }
+
+  &__section-title {
+    margin: 0 0 10px;
+    color: $purple8;
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  &__section-text {
+    margin: 0;
+    color: $natural7;
+    font-size: 0.96rem;
+    line-height: 1.7;
+  }
+}
+
+@media (max-width: 640px) {
+  .shipping-policy-page {
+    padding: 38px 0px 68px;
+
+    &__section {
+      padding: 22px;
+    }
+  }
+}
