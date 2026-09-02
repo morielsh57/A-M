@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import mockProductImage from '../../../assets/images/shirt.webp';
 import type { IProductCardProps } from '../../../components/product-page/product.types';
-import { formatPrice, getColorValue, getProductPageUrl, mockProductItem } from './productCard.utils';
+import {
+  formatPrice,
+  getColorValue,
+  getProductPageUrl,
+  mockProductItem,
+} from './productCard.utils';
 import './ProductCard.scss';
 
 const ProductCard: React.FC<IProductCardProps> = ({
@@ -11,7 +15,7 @@ const ProductCard: React.FC<IProductCardProps> = ({
   display = 'default',
 }) => {
   const selectedVariantId = product.selected_variant_id;
-  const productImage = product.images[0] || product.colors.find((color) => color.images[0])?.images[0] || mockProductImage;
+  const productImage = product.images[0] || product.colors.find((color) => color.images[0])?.images[0];
   const cardClassName = [
     'product-card',
     display === 'compact' ? 'product-card--compact' : '',
@@ -26,7 +30,11 @@ const ProductCard: React.FC<IProductCardProps> = ({
       />
 
       <div className="product-card__media">
-        <img className="product-card__image" src={productImage} alt={product.name} />
+        {productImage ? (
+          <img className="product-card__image" src={productImage} alt={product.name} />
+        ) : (
+          <span className="product-card__image-placeholder">No image</span>
+        )}
         <div className="product-card__quick-view">View details</div>
       </div>
 

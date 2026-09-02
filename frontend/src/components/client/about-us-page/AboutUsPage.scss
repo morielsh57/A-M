@@ -1,0 +1,66 @@
+@import '../../../shared/styles/colors.scss';
+
+.about-us-page {
+  margin: 0 auto;
+  padding: 54px 0px 86px;
+  color: $purple9;
+
+  &__header {
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  &__intro {
+    width: 90%;
+    max-width: 780px;
+    margin: -4px auto 0;
+    color: $natural7;
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+
+  &__content {
+    max-width: 1040px;
+    padding: 0 30px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  &__section {
+    min-height: 210px;
+    padding: 26px;
+    border: 1px solid $purple2;
+    border-radius: 8px;
+    background: $pink0;
+  }
+
+  &__section-title {
+    margin: 0 0 14px;
+    color: $purple8;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+
+  &__section-text {
+    margin: 0;
+    color: $natural7;
+    font-size: 0.96rem;
+    line-height: 1.7;
+  }
+}
+
+@media (max-width: 900px) {
+  .about-us-page {
+    padding-top: 38px;
+
+    &__content {
+      grid-template-columns: 1fr;
+    }
+
+    &__section {
+      min-height: auto;
+    }
+  }
+}
