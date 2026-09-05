@@ -1,12 +1,12 @@
 import React from 'react';
 import { Modal } from 'antd';
 import { DownOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PRODUCT_SIZE_OPTIONS } from '../../../../app/constants';
 import AppButton from '../../../../shared/components/app-button/AppButton';
 import AdminFormCheckbox from '../../../../shared/components/admin-form/AdminFormCheckbox';
 import AdminFormField from '../../../../shared/components/admin-form/AdminFormField';
 import AdminFormInput from '../../../../shared/components/admin-form/AdminFormInput';
 import AdminFormSelect from '../../../../shared/components/admin-form/AdminFormSelect';
-import { ADMIN_PRODUCT_SIZE_OPTIONS } from './adminProductForm.constants';
 import type { AdminProductVariantFormRow, AdminProductVariantRowError } from './adminProductForm.types';
 import AdminProductImageUploader from './AdminProductImageUploader';
 
@@ -127,7 +127,7 @@ const AdminProductVariantRow: React.FC<AdminProductVariantRowProps> = ({
 
           <AdminFormField error={error?.size} label="Size">
             <AdminFormSelect
-              options={ADMIN_PRODUCT_SIZE_OPTIONS.map((size) => ({ value: size, label: size }))}
+              options={PRODUCT_SIZE_OPTIONS.map((size) => ({ value: size, label: size }))}
               placeholder="Select size"
               value={row.size}
               onChange={(value) => updateRow('size', String(value))}
