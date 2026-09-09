@@ -133,7 +133,7 @@ const ProductPage: React.FC = () => {
             <h2>Size info</h2>
             <ul>
               <li>True to size.</li>
-              <li>0 = XXS, 1 = XS, 2 = S, 3 = M, 4 = L, 5 = XL, 6 = 2XL, 7 = 3XL.</li>
+              <li>0 = XS, 1 = S, 2 = M, 3 = L, 4 = XL.</li>
             </ul>
           </section>
 

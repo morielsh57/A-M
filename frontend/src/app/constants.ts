@@ -11,3 +11,11 @@ export const CART_LOCAL_STORAGE_KEYS = {
 } as const;
 
 export const ADMIN_TABLE_PAGE_SIZE = 10;
+
+export const PRODUCT_SIZE_OPTIONS = [
+  'XS',
+  'S',
+  'M',
+  'L',
+  'XL',
+] as const;

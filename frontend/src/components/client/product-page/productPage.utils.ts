@@ -1,8 +1,7 @@
 import type { IProduct, IProductVariant, ProductVariantId } from '../../product-page/product.types';
 import type { IMainCategory, CategoryId } from '../../../shared/store/category/category.types';
+import { PRODUCT_SIZE_OPTIONS } from '../../../app/constants';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
-
-export const PRODUCT_SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 export interface IProductPageColorOption {
   color: string;
@@ -86,8 +85,12 @@ export const getVariantsForColor = (
 
 export const sortVariantsBySize = (variants: IProductVariant[]) => (
   [...variants].sort((first, second) => {
-    const firstIndex = PRODUCT_SIZE_ORDER.indexOf(first.size || '');
-    const secondIndex = PRODUCT_SIZE_ORDER.indexOf(second.size || '');
+    const firstIndex = PRODUCT_SIZE_OPTIONS.indexOf(
+      first.size as typeof PRODUCT_SIZE_OPTIONS[number],
+    );
+    const secondIndex = PRODUCT_SIZE_OPTIONS.indexOf(
+      second.size as typeof PRODUCT_SIZE_OPTIONS[number],
+    );
 
     if (firstIndex === -1 && secondIndex === -1) {
       return String(first.size || '').localeCompare(String(second.size || ''));
@@ -106,7 +109,7 @@ export const getSizeOptionsForColor = (
 ): IProductPageSizeOption[] => {
   const colorVariants = getVariantsForColor(variants, color);
 
-  return PRODUCT_SIZE_ORDER.map((size) => {
+  return PRODUCT_SIZE_OPTIONS.map((size) => {
     const variant = colorVariants.find((item) => item.size === size);
 
     return {

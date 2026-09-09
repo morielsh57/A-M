@@ -12,6 +12,8 @@ from accounts.models import SUPPLIER_ROLE, Supplier
 from catalogue.models import Category
 from products.models import Product, ProductImage, ProductVariant
 
+ALLOWED_PRODUCT_SIZES = {"XS", "S", "M", "L", "XL"}
+
 
 class ProductCatalogueQuerySerializer(serializers.Serializer):
     search = serializers.CharField(required=False, allow_blank=True, trim_whitespace=True)
@@ -640,6 +642,11 @@ class AdminProductVariantWriteSerializer(serializers.ModelSerializer):
         if self.instance is not None:
             color = attrs.get("color", self.instance.color)
             size = attrs.get("size", self.instance.size)
+
+        if size and size not in ALLOWED_PRODUCT_SIZES:
+            raise serializers.ValidationError(
+                {"size": ["Size must be one of: XS, S, M, L, XL."]}
+            )
 
         duplicate = ProductVariant.objects.filter(
             product=product,

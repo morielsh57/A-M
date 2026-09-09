@@ -685,6 +685,28 @@ class ProductVariantApiTests(TestCase):
             ProductVariant.objects.filter(product=self.product, color="Blue", size="L").exists()
         )
 
+    def test_variant_creation_rejects_size_outside_allowed_range(self):
+        self.authorize(self.admin)
+
+        response = self.client.post(
+            reverse(
+                "admin-product-variant-create",
+                kwargs={"product_id": self.product.product_id},
+            ),
+            {
+                "color": "Blue",
+                "size": "2XL",
+                "quantity": 2,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("size", response.json()["error"]["details"])
+        self.assertFalse(
+            ProductVariant.objects.filter(product=self.product, color="Blue", size="2XL").exists()
+        )
+
     def test_admin_cannot_delete_variant_referenced_by_cart(self):
         self.authorize(self.admin)
         cart = Cart.objects.create(customer=self.customer, total_price=Decimal("49.99"))
