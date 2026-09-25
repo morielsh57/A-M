@@ -5,6 +5,7 @@ import { addToast } from '../../../shared/utils/toast.utils';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus, type IAPIError } from '../../../shared/api/models';
+import { EUserRole } from '../../../shared/store/user/user.types';
 import AdminTablePageLayout from '../../../shared/components/admin-table-page-layout/AdminTablePageLayout';
 import AdminFormDrawer from '../../../shared/components/admin-form-drawer/AdminFormDrawer';
 import AppTable from '../../../shared/components/app-table/AppTable';
@@ -65,6 +66,7 @@ const AdminProductsTablePage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { getMainCategoriesReq } = useAppSelector((store) => store.categoryStoreReducer);
+  const { adminOrSupplierUser } = useAppSelector((store) => store.userStoreReducer);
   const {
     adminProductImagePreviewByProductReq,
     adminProductsByQueryReq,
@@ -99,6 +101,7 @@ const AdminProductsTablePage: React.FC = () => {
   const products = adminProductsReq?.data || [];
   const pagination = adminProductsReq?.meta?.pagination;
   const isProductsLoading = !adminProductsReq || adminProductsReq.status === EAPIStatus.PENDING;
+  const isSupplierUser = adminOrSupplierUser?.role === EUserRole.SUPPLIER;
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = searchValue.trim().toLowerCase();
@@ -229,6 +232,7 @@ const AdminProductsTablePage: React.FC = () => {
   const columns = useMemo(() => ProductsColumnRender({
     adminProductImagePreviewByProductReq,
     isDeletePending: deleteAdminProductReq.status === EAPIStatus.PENDING,
+    isSupplierUser,
     onDeleteProduct: handleDeleteProduct,
     onEditProduct: handleEditProduct,
   }), [
@@ -236,6 +240,7 @@ const AdminProductsTablePage: React.FC = () => {
     deleteAdminProductReq.status,
     handleDeleteProduct,
     handleEditProduct,
+    isSupplierUser,
   ]);
 
   if (!categoryId) {

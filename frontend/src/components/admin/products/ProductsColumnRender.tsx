@@ -14,6 +14,7 @@ import type { IAdminProductImagePreview, IAdminProductListItem } from './adminPr
 interface ProductsColumnRenderProps {
   adminProductImagePreviewByProductReq: Record<string, IAPIRequestState<IAdminProductImagePreview>>;
   isDeletePending: boolean;
+  isSupplierUser: boolean;
   onEditProduct: (product: IAdminProductListItem) => void;
   onDeleteProduct: (product: IAdminProductListItem) => void | Promise<void>;
 }
@@ -21,6 +22,7 @@ interface ProductsColumnRenderProps {
 const ProductsColumnRender = ({
   adminProductImagePreviewByProductReq,
   isDeletePending,
+  isSupplierUser,
   onDeleteProduct,
   onEditProduct,
 }: ProductsColumnRenderProps): AppTableColumn<IAdminProductListItem>[] => [
@@ -118,7 +120,10 @@ const ProductsColumnRender = ({
     deleteConfirmTitle: (product) => `Delete ${product.name}?`,
     deleteConfirmContent: 'This action cannot be undone. Products with images, reviews, or referenced variants may be blocked by the server.',
     deleteOkText: 'Delete product',
-    isDeleteDisabled: isDeletePending,
+    deleteDisabledTooltip: isSupplierUser
+      ? 'Please contact an admin to delete this product.'
+      : undefined,
+    isDeleteDisabled: isDeletePending || isSupplierUser,
   }),
 ];
 
