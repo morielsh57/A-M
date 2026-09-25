@@ -156,6 +156,13 @@ class ProductVariantApiTests(TestCase):
         )
 
     def test_public_product_detail_returns_all_variants(self):
+        black_large = ProductVariant.objects.create(
+            product=self.product,
+            color="Black",
+            size="XL",
+            quantity=2,
+        )
+
         response = self.client.get(
             reverse("product-detail", kwargs={"product_id": self.product.product_id})
         )
@@ -165,16 +172,23 @@ class ProductVariantApiTests(TestCase):
         self.assertEqual(data["catalog_number"], "TS-100")
         self.assertEqual(data["category_id"], self.category.category_id)
         self.assertEqual(data["supplier_id"], self.supplier.supplier_id)
-        self.assertEqual(len(data["variants"]), 3)
+        self.assertEqual(len(data["variants"]), 4)
         self.assertEqual(
             {
                 (variant["color"], variant["size"], variant["quantity"])
                 for variant in data["variants"]
             },
-            {("Black", "S", 0), ("Black", "M", 5), ("White", "S", 3)},
+            {("Black", "S", 0), ("Black", "M", 5), ("Black", "XL", 2), ("White", "S", 3)},
+        )
+        black_large_data = next(
+            variant for variant in data["variants"] if variant["variant_id"] == black_large.variant_id
+        )
+        self.assertEqual(
+            black_large_data["images"],
+            ["https://res.cloudinary.com/am/image/upload/black.jpg"],
         )
         self.assertTrue(data["in_stock"])
-        self.assertEqual(data["total_quantity"], 8)
+        self.assertEqual(data["total_quantity"], 10)
         self.assertEqual(data["average_rating"], "0.00")
         self.assertEqual(data["rating_count"], 0)
 

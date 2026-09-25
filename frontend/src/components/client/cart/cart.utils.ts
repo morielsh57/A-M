@@ -63,12 +63,13 @@ export const getCartItemImage = (
   cartItem: ICartItem,
   product?: IProduct,
 ): string | undefined => {
-  const selectedVariant = product?.variants.find((variant) => (
-    String(variant.variant_id) === String(cartItem.variant_id)
-  ));
-  const variantImage = selectedVariant?.images.find(Boolean);
+  const colorVariantImage = product?.variants
+    .filter((variant) => variant.color === cartItem.color)
+    .flatMap((variant) => variant.images)
+    .find(Boolean);
+  if (colorVariantImage) return colorVariantImage;
 
-  if (variantImage) return variantImage;
+  if (cartItem.image) return cartItem.image;
 
   const primaryProductImage = product?.images?.find((image) => image.is_primary && image.secure_url);
   if (primaryProductImage?.secure_url) return primaryProductImage.secure_url;
