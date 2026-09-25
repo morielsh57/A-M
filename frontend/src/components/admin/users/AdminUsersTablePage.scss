@@ -12,8 +12,8 @@
     font-weight: 800;
   }
 
-  &__status-filter {
-    min-width: 160px;
+  &__status-filter.app-select {
+    width: 190px;
   }
 
   &__error {

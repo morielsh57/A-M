@@ -1,6 +1,16 @@
 import { EAPIStatus, type IAPIRequestState } from '../../../../shared/api/models';
 
-export const PAYPAL_ENVIRONMENT = 'sandbox';
+export type PayPalEnvironment = 'sandbox' | 'production';
+
+export const getPayPalEnvironment = (
+  environment = import.meta.env.REACT_APP_PAYPAL_ENVIRONMENT,
+): PayPalEnvironment => (
+  String(environment || '').trim().toLowerCase() === 'production'
+    ? 'production'
+    : 'sandbox'
+);
+
+export const PAYPAL_ENVIRONMENT = getPayPalEnvironment();
 
 export const createCheckoutIdempotencyKey = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {

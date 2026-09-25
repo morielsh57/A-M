@@ -5,8 +5,10 @@ import { addToast } from '../../../shared/utils/toast.utils';
 import { APP_ROUTING_PATHS } from '../../../app/routing';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
 import { EAPIStatus, type IAPIError } from '../../../shared/api/models';
+import { EUserRole } from '../../../shared/store/user/user.types';
 import AdminTablePageLayout from '../../../shared/components/admin-table-page-layout/AdminTablePageLayout';
 import AdminFormDrawer from '../../../shared/components/admin-form-drawer/AdminFormDrawer';
+import AppSelect from '../../../shared/components/app-select/AppSelect';
 import AppTable from '../../../shared/components/app-table/AppTable';
 import { getMainCategories } from '../../../shared/store/category/category.store';
 import type { CategoryId } from '../../product-page/product.types';
@@ -27,15 +29,6 @@ const getPageFromSearchParams = (pageParam: string | null) => {
   const page = Number(pageParam || 1);
   return Number.isFinite(page) && page > 0 ? page : 1;
 };
-
-const getProductSearchText = (product: IAdminProductListItem) => [
-  product.name,
-  product.catalog_number,
-  product.fabric,
-  product.supplier_name,
-  ...product.colors,
-  ...product.sizes,
-].filter(Boolean).join(' ').toLowerCase();
 
 const getErrorMessage = (error: unknown) => {
   const apiError = error as IAPIError | undefined;
@@ -65,6 +58,7 @@ const AdminProductsTablePage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { getMainCategoriesReq } = useAppSelector((store) => store.categoryStoreReducer);
+  const { adminOrSupplierUser } = useAppSelector((store) => store.userStoreReducer);
   const {
     adminProductImagePreviewByProductReq,
     adminProductsByQueryReq,
@@ -73,6 +67,7 @@ const AdminProductsTablePage: React.FC = () => {
   const mainCategories = getMainCategoriesReq.data || [];
   const currentPage = getPageFromSearchParams(searchParams.get('page'));
   const searchValue = searchParams.get('search') || '';
+  const statusValue = searchParams.get('status') || 'all';
   const currentMainCategory = mainCategories.find(
     (category) => String(category.category_id) === String(categoryId),
   );
@@ -87,8 +82,11 @@ const AdminProductsTablePage: React.FC = () => {
       category: categoryId as CategoryId,
       page_size: ADMIN_TABLE_PAGE_SIZE,
       page: currentPage,
+      ...(searchValue ? { search: searchValue } : {}),
+      ...(statusValue === 'active' ? { is_active: true } : {}),
+      ...(statusValue === 'inactive' ? { is_active: false } : {}),
     };
-  }, [categoryId, currentPage]);
+  }, [categoryId, currentPage, searchValue, statusValue]);
 
   const productsCacheKey = productsRequestParams
     ? getAdminProductsCacheKey(productsRequestParams)
@@ -99,18 +97,7 @@ const AdminProductsTablePage: React.FC = () => {
   const products = adminProductsReq?.data || [];
   const pagination = adminProductsReq?.meta?.pagination;
   const isProductsLoading = !adminProductsReq || adminProductsReq.status === EAPIStatus.PENDING;
-
-  const filteredProducts = useMemo(() => {
-    const normalizedSearch = searchValue.trim().toLowerCase();
-
-    if (!normalizedSearch) {
-      return products;
-    }
-
-    return products.filter((product) => (
-      getProductSearchText(product).includes(normalizedSearch)
-    ));
-  }, [products, searchValue]);
+  const isSupplierUser = adminOrSupplierUser?.role === EUserRole.SUPPLIER;
 
   useEffect(() => {
     if (
@@ -130,7 +117,7 @@ const AdminProductsTablePage: React.FC = () => {
   }, [adminProductsReq, dispatch, productsRequestParams]);
 
   useEffect(() => {
-    filteredProducts.forEach((product) => {
+    products.forEach((product) => {
       const productKey = String(product.product_id);
       const previewReq = adminProductImagePreviewByProductReq[productKey];
 
@@ -138,9 +125,9 @@ const AdminProductsTablePage: React.FC = () => {
         dispatch(getAdminProductImagePreview({ product_id: product.product_id }));
       }
     });
-  }, [adminProductImagePreviewByProductReq, dispatch, filteredProducts]);
+  }, [adminProductImagePreviewByProductReq, dispatch, products]);
 
-  const updateUrlParams = (nextParams: { page?: number; search?: string }) => {
+  const updateUrlParams = (nextParams: { page?: number; search?: string; status?: string }) => {
     if (!categoryId) {
       return;
     }
@@ -152,12 +139,20 @@ const AdminProductsTablePage: React.FC = () => {
     }
 
     if (nextParams.search !== undefined) {
-      const nextSearch = nextParams.search.trim();
-
-      if (nextSearch) {
-        params.set('search', nextSearch);
+      if (nextParams.search) {
+        params.set('search', nextParams.search);
       } else {
         params.delete('search');
+      }
+
+      params.set('page', '1');
+    }
+
+    if (nextParams.status !== undefined) {
+      if (nextParams.status === 'all') {
+        params.delete('status');
+      } else {
+        params.set('status', nextParams.status);
       }
 
       params.set('page', '1');
@@ -229,6 +224,7 @@ const AdminProductsTablePage: React.FC = () => {
   const columns = useMemo(() => ProductsColumnRender({
     adminProductImagePreviewByProductReq,
     isDeletePending: deleteAdminProductReq.status === EAPIStatus.PENDING,
+    isSupplierUser,
     onDeleteProduct: handleDeleteProduct,
     onEditProduct: handleEditProduct,
   }), [
@@ -236,6 +232,7 @@ const AdminProductsTablePage: React.FC = () => {
     deleteAdminProductReq.status,
     handleDeleteProduct,
     handleEditProduct,
+    isSupplierUser,
   ]);
 
   if (!categoryId) {
@@ -267,8 +264,20 @@ const AdminProductsTablePage: React.FC = () => {
       onCreateClick={openCreateProductDrawer}
     >
       <AppTable<IAdminProductListItem>
+        actions={(
+          <AppSelect
+            className="admin-products-page__status-filter"
+            value={statusValue}
+            options={[
+              { value: 'all', label: 'All statuses' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+            onChange={(value) => updateUrlParams({ status: String(value) })}
+          />
+        )}
         columns={columns}
-        data={filteredProducts}
+        data={products}
         emptyText="No products found."
         loading={isProductsLoading}
         pagination={{
@@ -279,10 +288,10 @@ const AdminProductsTablePage: React.FC = () => {
           onChange: (page) => updateUrlParams({ page }),
         }}
         rowKey="product_id"
-        scroll={{ x: 1770 }}
-        searchPlaceholder="Search products on this page..."
+        scroll={{ x: 1890 }}
+        searchPlaceholder="Search products..."
         searchValue={searchValue}
-        subtitle="Search and sorting apply to the currently loaded page."
+        subtitle="Search products across the full catalogue."
         title={`${categoryName} products`}
         onSearchChange={(value) => updateUrlParams({ search: value })}
       />

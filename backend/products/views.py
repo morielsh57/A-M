@@ -13,6 +13,7 @@ from django.db.models import (
     Value,
     When,
 )
+from django.db.models.deletion import ProtectedError
 from django.db.models.functions import Coalesce
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -83,6 +84,14 @@ def get_product_queryset(active_only=False):
     return products
 
 
+def cleanup_product_images_from_storage(images):
+    for image in images:
+        if image.pending_delete_public_id:
+            destroy_product_image(image.pending_delete_public_id, suppress_errors=True)
+        if image.public_id:
+            destroy_product_image(image.public_id, suppress_errors=True)
+
+
 def filter_products_by_category(queryset, request):
     category_id = request.query_params.get("category")
     if not category_id:
@@ -96,6 +105,34 @@ def filter_products_by_category(queryset, request):
             | Q(category__parent_category=category)
         )
     return queryset.filter(category=category)
+
+
+def filter_admin_products(queryset, request):
+    search = (request.query_params.get("search") or "").strip()
+    active = request.query_params.get("is_active")
+
+    if active not in (None, ""):
+        if active.lower() not in {"true", "false"}:
+            raise ValidationError({"is_active": ["Use true or false."]})
+        queryset = queryset.filter(is_active=active.lower() == "true")
+
+    if not search:
+        return queryset
+
+    search_query = (
+        Q(name__icontains=search)
+        | Q(catalog_number__icontains=search)
+        | Q(fabric__icontains=search)
+        | Q(supplier__user__name__icontains=search)
+        | Q(supplier__user__email__icontains=search)
+        | Q(variants__color__icontains=search)
+        | Q(variants__size__icontains=search)
+    )
+    product_id_search = search.removeprefix("#")
+    if product_id_search.isdigit():
+        search_query |= Q(product_id=int(product_id_search))
+
+    return queryset.filter(search_query).distinct()
 
 
 def filter_public_products(queryset, filters):
@@ -395,6 +432,8 @@ class SupplierProductListView(APIView):
         summary="List the supplier's products",
         description="Authenticated Supplier endpoint. Returns only products assigned to the current supplier.",
         parameters=[
+            OpenApiParameter("search", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("is_active", bool, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("page", int, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("page_size", int, OpenApiParameter.QUERY, required=False),
@@ -476,10 +515,9 @@ class AdminProductListCreateView(APIView):
         tags=["Admin Products"],
     )
     def get(self, request):
-        products = filter_products_by_category(
-            self.get_scoped_queryset(request).order_by("-date_created", "product_id"),
-            request,
-        )
+        products = self.get_scoped_queryset(request)
+        products = filter_products_by_category(products, request)
+        products = filter_admin_products(products, request).order_by("-date_created", "product_id")
         return paginate_queryset(request, products, AdminProductListSerializer)
 
     @extend_schema(
@@ -584,17 +622,20 @@ class AdminProductDetailView(AdminProductAccessMixin, APIView):
     def delete(self, request, product_id):
         self.require_admin(request)
         product = self.get_product(request, product_id)
-        if product.images.exists():
-            raise ValidationError(
-                {"product_id": ["Delete the product images before deleting the product."]}
-            )
         if product.reviews.exists() or product.variants.filter(
             cart_products__isnull=False,
         ).exists():
             raise ValidationError(
                 {"product_id": ["Referenced products must be deactivated instead of deleted."]}
             )
-        product.delete()
+        images = list(product.images.all())
+        try:
+            product.delete()
+        except ProtectedError as exc:
+            raise ValidationError(
+                {"product_id": ["Referenced products must be deactivated instead of deleted."]}
+            ) from exc
+        cleanup_product_images_from_storage(images)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -674,15 +715,18 @@ class AdminProductVariantDetailView(AdminProductAccessMixin, APIView):
         self.require_admin(request)
         self.get_product(request, product_id)
         variant = self.get_variant(product_id, variant_id)
-        if variant.product_images.exists():
-            raise ValidationError(
-                {"variant_id": ["Delete the variant images before deleting the variant."]}
-            )
         if variant.cart_products.exists():
             raise ValidationError(
                 {"variant_id": ["This variant is referenced by cart or order history."]}
             )
-        variant.delete()
+        images = list(variant.product_images.all())
+        try:
+            variant.delete()
+        except ProtectedError as exc:
+            raise ValidationError(
+                {"variant_id": ["This variant is referenced by cart or order history."]}
+            ) from exc
+        cleanup_product_images_from_storage(images)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_variant(self, product_id, variant_id):

@@ -1,4 +1,5 @@
 from decimal import Decimal
+from unittest.mock import patch
 from uuid import uuid4
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -535,6 +536,83 @@ class ProductVariantApiTests(TestCase):
             {self.product.product_id, subcategory_product.product_id},
         )
 
+    def test_admin_product_list_searches_before_pagination(self):
+        self.authorize(self.admin)
+        searched_product = Product.objects.create(
+            catalog_number="ADMIN-SEARCH-500",
+            name="Hidden Search Jacket",
+            price=Decimal("59.99"),
+            category=self.category,
+            supplier=self.supplier,
+        )
+        ProductVariant.objects.create(
+            product=searched_product,
+            color="Rose",
+            size="M",
+            quantity=2,
+        )
+
+        response = self.client.get(
+            reverse("admin-product-list"),
+            {
+                "category": self.category.category_id,
+                "page": 1,
+                "page_size": 1,
+                "search": "Hidden Search",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["meta"]["pagination"]["total_items"], 1)
+        self.assertEqual(response.json()["data"][0]["product_id"], searched_product.product_id)
+
+    def test_admin_product_list_searches_by_product_id_with_or_without_hash(self):
+        self.authorize(self.admin)
+
+        for search in (str(self.product.product_id), f"#{self.product.product_id}"):
+            with self.subTest(search=search):
+                response = self.client.get(
+                    reverse("admin-product-list"),
+                    {
+                        "category": self.category.category_id,
+                        "search": search,
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(
+                    self.product.product_id,
+                    [item["product_id"] for item in response.json()["data"]],
+                )
+
+    def test_admin_product_list_filters_by_product_active_status(self):
+        self.authorize(self.admin)
+        self.product.is_active = False
+        self.product.save(update_fields=["is_active"])
+
+        active_response = self.client.get(
+            reverse("admin-product-list"),
+            {
+                "category": self.category.category_id,
+                "is_active": "true",
+            },
+        )
+        inactive_response = self.client.get(
+            reverse("admin-product-list"),
+            {
+                "category": self.category.category_id,
+                "is_active": "false",
+            },
+        )
+
+        self.assertEqual(active_response.status_code, 200)
+        self.assertEqual(inactive_response.status_code, 200)
+        self.assertEqual(active_response.json()["data"], [])
+        self.assertEqual(
+            [item["product_id"] for item in inactive_response.json()["data"]],
+            [self.product.product_id],
+        )
+
     def test_admin_can_create_product_and_manage_variants(self):
         self.authorize(self.admin)
         create_response = self.client.post(
@@ -706,6 +784,57 @@ class ProductVariantApiTests(TestCase):
         self.assertFalse(
             ProductVariant.objects.filter(product=self.product, color="Blue", size="2XL").exists()
         )
+
+    @patch("products.views.destroy_product_image")
+    def test_admin_can_delete_product_with_variants_and_images(self, destroy_mock):
+        self.authorize(self.admin)
+        self.black_medium.product_images.update(
+            pending_delete_public_id="products/black-medium-old"
+        )
+        image_ids = set(self.product.images.values_list("image_id", flat=True))
+
+        response = self.client.delete(
+            reverse(
+                "admin-product-detail",
+                kwargs={"product_id": self.product.product_id},
+            )
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Product.objects.filter(product_id=self.product.product_id).exists())
+        self.assertFalse(
+            ProductVariant.objects.filter(product_id=self.product.product_id).exists()
+        )
+        self.assertFalse(ProductImage.objects.filter(image_id__in=image_ids).exists())
+        destroy_mock.assert_any_call("products/black", suppress_errors=True)
+        destroy_mock.assert_any_call("products/black-medium", suppress_errors=True)
+        destroy_mock.assert_any_call("products/black-medium-old", suppress_errors=True)
+        destroy_mock.assert_any_call("products/white", suppress_errors=True)
+
+    @patch("products.views.destroy_product_image")
+    def test_admin_can_delete_variant_with_images(self, destroy_mock):
+        self.authorize(self.admin)
+        image = self.white_small.product_images.get()
+        image.pending_delete_public_id = "products/white-old"
+        image.save(update_fields=["pending_delete_public_id"])
+
+        response = self.client.delete(
+            reverse(
+                "admin-product-variant-detail",
+                kwargs={
+                    "product_id": self.product.product_id,
+                    "variant_id": self.white_small.variant_id,
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertTrue(Product.objects.filter(product_id=self.product.product_id).exists())
+        self.assertFalse(ProductVariant.objects.filter(variant_id=self.white_small.variant_id).exists())
+        self.assertFalse(ProductImage.objects.filter(image_id=image.image_id).exists())
+        self.assertTrue(ProductImage.objects.filter(image_id=self.black_small.product_images.get().image_id).exists())
+        destroy_mock.assert_any_call("products/white-old", suppress_errors=True)
+        destroy_mock.assert_any_call("products/white", suppress_errors=True)
 
     def test_admin_cannot_delete_variant_referenced_by_cart(self):
         self.authorize(self.admin)

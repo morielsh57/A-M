@@ -2,11 +2,13 @@ import React from 'react';
 import { Modal } from 'antd';
 import { DownOutlined, DeleteOutlined } from '@ant-design/icons';
 import { PRODUCT_SIZE_OPTIONS } from '../../../../app/constants';
+import { useAppSelector } from '../../../../app/store';
 import AppButton from '../../../../shared/components/app-button/AppButton';
 import AdminFormCheckbox from '../../../../shared/components/admin-form/AdminFormCheckbox';
 import AdminFormField from '../../../../shared/components/admin-form/AdminFormField';
 import AdminFormInput from '../../../../shared/components/admin-form/AdminFormInput';
 import AdminFormSelect from '../../../../shared/components/admin-form/AdminFormSelect';
+import { EUserRole } from '../../../../shared/store/user/user.types';
 import type { AdminProductVariantFormRow, AdminProductVariantRowError } from './adminProductForm.types';
 import AdminProductImageUploader from './AdminProductImageUploader';
 
@@ -33,12 +35,15 @@ const AdminProductVariantRow: React.FC<AdminProductVariantRowProps> = ({
   onToggle,
   row,
 }) => {
+  const { adminOrSupplierUser } = useAppSelector((store) => store.userStoreReducer);
   const updateRow = <K extends keyof AdminProductVariantFormRow>(
     key: K,
     value: AdminProductVariantFormRow[K],
   ) => onChange({ ...row, [key]: value });
   const variantTitle = `Variant ${index + 1}`;
   const variantIdLabel = row.variant_id ? `#${row.variant_id}` : undefined;
+  const isRemoveDisabled = adminOrSupplierUser?.role === EUserRole.SUPPLIER && row.variant_id !== undefined;
+  const removeDisabledTooltip = 'Please contact an admin to delete this variant.';
   const handleRemoveClick = () => {
     Modal.confirm({
       title: `Remove ${variantTitle}${variantIdLabel ? ` ${variantIdLabel}` : ''}?`,
@@ -99,18 +104,24 @@ const AdminProductVariantRow: React.FC<AdminProductVariantRowProps> = ({
           </p>
         </div>
 
-        <AppButton
-          aria-label={`Remove ${variantTitle}${variantIdLabel ? ` ${variantIdLabel}` : ''}`}
-          className="admin-product-form__variant-remove"
-          type="button"
-          variant="danger"
-          onClick={(event) => {
-            event.stopPropagation();
-            handleRemoveClick();
-          }}
+        <span
+          title={isRemoveDisabled ? removeDisabledTooltip : undefined}
+          onClick={(event) => event.stopPropagation()}
         >
-          <DeleteOutlined />
-        </AppButton>
+          <AppButton
+            aria-label={`Remove ${variantTitle}${variantIdLabel ? ` ${variantIdLabel}` : ''}`}
+            className="admin-product-form__variant-remove"
+            disabled={isRemoveDisabled}
+            type="button"
+            variant="danger"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleRemoveClick();
+            }}
+          >
+            <DeleteOutlined />
+          </AppButton>
+        </span>
       </div>
 
       <div className="admin-product-form__variant-content">

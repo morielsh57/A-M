@@ -10,6 +10,8 @@ export interface IAdminProductsListRequestParams {
   page?: number;
   page_size?: number;
   category?: CategoryId;
+  search?: string;
+  is_active?: boolean;
 }
 
 export interface IAdminProductListItem {
@@ -21,6 +23,7 @@ export interface IAdminProductListItem {
   supplier_name?: string | null;
   price: string | number;
   fabric?: string | null;
+  is_active: boolean;
   colors: string[];
   sizes: string[];
   variant_count: number;

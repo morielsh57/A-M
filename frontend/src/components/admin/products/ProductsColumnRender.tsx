@@ -1,4 +1,5 @@
 import React from 'react';
+import { Tag } from 'antd';
 import { EAPIStatus, type IAPIRequestState } from '../../../shared/api/models';
 import {
   createActionsColumn,
@@ -14,6 +15,7 @@ import type { IAdminProductImagePreview, IAdminProductListItem } from './adminPr
 interface ProductsColumnRenderProps {
   adminProductImagePreviewByProductReq: Record<string, IAPIRequestState<IAdminProductImagePreview>>;
   isDeletePending: boolean;
+  isSupplierUser: boolean;
   onEditProduct: (product: IAdminProductListItem) => void;
   onDeleteProduct: (product: IAdminProductListItem) => void | Promise<void>;
 }
@@ -21,6 +23,7 @@ interface ProductsColumnRenderProps {
 const ProductsColumnRender = ({
   adminProductImagePreviewByProductReq,
   isDeletePending,
+  isSupplierUser,
   onDeleteProduct,
   onEditProduct,
 }: ProductsColumnRenderProps): AppTableColumn<IAdminProductListItem>[] => [
@@ -82,6 +85,16 @@ const ProductsColumnRender = ({
     width: 120,
   }),
   createRenderColumn<IAdminProductListItem>({
+    title: 'Status',
+    key: 'is_active',
+    width: 120,
+    render: (_, product) => (
+      <Tag color={product.is_active ? 'success' : 'default'}>
+        {product.is_active ? 'Active' : 'Inactive'}
+      </Tag>
+    ),
+  }),
+  createRenderColumn<IAdminProductListItem>({
     title: 'Supplier',
     key: 'supplier_name',
     width: 180,
@@ -118,7 +131,10 @@ const ProductsColumnRender = ({
     deleteConfirmTitle: (product) => `Delete ${product.name}?`,
     deleteConfirmContent: 'This action cannot be undone. Products with images, reviews, or referenced variants may be blocked by the server.',
     deleteOkText: 'Delete product',
-    isDeleteDisabled: isDeletePending,
+    deleteDisabledTooltip: isSupplierUser
+      ? 'Please contact an admin to delete this product.'
+      : undefined,
+    isDeleteDisabled: isDeletePending || isSupplierUser,
   }),
 ];
 
