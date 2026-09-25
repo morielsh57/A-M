@@ -109,6 +109,13 @@ def filter_products_by_category(queryset, request):
 
 def filter_admin_products(queryset, request):
     search = (request.query_params.get("search") or "").strip()
+    active = request.query_params.get("is_active")
+
+    if active not in (None, ""):
+        if active.lower() not in {"true", "false"}:
+            raise ValidationError({"is_active": ["Use true or false."]})
+        queryset = queryset.filter(is_active=active.lower() == "true")
+
     if not search:
         return queryset
 
@@ -426,6 +433,7 @@ class SupplierProductListView(APIView):
         description="Authenticated Supplier endpoint. Returns only products assigned to the current supplier.",
         parameters=[
             OpenApiParameter("search", str, OpenApiParameter.QUERY, required=False),
+            OpenApiParameter("is_active", bool, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("page", int, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("page_size", int, OpenApiParameter.QUERY, required=False),

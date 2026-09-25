@@ -42,6 +42,10 @@ $adminProductsIdColor: $purple6;
     text-align: center;
   }
 
+  &__status-filter.app-select {
+    width: 190px;
+  }
+
   @media (max-width: 768px) {
     &__images {
       justify-content: flex-end;

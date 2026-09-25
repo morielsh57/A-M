@@ -448,6 +448,7 @@ class AdminProductListSerializer(serializers.ModelSerializer):
             "supplier_name",
             "price",
             "fabric",
+            "is_active",
             "colors",
             "sizes",
             "variant_count",

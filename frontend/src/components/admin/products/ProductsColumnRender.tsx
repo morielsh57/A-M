@@ -1,4 +1,5 @@
 import React from 'react';
+import { Tag } from 'antd';
 import { EAPIStatus, type IAPIRequestState } from '../../../shared/api/models';
 import {
   createActionsColumn,
@@ -82,6 +83,16 @@ const ProductsColumnRender = ({
     title: 'Price',
     dataIndex: 'price',
     width: 120,
+  }),
+  createRenderColumn<IAdminProductListItem>({
+    title: 'Status',
+    key: 'is_active',
+    width: 120,
+    render: (_, product) => (
+      <Tag color={product.is_active ? 'success' : 'default'}>
+        {product.is_active ? 'Active' : 'Inactive'}
+      </Tag>
+    ),
   }),
   createRenderColumn<IAdminProductListItem>({
     title: 'Supplier',

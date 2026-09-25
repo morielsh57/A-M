@@ -585,6 +585,34 @@ class ProductVariantApiTests(TestCase):
                     [item["product_id"] for item in response.json()["data"]],
                 )
 
+    def test_admin_product_list_filters_by_product_active_status(self):
+        self.authorize(self.admin)
+        self.product.is_active = False
+        self.product.save(update_fields=["is_active"])
+
+        active_response = self.client.get(
+            reverse("admin-product-list"),
+            {
+                "category": self.category.category_id,
+                "is_active": "true",
+            },
+        )
+        inactive_response = self.client.get(
+            reverse("admin-product-list"),
+            {
+                "category": self.category.category_id,
+                "is_active": "false",
+            },
+        )
+
+        self.assertEqual(active_response.status_code, 200)
+        self.assertEqual(inactive_response.status_code, 200)
+        self.assertEqual(active_response.json()["data"], [])
+        self.assertEqual(
+            [item["product_id"] for item in inactive_response.json()["data"]],
+            [self.product.product_id],
+        )
+
     def test_admin_can_create_product_and_manage_variants(self):
         self.authorize(self.admin)
         create_response = self.client.post(
