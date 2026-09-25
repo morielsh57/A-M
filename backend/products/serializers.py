@@ -163,6 +163,16 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         return variant.quantity > 0
 
 
+class AdminProductVariantSerializer(ProductVariantSerializer):
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
+    def get_images(self, variant):
+        return [
+            image.secure_url
+            for image in variant.product_images.all()
+            if image.is_active
+        ]
+
+
 class ProductImageSerializer(serializers.ModelSerializer):
     variant_id = serializers.SerializerMethodField()
 
@@ -540,7 +550,7 @@ class AdminProductWriteSerializer(serializers.ModelSerializer):
 
 
 class AdminProductDetailSerializer(ProductDetailSerializer):
-    pass
+    variants = AdminProductVariantSerializer(many=True, read_only=True)
 
 
 class SupplierProductWriteSerializer(serializers.ModelSerializer):
