@@ -1,4 +1,5 @@
 from decimal import Decimal
+from unittest.mock import patch
 from uuid import uuid4
 
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -706,6 +707,57 @@ class ProductVariantApiTests(TestCase):
         self.assertFalse(
             ProductVariant.objects.filter(product=self.product, color="Blue", size="2XL").exists()
         )
+
+    @patch("products.views.destroy_product_image")
+    def test_admin_can_delete_product_with_variants_and_images(self, destroy_mock):
+        self.authorize(self.admin)
+        self.black_medium.product_images.update(
+            pending_delete_public_id="products/black-medium-old"
+        )
+        image_ids = set(self.product.images.values_list("image_id", flat=True))
+
+        response = self.client.delete(
+            reverse(
+                "admin-product-detail",
+                kwargs={"product_id": self.product.product_id},
+            )
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(Product.objects.filter(product_id=self.product.product_id).exists())
+        self.assertFalse(
+            ProductVariant.objects.filter(product_id=self.product.product_id).exists()
+        )
+        self.assertFalse(ProductImage.objects.filter(image_id__in=image_ids).exists())
+        destroy_mock.assert_any_call("products/black", suppress_errors=True)
+        destroy_mock.assert_any_call("products/black-medium", suppress_errors=True)
+        destroy_mock.assert_any_call("products/black-medium-old", suppress_errors=True)
+        destroy_mock.assert_any_call("products/white", suppress_errors=True)
+
+    @patch("products.views.destroy_product_image")
+    def test_admin_can_delete_variant_with_images(self, destroy_mock):
+        self.authorize(self.admin)
+        image = self.white_small.product_images.get()
+        image.pending_delete_public_id = "products/white-old"
+        image.save(update_fields=["pending_delete_public_id"])
+
+        response = self.client.delete(
+            reverse(
+                "admin-product-variant-detail",
+                kwargs={
+                    "product_id": self.product.product_id,
+                    "variant_id": self.white_small.variant_id,
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertTrue(Product.objects.filter(product_id=self.product.product_id).exists())
+        self.assertFalse(ProductVariant.objects.filter(variant_id=self.white_small.variant_id).exists())
+        self.assertFalse(ProductImage.objects.filter(image_id=image.image_id).exists())
+        self.assertTrue(ProductImage.objects.filter(image_id=self.black_small.product_images.get().image_id).exists())
+        destroy_mock.assert_any_call("products/white-old", suppress_errors=True)
+        destroy_mock.assert_any_call("products/white", suppress_errors=True)
 
     def test_admin_cannot_delete_variant_referenced_by_cart(self):
         self.authorize(self.admin)
