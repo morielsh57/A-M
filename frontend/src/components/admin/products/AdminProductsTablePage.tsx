@@ -29,15 +29,6 @@ const getPageFromSearchParams = (pageParam: string | null) => {
   return Number.isFinite(page) && page > 0 ? page : 1;
 };
 
-const getProductSearchText = (product: IAdminProductListItem) => [
-  product.name,
-  product.catalog_number,
-  product.fabric,
-  product.supplier_name,
-  ...product.colors,
-  ...product.sizes,
-].filter(Boolean).join(' ').toLowerCase();
-
 const getErrorMessage = (error: unknown) => {
   const apiError = error as IAPIError | undefined;
   const details = apiError?.details;
@@ -89,8 +80,9 @@ const AdminProductsTablePage: React.FC = () => {
       category: categoryId as CategoryId,
       page_size: ADMIN_TABLE_PAGE_SIZE,
       page: currentPage,
+      ...(searchValue ? { search: searchValue } : {}),
     };
-  }, [categoryId, currentPage]);
+  }, [categoryId, currentPage, searchValue]);
 
   const productsCacheKey = productsRequestParams
     ? getAdminProductsCacheKey(productsRequestParams)
@@ -102,18 +94,6 @@ const AdminProductsTablePage: React.FC = () => {
   const pagination = adminProductsReq?.meta?.pagination;
   const isProductsLoading = !adminProductsReq || adminProductsReq.status === EAPIStatus.PENDING;
   const isSupplierUser = adminOrSupplierUser?.role === EUserRole.SUPPLIER;
-
-  const filteredProducts = useMemo(() => {
-    const normalizedSearch = searchValue.trim().toLowerCase();
-
-    if (!normalizedSearch) {
-      return products;
-    }
-
-    return products.filter((product) => (
-      getProductSearchText(product).includes(normalizedSearch)
-    ));
-  }, [products, searchValue]);
 
   useEffect(() => {
     if (
@@ -133,7 +113,7 @@ const AdminProductsTablePage: React.FC = () => {
   }, [adminProductsReq, dispatch, productsRequestParams]);
 
   useEffect(() => {
-    filteredProducts.forEach((product) => {
+    products.forEach((product) => {
       const productKey = String(product.product_id);
       const previewReq = adminProductImagePreviewByProductReq[productKey];
 
@@ -141,7 +121,7 @@ const AdminProductsTablePage: React.FC = () => {
         dispatch(getAdminProductImagePreview({ product_id: product.product_id }));
       }
     });
-  }, [adminProductImagePreviewByProductReq, dispatch, filteredProducts]);
+  }, [adminProductImagePreviewByProductReq, dispatch, products]);
 
   const updateUrlParams = (nextParams: { page?: number; search?: string }) => {
     if (!categoryId) {
@@ -155,10 +135,8 @@ const AdminProductsTablePage: React.FC = () => {
     }
 
     if (nextParams.search !== undefined) {
-      const nextSearch = nextParams.search.trim();
-
-      if (nextSearch) {
-        params.set('search', nextSearch);
+      if (nextParams.search) {
+        params.set('search', nextParams.search);
       } else {
         params.delete('search');
       }
@@ -273,7 +251,7 @@ const AdminProductsTablePage: React.FC = () => {
     >
       <AppTable<IAdminProductListItem>
         columns={columns}
-        data={filteredProducts}
+        data={products}
         emptyText="No products found."
         loading={isProductsLoading}
         pagination={{
@@ -285,9 +263,9 @@ const AdminProductsTablePage: React.FC = () => {
         }}
         rowKey="product_id"
         scroll={{ x: 1770 }}
-        searchPlaceholder="Search products on this page..."
+        searchPlaceholder="Search products..."
         searchValue={searchValue}
-        subtitle="Search and sorting apply to the currently loaded page."
+        subtitle="Search products across the full catalogue."
         title={`${categoryName} products`}
         onSearchChange={(value) => updateUrlParams({ search: value })}
       />

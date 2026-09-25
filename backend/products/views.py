@@ -107,6 +107,27 @@ def filter_products_by_category(queryset, request):
     return queryset.filter(category=category)
 
 
+def filter_admin_products(queryset, request):
+    search = (request.query_params.get("search") or "").strip()
+    if not search:
+        return queryset
+
+    search_query = (
+        Q(name__icontains=search)
+        | Q(catalog_number__icontains=search)
+        | Q(fabric__icontains=search)
+        | Q(supplier__user__name__icontains=search)
+        | Q(supplier__user__email__icontains=search)
+        | Q(variants__color__icontains=search)
+        | Q(variants__size__icontains=search)
+    )
+    product_id_search = search.removeprefix("#")
+    if product_id_search.isdigit():
+        search_query |= Q(product_id=int(product_id_search))
+
+    return queryset.filter(search_query).distinct()
+
+
 def filter_public_products(queryset, filters):
     search = filters.get("search")
     if search:
@@ -404,6 +425,7 @@ class SupplierProductListView(APIView):
         summary="List the supplier's products",
         description="Authenticated Supplier endpoint. Returns only products assigned to the current supplier.",
         parameters=[
+            OpenApiParameter("search", str, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("category", int, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("page", int, OpenApiParameter.QUERY, required=False),
             OpenApiParameter("page_size", int, OpenApiParameter.QUERY, required=False),
@@ -485,10 +507,9 @@ class AdminProductListCreateView(APIView):
         tags=["Admin Products"],
     )
     def get(self, request):
-        products = filter_products_by_category(
-            self.get_scoped_queryset(request).order_by("-date_created", "product_id"),
-            request,
-        )
+        products = self.get_scoped_queryset(request)
+        products = filter_products_by_category(products, request)
+        products = filter_admin_products(products, request).order_by("-date_created", "product_id")
         return paginate_queryset(request, products, AdminProductListSerializer)
 
     @extend_schema(

@@ -57,6 +57,7 @@ export const getAdminProductsCacheKey = (params: IAdminProductsListRequestParams
   `category:${params.category || ''}`,
   `page:${params.page || 1}`,
   `page_size:${params.page_size || ''}`,
+  `search:${params.search || ''}`,
 ].join('|');
 
 export const getAdminProductImagePreviewCacheKey = (

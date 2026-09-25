@@ -10,6 +10,7 @@ export interface IAdminProductsListRequestParams {
   page?: number;
   page_size?: number;
   category?: CategoryId;
+  search?: string;
 }
 
 export interface IAdminProductListItem {

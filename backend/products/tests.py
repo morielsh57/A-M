@@ -536,6 +536,55 @@ class ProductVariantApiTests(TestCase):
             {self.product.product_id, subcategory_product.product_id},
         )
 
+    def test_admin_product_list_searches_before_pagination(self):
+        self.authorize(self.admin)
+        searched_product = Product.objects.create(
+            catalog_number="ADMIN-SEARCH-500",
+            name="Hidden Search Jacket",
+            price=Decimal("59.99"),
+            category=self.category,
+            supplier=self.supplier,
+        )
+        ProductVariant.objects.create(
+            product=searched_product,
+            color="Rose",
+            size="M",
+            quantity=2,
+        )
+
+        response = self.client.get(
+            reverse("admin-product-list"),
+            {
+                "category": self.category.category_id,
+                "page": 1,
+                "page_size": 1,
+                "search": "Hidden Search",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["meta"]["pagination"]["total_items"], 1)
+        self.assertEqual(response.json()["data"][0]["product_id"], searched_product.product_id)
+
+    def test_admin_product_list_searches_by_product_id_with_or_without_hash(self):
+        self.authorize(self.admin)
+
+        for search in (str(self.product.product_id), f"#{self.product.product_id}"):
+            with self.subTest(search=search):
+                response = self.client.get(
+                    reverse("admin-product-list"),
+                    {
+                        "category": self.category.category_id,
+                        "search": search,
+                    },
+                )
+
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(
+                    self.product.product_id,
+                    [item["product_id"] for item in response.json()["data"]],
+                )
+
     def test_admin_can_create_product_and_manage_variants(self):
         self.authorize(self.admin)
         create_response = self.client.post(
