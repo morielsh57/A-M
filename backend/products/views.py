@@ -59,7 +59,7 @@ def get_product_queryset(active_only=False):
             queryset=ProductImage.objects.order_by("display_order", "image_id"),
         )
     )
-    images = ProductImage.objects.order_by("display_order", "image_id")
+    images = ProductImage.objects.select_related("variant").order_by("display_order", "image_id")
     if active_only:
         variants = variants.filter(is_active=True)
         images = images.filter(is_active=True)

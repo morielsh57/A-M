@@ -66,7 +66,7 @@ const ProductPurchasePanel: React.FC<ProductPurchasePanelProps> = ({
   return (
     <section className="product-page__purchase-panel">
       <h1 className="product-page__title">{product.name}</h1>
-      <ProductRating />
+      <ProductRating stars={Number(product.average_rating || 0)} />
       <p className="product-page__price">{formatPrice(product.price)}</p>
 
       {product.description && (

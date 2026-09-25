@@ -9,7 +9,7 @@ from accounts.models import ADMIN_ROLE, CUSTOMER_ROLE, Role, User
 from carts.models import Cart, CartProduct
 from carts.services import GUEST_CART_HEADER
 from catalogue.models import Category
-from products.models import Product, ProductVariant
+from products.models import Product, ProductImage, ProductVariant
 
 
 class CartApiTests(TestCase):
@@ -140,6 +140,62 @@ class CartApiTests(TestCase):
         self.assertEqual(data["items"][0]["color"], "Black")
         self.assertEqual(data["items"][0]["size"], "M")
         self.assertEqual(data["items"][0]["quantity"], 2)
+
+    def test_cart_item_uses_variant_image_before_product_image(self):
+        self.authorize()
+        ProductImage.objects.create(
+            product=self.product,
+            secure_url="https://res.cloudinary.com/am/image/upload/product-primary.jpg",
+            is_primary=True,
+        )
+        ProductImage.objects.create(
+            product=self.product,
+            variant=self.blue_large,
+            secure_url="https://res.cloudinary.com/am/image/upload/blue-large.jpg",
+        )
+
+        response = self.client.post(
+            reverse("cart-items"),
+            {"variant_id": self.blue_large.variant_id, "quantity": 1},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            response.json()["data"]["items"][0]["image"],
+            "https://res.cloudinary.com/am/image/upload/blue-large.jpg",
+        )
+
+    def test_cart_item_uses_same_color_variant_image_before_product_image(self):
+        self.authorize()
+        blue_medium = ProductVariant.objects.create(
+            product=self.product,
+            color="Blue",
+            size="M",
+            quantity=3,
+        )
+        ProductImage.objects.create(
+            product=self.product,
+            secure_url="https://res.cloudinary.com/am/image/upload/product-primary.jpg",
+            is_primary=True,
+        )
+        ProductImage.objects.create(
+            product=self.product,
+            variant=self.blue_large,
+            secure_url="https://res.cloudinary.com/am/image/upload/blue-color.jpg",
+        )
+
+        response = self.client.post(
+            reverse("cart-items"),
+            {"variant_id": blue_medium.variant_id, "quantity": 1},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            response.json()["data"]["items"][0]["image"],
+            "https://res.cloudinary.com/am/image/upload/blue-color.jpg",
+        )
 
     def test_adding_duplicate_variant_combines_quantities(self):
         self.authorize()

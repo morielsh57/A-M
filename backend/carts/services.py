@@ -75,8 +75,31 @@ def recalculate_cart_total(cart):
     cart.save(update_fields=("total_price", "date_updated"))
 
 
+def get_cart_item_image(variant):
+    color_image = (
+        variant.product.images.filter(
+            is_active=True,
+            variant__color=variant.color,
+        )
+        .first()
+    )
+    if color_image:
+        return color_image.secure_url
+
+    product_image = variant.product.images.filter(is_active=True, is_primary=True).first()
+    if product_image:
+        return product_image.secure_url
+
+    product_image = variant.product.images.filter(is_active=True).first()
+    return product_image.secure_url if product_image else None
+
+
 def serialize_cart(cart):
-    items = cart.cart_products.select_related("variant__product").order_by("cart_product_id")
+    items = (
+        cart.cart_products.select_related("variant__product")
+        .prefetch_related("variant__product_images", "variant__product__images")
+        .order_by("cart_product_id")
+    )
     return {
         "cart_id": cart.cart_id,
         "guest_cart_id": cart.guest_id,
@@ -89,6 +112,7 @@ def serialize_cart(cart):
                 "product_name": item.variant.product.name,
                 "color": item.variant.color,
                 "size": item.variant.size,
+                "image": get_cart_item_image(item.variant),
                 "quantity": item.quantity,
                 "available_quantity": item.variant.quantity,
                 "unit_price": f"{item.unit_price:.2f}",

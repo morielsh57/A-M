@@ -15,14 +15,23 @@
   }
 
   &__stars {
-    display: inline-flex;
-    gap: 1px;
+    display: inline-block;
+    position: relative;
     color: $gold6;
     font-size: 0.98rem;
     line-height: 1;
   }
 
-  &__star--empty {
+  &__stars-empty {
     color: $natural5;
+  }
+
+  &__stars-filled {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    color: $gold6;
   }
 }

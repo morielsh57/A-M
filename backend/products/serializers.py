@@ -105,16 +105,24 @@ def get_representative_variant(variants):
 
 
 def get_variant_image_urls(variant):
-    variant_images = [
-        image.secure_url for image in variant.product_images.all() if image.is_active
+    color_images = [
+        image.secure_url
+        for image in variant.product.images.all()
+        if (
+            image.is_active
+            and image.variant_id
+            and image.variant.color == variant.color
+        )
     ]
-    if variant_images:
-        return variant_images
-    return [
+    if color_images:
+        return list(OrderedDict.fromkeys(color_images))
+
+    product_images = [
         image.secure_url
         for image in variant.product.images.all()
         if image.is_active and image.variant_id is None
     ]
+    return list(OrderedDict.fromkeys(product_images))
 
 
 def get_color_representatives(product):
@@ -148,15 +156,21 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.ListField(child=serializers.CharField()))
     def get_images(self, variant):
+        return get_variant_image_urls(variant)
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_in_stock(self, variant):
+        return variant.quantity > 0
+
+
+class AdminProductVariantSerializer(ProductVariantSerializer):
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
+    def get_images(self, variant):
         return [
             image.secure_url
             for image in variant.product_images.all()
             if image.is_active
         ]
-
-    @extend_schema_field(OpenApiTypes.BOOL)
-    def get_in_stock(self, variant):
-        return variant.quantity > 0
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -536,7 +550,7 @@ class AdminProductWriteSerializer(serializers.ModelSerializer):
 
 
 class AdminProductDetailSerializer(ProductDetailSerializer):
-    pass
+    variants = AdminProductVariantSerializer(many=True, read_only=True)
 
 
 class SupplierProductWriteSerializer(serializers.ModelSerializer):
