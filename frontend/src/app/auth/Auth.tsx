@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store';
 import { removeItemFromLocalStorage, setItemInLocalStorage } from '../../shared/utils/localStorage.utils';
@@ -83,6 +83,41 @@ export const Auth: React.FC<React.PropsWithChildren> = ({ children }) => {
       navigate(APP_ROUTING_PATHS.ADMIN_HOME_PAGE);
     });
   };
+
+  // Email verification redirects back with auth tokens so the new customer is logged in automatically.
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const access = searchParams.get('access');
+    const refresh = searchParams.get('refresh');
+
+    if (!access || !refresh) {
+      return;
+    }
+
+    persistTokens(access, refresh);
+
+    void (async () => {
+      try {
+        const userData = await dispatch(getCurrentUser()).unwrap();
+        await dispatch(getCart()).unwrap();
+        addToast(`welcome ${userData?.name || ''} to our store, your email was verified`, {
+          appearance: 'success',
+          autoDismiss: true,
+        });
+      } finally {
+        searchParams.delete('access');
+        searchParams.delete('refresh');
+        const cleanSearch = searchParams.toString();
+        navigate(
+          {
+            pathname: location.pathname,
+            search: cleanSearch ? `?${cleanSearch}` : '',
+          },
+          { replace: true },
+        );
+      }
+    })();
+  }, [dispatch, location.pathname, location.search, navigate]);
 
   useApiData(loginRes, {
     onFulfilled(loginData) {
