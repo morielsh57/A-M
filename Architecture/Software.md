@@ -127,7 +127,7 @@ Main capabilities include:
 - JWT login, access-token refresh, and logout with refresh-token blacklisting.
 - Refresh-token rotation and automatic frontend access-token refresh.
 - Role-based access control for `Customer`, `Supplier`, and `Admin`.
-- Profile viewing and editing, and password changes.
+- Profile viewing and editing of name, phone, and address, and password changes through a separate endpoint. Self-service profile editing cannot change email, role, or account/verification status.
 - Backend password-reset request and token-consumption endpoints with email delivery.
 - Rate limits for verification resend and password-reset requests.
 
@@ -257,6 +257,8 @@ Main capabilities include:
 - Check review eligibility using purchase ownership and completed-order status.
 
 The backend prevents duplicate reviews for the same eligible purchase and rejects unauthorized review creation or editing.
+
+Ratings range from 1 to 5 and review text must be nonblank. Review creation checks completed-order status; the review-edit API checks ownership without rechecking order status. The frontend review page requires the order to be completed for both creation and editing.
 
 ---
 
