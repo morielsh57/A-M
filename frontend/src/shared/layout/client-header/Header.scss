@@ -3,6 +3,26 @@
 .client-store-header {
   background: $natural1;
 
+  &__login-link {
+    padding: 8px 18px;
+    border: 1px solid $purple6;
+    border-radius: 8px;
+    color: $purple7;
+    font-weight: 800;
+    text-decoration: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+    &:hover {
+      background: $purple6;
+      color: $natural1;
+    }
+    
+    @media (max-width: 399px) {
+      padding: 6px 12px;
+      font-size: 0.88rem;
+    }
+  }
+
   .cart-header-btn {
     position: relative;
     background: transparent;
