@@ -1,8 +1,22 @@
+@import '../../../shared/styles/colors.scss';
+
 .client-main-container {
   display: flex;
   flex-direction: column;
   min-height: 100%;
   justify-content: space-between;
+
+  &__loader {
+    flex: 1;
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    .ant-spin-dot-item {
+      background-color: $pink8;
+    }
+  }
 
   .client-main-scrollable-content-container {
     width: 100%;

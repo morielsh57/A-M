@@ -21,12 +21,14 @@ const Header: React.FC = () => {
         <div className="col-4 text-center">
           <AppLogo />
         </div>
-        <div className="col-4 text-end d-flex align-items-center border-1 border-white justify-content-end">
+        <div className="col-4 text-end d-flex align-items-center border-1 border-white justify-content-end gap-3">
           <SearchInput view="desktop" />
           {isLoggedIn ? (
             <ClientUserMenu />
           ) : (
-            <Link to={APP_ROUTING_PATHS.AUTH_LOGIN_PAGE} className="btn btn-outline-purple fw-bold">LogIn</Link>
+            <Link to={APP_ROUTING_PATHS.AUTH_LOGIN_PAGE} className="client-store-header__login-link">
+              Log In
+            </Link>
           )}
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { Spin } from 'antd';
 import Header from './../../../shared/layout/client-header/Header';
 import ClientFooter from '../../../shared/layout/client-footer/ClientFooter';
 import { useAppDispatch, useAppSelector } from '../../../app/store';
@@ -13,6 +14,10 @@ const Main: React.FC = () => {
   const { getMainCategoriesReq } = useAppSelector((store) => store.categoryStoreReducer);
   const { getCartReq } = useAppSelector((store) => store.cartStoreReducer);
   const mainCategories = getMainCategoriesReq.data || [];
+  const isInitialAppLoading = (
+    mainCategories.length === 0
+    && [EAPIStatus.IDLE, EAPIStatus.PENDING].includes(getMainCategoriesReq.status)
+  );
 
   useEffect(() => {
     if (
@@ -33,7 +38,13 @@ const Main: React.FC = () => {
     <main className="client-main-container">
       <Header />
       <div className="client-main-scrollable-content-container">
-        <Outlet />
+        {isInitialAppLoading ? (
+          <div className="client-main-container__loader">
+            <Spin size="large" className='main-spinner' />
+          </div>
+        ) : (
+          <Outlet />
+        )}
         <ClientFooter />
       </div>
     </main>
