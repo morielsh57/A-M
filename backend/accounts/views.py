@@ -145,10 +145,13 @@ class VerifyEmailView(APIView):
         raw_token = request.query_params.get("token", "")
         if not raw_token:
             raise InvalidVerificationToken()
-        verify_email(raw_token)
+        user = verify_email(raw_token)
+        refresh = RefreshToken.for_user(user)
+        refresh["role"] = user.role.role_name
         destination = urlsplit(settings.FRONTEND_VERIFICATION_SUCCESS_URL)
         query = dict(parse_qsl(destination.query, keep_blank_values=True))
-        query["token"] = raw_token
+        query["access"] = str(refresh.access_token)
+        query["refresh"] = str(refresh)
         redirect_url = urlunsplit(
             (
                 destination.scheme,

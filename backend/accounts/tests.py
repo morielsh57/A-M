@@ -10,6 +10,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from accounts.exceptions import EmailDeliveryFailed
 from accounts.models import (
@@ -21,6 +22,7 @@ from accounts.models import (
 
 
 @override_settings(
+    EMAIL_PROVIDER="smtp",
     EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
     BACKEND_BASE_URL="https://testserver",
     FRONTEND_BASE_URL="https://localhost:3001",
@@ -133,11 +135,18 @@ class RegistrationApiTests(TestCase):
         response = self.client.get(reverse("verify-email"), {"token": raw_token})
 
         self.assertEqual(response.status_code, 302)
+        redirect = urlparse(response.url)
+        redirect_query = parse_qs(redirect.query)
         self.assertEqual(
-            response.url,
-            f"https://localhost:3001/app?token={raw_token}",
+            f"{redirect.scheme}://{redirect.netloc}{redirect.path}",
+            "https://localhost:3001/app",
         )
+        self.assertNotIn("token", redirect_query)
+        self.assertTrue(redirect_query.get("access", [""])[0])
+        self.assertTrue(redirect_query.get("refresh", [""])[0])
         user = User.objects.get(email="taylor@example.com")
+        self.assertEqual(AccessToken(redirect_query["access"][0])["role"], CUSTOMER_ROLE)
+        self.assertEqual(RefreshToken(redirect_query["refresh"][0])["role"], CUSTOMER_ROLE)
         self.assertTrue(user.is_valid_email)
         self.assertTrue(user.is_active)
         self.assertIsNotNone(EmailVerificationToken.objects.get().used_at)
