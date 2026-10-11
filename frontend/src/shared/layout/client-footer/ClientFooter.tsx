@@ -16,8 +16,7 @@ const ClientFooter: React.FC = () => {
         </div>
         <div className="col-md-4 col-12 mt-md-0 mt-2">
           <p className="fw-bold">Contact Us <i className="fa fa-phone text-light"></i> :</p>
-          <p>am_fashoin.service.customer@gmail.com</p>
-          <p>077-2136567</p>
+          <p>am.fashion.service@gmail.com</p>
           <p>
             <strong>Customer service hours:</strong><br />
             Sunday-Thursday, 10:00-16:00<br />
