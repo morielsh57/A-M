@@ -4,7 +4,7 @@
 
 This document describes the software technologies, development tools, and main features implemented in **A&M Fashion**, a clothing e-commerce application with customer, supplier, and administrator interfaces.
 
-The description reflects the repository's source code and configuration. The system separates the React user interface, Django business logic, and MySQL data storage.
+The description reflects the repository's source code and configuration. The system separates the React user interface, Django business logic, and MySQL data storage hosted on Aiven in production.
 
 ---
 
@@ -36,11 +36,13 @@ The backend integrates PayPal for payment creation and capture, Cloudinary for p
 
 ### 2.3 Database
 
-**Technology:** MySQL with the Django ORM and migrations
+**Technology:** MySQL with the Django ORM and migrations; hosted on [Aiven](https://aiven.io/mysql) in production
 
 MySQL stores users and roles, suppliers, category hierarchies, products and size/color variants, image metadata, carts, payments, orders, supplier fulfillments, reviews, notifications, and pickup points.
 
 Inventory is tracked per product variant. Payment and order items store snapshots of product names, sizes, colors, quantities, and prices. Foreign keys, uniqueness constraints, and protected relationships maintain data integrity. Django migrations manage schema changes.
+
+The production database is hosted on **[Aiven for MySQL](https://aiven.io/mysql)** and stores the application's relational data. The backend API runs on Render and connects to Aiven using environment-based database settings; the frontend is hosted on Netlify. Product-image files are stored separately in Cloudinary, while their metadata is stored in MySQL.
 
 Only the backend accesses the database. The frontend accesses application data through the REST API. Database credentials and optional SSL settings come from environment variables; backend automated tests use a separate in-memory SQLite database.
 
@@ -96,7 +98,7 @@ React 18 + TypeScript Frontend
   ↓ HTTP/HTTPS REST requests
 Django REST Framework API (/api/v1)
   ↓ Django ORM
-MySQL Database
+MySQL Database (Aiven in production)
 ```
 
 Example request flow:
@@ -323,13 +325,13 @@ Customer, supplier, and administrator navigation and page access depend on the u
 
 ### 6.10. Backend and Database Integration
 
-The frontend communicates with the backend through the versioned REST API. The backend accesses MySQL through the Django ORM.
+The frontend communicates with the backend through the versioned REST API. The backend accesses MySQL through the Django ORM; the production database is hosted on [Aiven](https://aiven.io/mysql).
 
 The system architecture includes:
 
 - React 18 and TypeScript frontend built with Vite.
 - Python backend using Django and Django REST Framework.
-- MySQL relational database with Django migrations.
+- MySQL relational database hosted on Aiven in production, with Django migrations.
 - JSON-based communication and multipart image uploads.
 
 The backend is responsible for:
@@ -370,7 +372,8 @@ A&M Fashion is an online clothing-store platform that implements:
 | Frontend tooling | Vite | Development server and type-checked production builds |
 | State and HTTP | Redux Toolkit, React Redux, Axios | Shared state, API requests, token refresh |
 | Backend | Python, Django 6.0.7, Django REST Framework 3.17.1 | Business logic, validation, permissions, REST API |
-| Database | MySQL, Django ORM and migrations | Persistent data, relationships, constraints |
+| Database | MySQL on Aiven in production, Django ORM and migrations | Persistent application data, relationships, constraints |
+| Database hosting | [Aiven for MySQL](https://aiven.io/mysql) | Hosting the production MySQL database; accessed only by the backend |
 | Authentication | Simple JWT | Access/refresh tokens, rotation, blacklisting |
 | Payments | PayPal API and React SDK | Payment creation, approval, capture |
 | Pickup selection | Google Maps and backend pickup points | Map/search and pickup-point selection |
