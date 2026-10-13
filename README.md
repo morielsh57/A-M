@@ -15,7 +15,7 @@ This README is the entry point for our degree final project. It covers the appli
 | Administrator and supplier interface | [A&M Fashion — Management](https://am-fashion.netlify.app/admin) |
 | Source code | [GitHub Repository](https://github.com/morielsh57/A-M) |
 | Interactive backend API documentation | [Backend API — Swagger](https://am-fashion-backend.onrender.com/api/docs) |
-| Project task board | [GitHub Projects](https://github.com/users/morielsh57/projects/2) |
+| Project task board | [GitHub Projects](https://github.com/users/morielsh57/projects/2/views/1) |
 
 Protected operations require authentication with an appropriate role. Administrators and suppliers share the management interface, with pages and permissions tailored to their roles.
 
@@ -36,7 +36,7 @@ Protected operations require authentication with an appropriate role. Administra
 
 The project was developed by **Amit and Moriel**, both working as **full-stack developers**. Moriel primarily focused on the frontend and also contributed to the backend; Amit primarily focused on the backend and also contributed to the frontend. We worked collaboratively throughout the project and divided tasks equally, as documented on the project board.
 
-Tasks were managed in [GitHub Projects](https://github.com/users/morielsh57/projects/2). Each task was linked to a pull request describing the code changes and their rationale. Approval from the other team member was required before merging, providing mutual code review and shared understanding of both parts of the system. The [project pull requests](https://github.com/morielsh57/A-M/pulls?q=is%3Apr) complement the task board as a record of this work.
+Tasks were managed in [GitHub Projects](https://github.com/users/morielsh57/projects/2/views/1). Each task was linked to a pull request describing the code changes and their rationale. Approval from the other team member was required before merging, providing mutual code review and shared understanding of both parts of the system. The [project pull requests](https://github.com/morielsh57/A-M/pulls?q=is%3Apr) complement the task board as a record of this work.
 
 The [GitHub Actions workflow](.github/workflows/main.yaml) runs backend checks and tests, as well as frontend type checking and production builds.
 
@@ -205,7 +205,7 @@ Implementation references: [email delivery service](backend/accounts/email_servi
 ### Authentication, Tokens, and Authorization
 
 - **JWT:** Protected requests use an access token in the `Authorization: Bearer` header. Default lifetimes are 15 minutes for access tokens and 7 days for refresh tokens, configurable through environment variables.
-- **Token refresh:** Axios handles automatic refresh. The backend rotates refresh tokens and blacklists the previous token to prevent reuse.
+- **Token refresh:** Axios handles automatic refresh. The backend rotates refresh tokens and blacklists the previous token to prevent reuse. Concurrent `401` responses within the same browser tab use **deduplication** through a shared `refreshPromise`, so requests waiting during an active refresh share a single refresh request. Waiting requests retry with the same new access token, and each request is retried at most once. See the [Axios refresh and retry implementation](frontend/src/shared/api/axios.ts).
 - **Token revocation:** Logout blacklists the refresh token. Password changes and resets revoke the user's refresh tokens; JWT authentication also checks for password changes.
 - **Role and ownership checks:** Beyond frontend route guards, the backend validates authentication, roles, and resource ownership. Supplier queries are scoped to their products and order items; customers access their own orders and reviews.
 - **Email verification:** New accounts remain inactive until verified. Verification and password-reset tokens are randomly generated, expire, and are stored as SHA-256 hashes. Token consumption prevents reuse. Resend and reset requests are rate-limited.
