@@ -93,7 +93,6 @@ const CartSideWindow: React.FC = () => {
         'cart-side-window',
         isCartOpen ? 'cart-side-window--open' : '',
       ].filter(Boolean).join(' ')}
-      aria-hidden={!isCartOpen}
       onMouseDown={handleCloseCart}
     >
       <aside

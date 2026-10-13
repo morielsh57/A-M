@@ -1,17 +1,20 @@
 import type { EnhancedStore } from '@reduxjs/toolkit';
-import { createAsyncThunk } from '@reduxjs/toolkit';
 import type {
   AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
-  InternalAxiosRequestConfig,
 } from 'axios';
 import axios, { AxiosHeaders } from 'axios';
 import { AUTH_LOCAL_STORAGE_KEYS } from '../../app/constants';
 import { API_ROUTES, APP_ROUTING_PATHS } from '../../app/routing';
-import type { IAPIError } from './models';
 import { addAuthorizationHeaderInterceptor } from './interceptors';
+import type { ApiService, ApiSuccessResponse, RetryableRequestConfig } from './models';
+import { unwrapApiResponse, unwrapApiResponseEnvelope } from './response.utils';
+
+// Preserve existing imports while keeping helpers independent of this client.
+export { createApiThunk } from './api-thunk';
+export type { ApiService, ApiSuccessResponse } from './models';
 import {
   getItemFromLocalStorage,
   removeItemFromLocalStorage,
@@ -28,158 +31,10 @@ export const InternalError = {
  * https://redux.js.org/faq/code-structure#how-can-i-use-the-redux-store-in-non-component-files
  */
 
-// eslint-disable-next-line
 let store: EnhancedStore | undefined;
 
 export const injectStoreAxios = (_store: EnhancedStore) => {
   store = _store;
-};
-
-/**
- * The api thunk callback type (because we cannot import it from redux toolkit
- */
-type ApiThunkCallback<TData, TArgs> = (
-  args: TArgs
-) => Promise<TData | ApiSuccessResponse<TData>> | TData | ApiSuccessResponse<TData>;
-
-export interface ApiSuccessResponse<TData, TMeta = unknown> {
-  success: boolean;
-  data: TData;
-  meta?: TMeta;
-}
-
-export interface ApiService {
-  request<TResponse = unknown, TMeta = unknown, TRequestData = unknown>(
-    config: AxiosRequestConfig<TRequestData>,
-  ): Promise<ApiSuccessResponse<TResponse, TMeta>>;
-  get<TResponse = unknown, TMeta = unknown, TRequestData = unknown>(
-    url: string,
-    config?: AxiosRequestConfig<TRequestData>,
-  ): Promise<ApiSuccessResponse<TResponse, TMeta>>;
-  delete<TResponse = unknown, TRequestData = unknown>(
-    url: string,
-    config?: AxiosRequestConfig<TRequestData>,
-  ): Promise<TResponse>;
-  head<TResponse = unknown, TRequestData = unknown>(
-    url: string,
-    config?: AxiosRequestConfig<TRequestData>,
-  ): Promise<TResponse>;
-  options<TResponse = unknown, TRequestData = unknown>(
-    url: string,
-    config?: AxiosRequestConfig<TRequestData>,
-  ): Promise<TResponse>;
-  post<TResponse = unknown, TRequestData = unknown>(
-    url: string,
-    data?: TRequestData,
-    config?: AxiosRequestConfig<TRequestData>,
-  ): Promise<TResponse>;
-  put<TResponse = unknown, TRequestData = unknown>(
-    url: string,
-    data?: TRequestData,
-    config?: AxiosRequestConfig<TRequestData>,
-  ): Promise<TResponse>;
-  patch<TResponse = unknown, TRequestData = unknown>(
-    url: string,
-    data?: TRequestData,
-    config?: AxiosRequestConfig<TRequestData>,
-  ): Promise<TResponse>;
-}
-
-const unwrapApiResponse = <TData>(
-  response: AxiosResponse<ApiSuccessResponse<TData> | TData>,
-): TData => {
-  const payload = response.data;
-
-  if (
-    payload &&
-    typeof payload === 'object' &&
-    'success' in payload &&
-    payload.success === true &&
-    'data' in payload
-  ) {
-    return payload.data as TData;
-  }
-
-  return payload as TData;
-};
-
-const unwrapApiResponseEnvelope = <TData, TMeta = unknown>(
-  response: AxiosResponse<ApiSuccessResponse<TData, TMeta> | TData>,
-): ApiSuccessResponse<TData, TMeta> => {
-  const payload = response.data;
-
-  if (
-    payload &&
-    typeof payload === 'object' &&
-    'success' in payload &&
-    'data' in payload
-  ) {
-    return payload as ApiSuccessResponse<TData, TMeta>;
-  }
-
-  return {
-    success: true,
-    data: payload as TData,
-  };
-};
-
-const isApiSuccessResponse = <TData>(
-  payload: TData | ApiSuccessResponse<TData>,
-): payload is ApiSuccessResponse<TData> => (
-    !!payload
-    && typeof payload === 'object'
-    && 'success' in payload
-    && 'data' in payload
-  );
-
-/**
- * Create an api thunk, which will run the provided promise and await it
- * @param typePrefix The type prefix of the action
- * @param requestCallback A callback function which returns an api request using axios
- */
-export const createApiThunk = <TData, TArgs = void>(
-  typePrefix: string,
-  requestCallback: ApiThunkCallback<TData, TArgs>,
-) => {
-  return createAsyncThunk<TData, TArgs, { rejectValue: IAPIError; fulfilledMeta: { apiMeta?: unknown } }>(
-    typePrefix,
-    async (args, { rejectWithValue, fulfillWithValue }) => {
-      try {
-        const payload = await requestCallback(args as TArgs);
-
-        if (isApiSuccessResponse(payload)) {
-          return fulfillWithValue(payload.data, { apiMeta: payload.meta });
-        }
-
-        return fulfillWithValue(payload, {});
-        // eslint-disable-next-line
-      } catch (e: unknown) {
-        const axiosError = e as AxiosError;
-        const responseData = axiosError?.response?.data;
-        const structuredError = responseData as {
-          message?: string;
-          msg?: string;
-          detail?: string;
-          error?: { message?: string; details?: unknown };
-        } | undefined;
-        const responseMessage = typeof responseData === 'string'
-          ? responseData
-          : (
-            structuredError?.error?.message
-            || structuredError?.message
-            || structuredError?.msg
-            || structuredError?.detail
-          );
-
-        return rejectWithValue({
-          message: responseMessage || axiosError?.message,
-          code: axiosError?.response?.status ?? axiosError?.status,
-          details: structuredError?.error?.details,
-          axiosError,
-        });
-      }
-    },
-  );
 };
 
 /**
@@ -192,14 +47,7 @@ export const URL_API = BASE_URL;
 // Create the main apiService with the default base URL
 export const apiService = createAxiosInstance(BASE_URL);
 
-/**
- * Create an Axios instance with the specified base URL
- * @param baseURL The base URL
- */
-interface RetryableRequestConfig extends InternalAxiosRequestConfig {
-  _retry?: boolean;
-}
-
+// Share one in-flight refresh across requests in this browser tab.
 let refreshPromise: Promise<string | null> | null = null;
 
 const authEndpoints = [API_ROUTES.AUTH.LOGIN, API_ROUTES.AUTH.SIGNUP, API_ROUTES.AUTH.REFRESH];
@@ -317,6 +165,8 @@ function createAxiosInstance(baseURL: string): ApiService {
   // Add authorization header interceptor
   instance.interceptors.request.use(addAuthorizationHeaderInterceptor);
 
+  // Deduplicate concurrent 401 refresh attempts by sharing a single refresh promise,
+  // then retry each failed request with the refreshed access token.
   instance.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
