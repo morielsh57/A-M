@@ -72,7 +72,7 @@ The configured GitHub Actions workflow runs Django checks and tests on Python 3.
 
 **GitHub Projects** provides the project's workspace for backlog items, priorities, assignments, and progress tracking:
 
-https://github.com/users/morielsh57/projects/2
+https://github.com/users/morielsh57/projects/2/views/1
 
 Each work item should be represented by a GitHub Issue and may include:
 
