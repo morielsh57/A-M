@@ -172,7 +172,7 @@ export const getBaseProductPayload = (
   price: values.price,
   tags: values.tags.trim() || null,
   fabric: values.fabric.trim() || null,
-  category_id: values.main_category_id || '',
+  category_id: values.sub_category_id || values.main_category_id || '',
   ...(includeSupplier ? { supplier_id: values.supplier_id || null } : {}),
   is_active: values.is_active,
 });
