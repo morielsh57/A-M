@@ -1,4 +1,4 @@
-# A&M Fashion — E-Commerce Platform with PayPal and Google Maps Integrations
+# A&M Fashion - E-Commerce Platform with PayPal and Google Maps Integrations
 
 ## Project Overview, Key Features, User Workflows by Role, and Local Backend and Frontend Setup
 
