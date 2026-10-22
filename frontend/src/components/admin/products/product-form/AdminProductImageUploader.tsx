@@ -182,7 +182,18 @@ const AdminProductImageUploader: React.FC<AdminProductImageUploaderProps> = ({
           multiple
           type="file"
           onChange={(event) => {
-            onFilesChange(Array.from(event.target.files || []));
+            const selectedFiles = Array.from(event.target.files || []);
+            const newFiles = selectedFiles.filter((selectedFile) => !files.some((file) => (
+              file.name === selectedFile.name
+              && file.size === selectedFile.size
+              && file.lastModified === selectedFile.lastModified
+            )));
+
+            if (newFiles.length) {
+              onFilesChange([...files, ...newFiles]);
+            }
+
+            event.target.value = '';
           }}
         />
       </label>
